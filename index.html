@@ -1,170 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>沈黙の解剖図譜 AR</title>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <script src='https://aframe.io/releases/1.5.0/aframe.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js'></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;500;700&display=swap');
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            margin: 0; overflow: hidden; background: #0a0a0a; 
-            font-family: 'Noto Serif JP', serif; color: #fff;
-        }
-        
-        /* ローディング画面 */
-        #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 2000; transition: opacity 0.8s ease;
-        }
-        #loading-overlay.hidden { opacity: 0; pointer-events: none; }
-        .loader { 
-            border: 2px solid rgba(255,255,255,0.1); 
-            border-top: 2px solid rgba(255,255,255,0.8); 
-            border-radius: 50%; width: 50px; height: 50px; 
-            animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite; 
-        }
-        .loading-text { margin-top: 20px; font-size: 0.85rem; letter-spacing: 0.2em; opacity: 0.6; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* キャプションUI（モダン・グラスモーフィズム） */
+        body { margin: 0; overflow: hidden; }
         #ui-overlay {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            padding: 0; pointer-events: none; z-index: 999;
-            opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute; bottom: 30px; left: 0; width: 100%;
+            text-align: center; pointer-events: none; z-index: 999;
         }
-        #ui-overlay.visible { opacity: 1; transform: translateY(0); }
-
-        .content-card {
-            margin: 0 20px 30px 20px; padding: 30px 25px;
-            background: linear-gradient(135deg, rgba(20,20,30,0.85) 0%, rgba(10,10,20,0.9) 100%);
-            backdrop-filter: blur(20px) saturate(180%);
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        .card {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-family: serif;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            max-width: 80%;
+            transition: all 0.3s ease;
+            pointer-events: auto;
         }
+        h2 { margin: 0 0 5px 0; font-size: 1.2rem; font-weight: normal; letter-spacing: 0.1em; }
+        p { margin: 0; font-size: 0.9rem; opacity: 0.9; }
         
-        .episode-number { 
-            display: inline-block; padding: 6px 12px; margin-bottom: 12px;
-            background: rgba(255,255,255,0.08); 
-            border-radius: 6px; border: 1px solid rgba(255,255,255,0.15);
-            font-size: 0.7rem; font-weight: 500; letter-spacing: 0.15em; 
-            color: rgba(255,255,255,0.7); text-transform: uppercase;
+        #ui-image {
+            display: none;
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
-        
-        h2 { 
-            margin: 0 0 18px 0; font-size: 1.25rem; font-weight: 700; 
-            letter-spacing: 0.15em; color: #fff;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-        
-        .poem {
-            line-height: 2.2; font-size: 0.95rem; font-weight: 300;
-            color: rgba(255,255,255,0.9); letter-spacing: 0.08em;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
-        }
-
-        /* ミニマルフレーム */
-        .frame-corner {
-            position: fixed; width: 40px; height: 40px;
-            border: 1px solid rgba(255,255,255,0.15);
-            pointer-events: none; z-index: 1000;
-        }
-        .frame-corner.top-left { top: 15px; left: 15px; border-right: none; border-bottom: none; }
-        .frame-corner.top-right { top: 15px; right: 15px; border-left: none; border-bottom: none; }
-        .frame-corner.bottom-left { bottom: 15px; left: 15px; border-right: none; border-top: none; }
-        .frame-corner.bottom-right { bottom: 15px; right: 15px; border-left: none; border-top: none; }
     </style>
-</head>
-<body>
-    <div id="loading-overlay">
-        <div class="loader"></div>
-        <div class="loading-text">INITIALIZING AR</div>
-    </div>
-    
-    <div class="frame-corner top-left"></div>
-    <div class="frame-corner top-right"></div>
-    <div class="frame-corner bottom-left"></div>
-    <div class="frame-corner bottom-right"></div>
-
-    <div id="ui-overlay">
-        <div class="content-card">
-            <div class="episode-number">Episode 02</div>
-            <h2>沈黙の蔦</h2>
-            <div class="poem">
-                「怒らない」という名の優しさが、<br>
-                音もなく首筋を這い上がる。<br>
-                美しい蔦は、静かに私の呼吸を奪っていく。
-            </div>
-        </div>
-    </div>
-
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const sceneEl = document.querySelector('a-scene');
-            const overlay = document.querySelector('#ui-overlay');
-            const loading = document.querySelector('#loading-overlay');
+        document.addEventListener('DOMContentLoaded', function() {
+            const target = document.querySelector('#target-marker');
+            const uiImage = document.querySelector('#ui-image');
+            const statusText = document.querySelector('#status-text');
 
-            sceneEl.addEventListener("arReady", (event) => {
-                loading.classList.add('hidden');
+            target.addEventListener('targetFound', event => {
+                console.log('target found');
+                uiImage.style.display = 'block';
+                statusText.innerText = '解剖図が検出されました';
             });
 
-            // 単一のターゲット（Episode 2専用）を監視
-            const target = document.querySelector('[mindar-image-target]');
-            
-            target.addEventListener("targetFound", event => {
-                overlay.classList.add('visible');
-            });
-
-            target.addEventListener("targetLost", event => {
-                overlay.classList.remove('visible');
+            target.addEventListener('targetLost', event => {
+                console.log('target lost');
+                // uiImage.style.display = 'none'; // Optional
+                // statusText.innerText = '対象を探しています...';
             });
         });
     </script>
+</head>
+<body>
+    <div id='ui-overlay'>
+        <div class='card'>
+            <h2>No.02 沈黙の蔦</h2>
+            <p id='status-text'>対象を探しています...</p>
+            <img id='ui-image' src='./images/layerB.jpg' alt='AR Image'>
+        </div>
+    </div>
 
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001; uiLoading:no; uiError:no; uiScanning:no;" 
-             color-space="sRGB" 
-             renderer="colorManagement: true, physicallyCorrectLights, antialias: true" 
-             vr-mode-ui="enabled: false" 
-             device-orientation-permission-ui="enabled: false">
+    <a-scene mindar-image='imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001;' 
+             color-space='sRGB' 
+             renderer='colorManagement: true, physicallyCorrectLights' 
+             vr-mode-ui='enabled: false' 
+             device-orientation-permission-ui='enabled: false'>
         
-        <a-assets>
-            <img id="tex" src="./images/layerB.jpg">
-            <img id="depth" src="./depth_maps/layerB_depth.png">
-        </a-assets>
+        <a-camera position='0 0 0' look-controls='enabled: false'></a-camera>
 
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-        <!-- 再出力されたEpisode2単体のmindファイルを使用するため targetIndex: 0 -->
-        <a-entity mindar-image-target="targetIndex: 0">
-            
-            <a-light type="directional" position="1 4 2" intensity="1.2" color="#ffffff"></a-light>
-            <a-light type="ambient" intensity="0.5" color="#a8b5e0"></a-light>
-
-            <!-- 傾きによる変化を軽減し、テキスト上部に安定して配置 -->
-            <a-entity position="0 0.82 0" rotation="-15 0 0">
-                <a-plane 
-                    width="1" height="0.671"
-                    segments-width="128" segments-height="128"
-                    material="src: #tex; 
-                              displacementMap: #depth; 
-                              displacementScale: 0.4; 
-                              displacementBias: -0.2;
-                              transparent: true; 
-                              opacity: 1;
-                              alphaTest: 0.1;
-                              roughness: 0.3;
-                              metalness: 0.05;">
-                </a-plane>
-            </a-entity>
-
+        <a-entity id='target-marker' mindar-image-target='targetIndex: 0'>
         </a-entity>
     </a-scene>
-
 </body>
 </html>
