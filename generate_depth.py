@@ -63,7 +63,7 @@ def main():
         
         # 縁を黒くする処理（歪み防止）
         print("  → 縁をフェード処理中...")
-        depth = apply_edge_fade(depth, fade_width=100)
+        depth = apply_edge_fade(depth, fade_width=150)
         
         # 保存 (ファイル名_depth.png)
         name, _ = os.path.splitext(filename)
