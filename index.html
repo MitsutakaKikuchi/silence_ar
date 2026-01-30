@@ -310,29 +310,32 @@
             animation: growVineOrganic 3.5s ease-in-out infinite;
             transform-origin: bottom center;
             border-radius: 2px;
+            bottom: calc(50% - 45px);
+            left: 50%;
+            transform: translateX(-50%);
         }
-        .vine:nth-child(1) { left: 50%; height: 90px; animation-delay: 0s; }
-        .vine:nth-child(2) { left: 38%; height: 70px; animation-delay: 0.4s; }
-        .vine:nth-child(3) { left: 62%; height: 80px; animation-delay: 0.8s; }
-        .vine:nth-child(4) { left: 28%; height: 60px; animation-delay: 1.2s; }
-        .vine:nth-child(5) { left: 72%; height: 65px; animation-delay: 1.6s; }
+        .vine:nth-child(1) { margin-left: 0; height: 90px; animation-delay: 0s; }
+        .vine:nth-child(2) { margin-left: -20px; height: 70px; animation-delay: 0.4s; }
+        .vine:nth-child(3) { margin-left: 20px; height: 80px; animation-delay: 0.8s; }
+        .vine:nth-child(4) { margin-left: -40px; height: 60px; animation-delay: 1.2s; }
+        .vine:nth-child(5) { margin-left: 40px; height: 65px; animation-delay: 1.6s; }
         
         @keyframes growVineOrganic {
             0%, 100% { 
-                transform: scaleY(0) rotate(0deg); 
+                transform: translateX(-50%) scaleY(0) rotate(0deg); 
                 opacity: 0; 
             }
-            25% { 
-                transform: scaleY(0.6) rotate(2deg); 
-                opacity: 0.7; 
+            30% { 
+                transform: translateX(-50%) scaleY(0.7) rotate(2deg); 
+                opacity: 0.8; 
             }
-            50% { 
-                transform: scaleY(1) rotate(-1deg); 
+            60% { 
+                transform: translateX(-50%) scaleY(1) rotate(-1deg); 
                 opacity: 1; 
             }
-            75% { 
-                transform: scaleY(0.85) rotate(1deg); 
-                opacity: 0.8; 
+            85% { 
+                transform: translateX(-50%) scaleY(0.9) rotate(1deg); 
+                opacity: 0.9; 
             }
         }
         
@@ -605,19 +608,27 @@
 
             let currentTargetIndex = -1;
             let sceneLoaded = false;
+            const loadStartTime = Date.now();
+            const MIN_LOADING_TIME = 2500; // 最低2.5秒間ローディング画面を表示
 
             // A-Frameシーンのロード完了を検知（キャッシュ対策含む）
             const onSceneLoaded = () => {
                 if (sceneLoaded) return; // 2回実行防止
                 sceneLoaded = true;
                 
-                // ローディング画面をフェードアウト
-                customLoading.classList.add('fade-out');
+                // 経過時間を計算し、最低表示時間を確保
+                const elapsed = Date.now() - loadStartTime;
+                const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsed);
+                
                 setTimeout(() => {
-                    customLoading.style.display = 'none';
-                    // スキャンガイドを表示
-                    scanningGuide.classList.add('visible');
-                }, 800);
+                    // ローディング画面をフェードアウト
+                    customLoading.classList.add('fade-out');
+                    setTimeout(() => {
+                        customLoading.style.display = 'none';
+                        // スキャンガイドを表示
+                        scanningGuide.classList.add('visible');
+                    }, 800);
+                }, remainingTime);
             };
 
             if (scene.hasLoaded) {
