@@ -8,83 +8,148 @@
     <script src='https://aframe.io/releases/1.5.0/aframe.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js'></script>
     <style>
-        body { margin: 0; overflow: hidden; }
-        /* カードUIの配置 */
+        body { margin: 0; overflow: hidden; font-family: 'Yu Mincho', 'Hiragino Mincho ProN', 'serif'; }
+        
+        /* 全画面オーバーレイ（スキャンガイドとUIコンテナ） */
         #ui-overlay {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 100vh;
-            pointer-events: none; z-index: 999;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100vh;
+            pointer-events: none; z-index: 1000;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            padding-bottom: 40px; box-sizing: border-box;
         }
+
+        /* スキャン用ガイド（認識前のみ表示） */
+        #scanning-guide {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 70%; max-width: 400px; aspect-ratio: 1;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.6);
+            display: flex; justify-content: center; align-items: center;
+            opacity: 1; transition: opacity 0.5s;
+        }
+        #scanning-guide::after {
+            content: "画像を枠に合わせてください";
+            color: white; font-size: 0.9rem; margin-top: 20px;
+            position: absolute; bottom: -40px; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+        #scanning-guide.hidden { opacity: 0; pointer-events: none; }
+
+        /* スキャンラインのアニメーション */
+        .scan-line {
+            width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, #00ffaa, transparent);
+            position: absolute; top: 0;
+            animation: scan 2s infinite ease-in-out;
+            box-shadow: 0 0 4px #00ffaa;
+        }
+        @keyframes scan {
+            0% { top: 10%; opacity: 0; }
+            50% { opacity: 1; }
+            100% { top: 90%; opacity: 0; }
+        }
+
+        /* モダンなカードUI */
         .card {
             display: none; /* 初期非表示 */
-            background: rgba(0, 0, 0, 0.85); /* 濃いめの背景 */
-            color: #fff;
-            padding: 20px 25px;
-            border-radius: 4px;
-            font-family: 'Yu Mincho', 'Times New Roman', serif;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            max-width: 85%;
-            width: 380px;
-            pointer-events: auto;
-            text-align: left;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: opacity 0.4s ease, transform 0.4s ease;
-        }
-        .card.visible {
-            display: block;
-            animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* エピソードタイトル */
-        h2 { 
-            margin: 5px 0 15px 0; 
-            font-size: 1.1rem; 
-            font-weight: 500; 
-            letter-spacing: 0.15em;
-            text-align: center; 
+            background: rgba(20, 20, 20, 0.85);
             color: #eee;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            padding-bottom: 10px;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 24px 24px 0 0; /* 上部だけ丸く */
+            padding: 0;
+            margin-bottom: 0;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            transform: translateY(110%);
+            transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            pointer-events: auto;
+            overflow: hidden;
+            display: flex; flex-direction: column;
+            max-height: 85vh; /* 画面が高すぎないように */
         }
         
-        /* AR画像（LayerB） */
+        .card.visible {
+            transform: translateY(0);
+            display: flex; /* visible時にflexに戻す */
+        }
+
+        /* 画像エリア */
+        .card-image-container {
+            width: 100%;
+            position: relative;
+            background: #000;
+            line-height: 0;
+        }
         #ui-image {
             width: 100%;
             height: auto;
-            border-radius: 2px;
-            border: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 15px;
+            max-height: 40vh; /* 画像が画面を占有しすぎないように */
+            object-fit: contain;
             display: block;
-            filter: sepia(0.2) contrast(1.1); /* 雰囲気を合わせる */
+            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
         }
 
-        /* 本文テキスト */
+        /* テキストエリア */
+        .card-content {
+            padding: 24px 28px 40px 28px;
+            overflow-y: auto;
+        }
+
+        h2 { 
+            margin: 0 0 12px 0; 
+            font-size: 1.25rem; 
+            font-weight: 500; 
+            letter-spacing: 0.1em;
+            color: #fff;
+            position: relative;
+            padding-bottom: 12px;
+        }
+        h2::after {
+            content: '';
+            position: absolute; bottom: 0; left: 0;
+            width: 40px; height: 1px;
+            background: #00ffaa;
+            opacity: 0.7;
+        }
+        
         .description-box {
-            font-size: 0.9rem;
-            line-height: 1.9;
+            font-size: 0.95rem;
+            line-height: 1.8;
             color: #ccc;
+            margin-bottom: 15px;
         }
         .description-box strong {
             color: #fff;
-            font-weight: normal;
-            border-bottom: 1px dotted #aaa;
+            border-bottom: 1px solid rgba(255,255,255,0.4);
+            padding-bottom: 1px;
         }
-        .hidden-marker {
-            font-size: 0.75rem;
-            color: #666;
-            margin-top: 10px;
-            text-align: right;
+        
+        .footer-note {
+            font-size: 0.7rem;
+            color: #555;
+            text-align: center;
+            margin-top: 20px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        /* 閉じるボタン（スマホ操作用） */
+        .close-btn {
+            position: absolute; top: 10px; right: 10px;
+            width: 30px; height: 30px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            color: white; font-size: 1.2rem; cursor: pointer;
+            z-index: 10;
+            border: 1px solid rgba(255,255,255,0.2);
         }
     </style>
     <script>
         // エピソードデータ (01-10)
-        // targetIndex: 0 -> Episode 1
         const episodes = [
             {
                 title: 'No.01 矯正する支柱',
@@ -140,32 +205,44 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const card = document.querySelector('.card');
+            const scanningGuide = document.getElementById('scanning-guide');
             const uiTitle = document.querySelector('#ui-title');
             const uiImage = document.querySelector('#ui-image');
             const uiDesc = document.querySelector('#ui-desc');
+            const closeBtn = document.querySelector('.close-btn');
 
-            // ターゲットが見つかったときの処理
+            let currentTargetIndex = -1;
+
+            // 閉じるボタン
+            closeBtn.addEventListener('click', () => {
+                card.classList.remove('visible');
+                scanningGuide.classList.remove('hidden');
+            });
+
             const onTargetFound = (index) => {
                 console.log('Target Found:', index);
+                currentTargetIndex = index;
+                
+                // ガイドを隠す
+                scanningGuide.classList.add('hidden');
+
                 const data = episodes[index];
                 if (data) {
                     uiTitle.innerHTML = data.title;
                     uiDesc.innerHTML = data.text;
                     uiImage.src = data.image;
                     
-                    card.classList.remove('visible'); // 一度リセット
-                    void card.offsetWidth; 
+                    // アニメーションをリセットして表示
                     card.classList.add('visible');
                 }
             };
 
-            // ターゲットを見失ったときの処理
             const onTargetLost = (index) => {
                 console.log('Target Lost:', index);
-                card.classList.remove('visible');
+                // 完全に隠さず、少し残すか、あるいはユーザーが閉じるまで残す仕様に変更も可能
+                // ここでは即座に隠さず、次のターゲットを探しやすいようにする
             };
 
-            // すでにHTMLにあるエンティティにイベントを設定
             for (let i = 0; i < 10; i++) {
                 const entity = document.querySelector(`#target-${i}`);
                 if (entity) {
@@ -178,16 +255,25 @@
 </head>
 <body>
     <div id='ui-overlay'>
+        <!-- スキャン枠 -->
+        <div id='scanning-guide'>
+            <div class='scan-line'></div>
+        </div>
+
+        <!-- カードUI -->
         <div class='card'>
-            <!-- 画像 -->
-            <img id='ui-image' src='' alt='AR Image'>
-            
-            <!-- コンテンツ -->
-            <h2 id='ui-title'>No.xx Title</h2>
-            <div class='description-box' id='ui-desc'>
-                Text description...
+            <div class='card-image-container'>
+                <img id='ui-image' src='' alt='Episode Image'>
+                <div class='close-btn'>×</div>
             </div>
-            <div class='hidden-marker'>沈黙の解剖図譜</div>
+            
+            <div class='card-content'>
+                <h2 id='ui-title'>No.xx Title</h2>
+                <div class='description-box' id='ui-desc'>
+                    Text description...
+                </div>
+                <div class='footer-note'>沈黙の解剖図譜</div>
+            </div>
         </div>
     </div>
 
