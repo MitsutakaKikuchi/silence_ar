@@ -320,6 +320,61 @@
         .vine:nth-child(4) { margin-left: -40px; height: 60px; animation-delay: 1.2s; }
         .vine:nth-child(5) { margin-left: 40px; height: 65px; animation-delay: 1.6s; }
         
+        /* メインローディングの蔦に葉を追加 */
+        .vine::before,
+        .vine::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 16px;
+            background: radial-gradient(ellipse at 35% 35%, 
+                rgba(0, 255, 170, 0.5), 
+                rgba(0, 255, 170, 0.25) 50%, 
+                rgba(0, 255, 170, 0.1) 100%);
+            border-radius: 50% 0 50% 50%;
+            opacity: 0;
+            animation: leafGrowMain 3.5s ease-in-out infinite;
+            box-shadow: inset 1px 1px 2px rgba(0, 255, 170, 0.2);
+        }
+        
+        .vine::before {
+            top: 25%;
+            left: -8px;
+            transform: rotate(-35deg);
+        }
+        
+        .vine::after {
+            top: 55%;
+            right: -8px;
+            transform: rotate(35deg) scaleX(-1);
+        }
+        
+        .vine:nth-child(1)::before,
+        .vine:nth-child(1)::after { animation-delay: 0.2s; }
+        .vine:nth-child(2)::before,
+        .vine:nth-child(2)::after { animation-delay: 0.6s; }
+        .vine:nth-child(3)::before,
+        .vine:nth-child(3)::after { animation-delay: 1.0s; }
+        .vine:nth-child(4)::before,
+        .vine:nth-child(4)::after { animation-delay: 1.4s; }
+        .vine:nth-child(5)::before,
+        .vine:nth-child(5)::after { animation-delay: 1.8s; }
+        
+        @keyframes leafGrowMain {
+            0%, 15% { 
+                opacity: 0; 
+                transform: scale(0) rotate(0deg); 
+            }
+            35%, 75% { 
+                opacity: 0.85; 
+                transform: scale(1.1) rotate(5deg); 
+            }
+            90%, 100% { 
+                opacity: 0; 
+                transform: scale(0.8) rotate(-5deg); 
+            }
+        }
+        
         @keyframes growVineOrganic {
             0%, 100% { 
                 transform: translateX(-50%) scaleY(0) rotate(0deg); 
@@ -410,7 +465,7 @@
             justify-content: center;
         }
         
-        /* 画像ローディング表示 */
+        /* 画像ローディング表示（蔦アニメーション） */
         .image-loading {
             position: absolute;
             top: 50%;
@@ -419,34 +474,117 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
             opacity: 1;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.6s ease;
+            z-index: 10;
         }
         .image-loading.hidden {
             opacity: 0;
             pointer-events: none;
         }
         
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(0, 255, 170, 0.1);
-            border-top: 3px solid rgba(0, 255, 170, 0.8);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        /* カード内の蔦ローディング */
+        .card-loading-garden {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 170, 0.2));
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .card-vine {
+            position: absolute;
+            width: 2px;
+            background: linear-gradient(to bottom, 
+                transparent 0%, 
+                rgba(0, 255, 170, 0.2) 20%, 
+                rgba(0, 255, 170, 0.5) 50%, 
+                rgba(0, 255, 170, 0.3) 80%, 
+                transparent 100%);
+            animation: growCardVine 2.5s ease-in-out infinite;
+            transform-origin: bottom center;
+            border-radius: 2px;
+            bottom: calc(50% - 30px);
+            left: 50%;
+            transform: translateX(-50%);
         }
         
-        .loading-spinner-text {
-            color: rgba(255, 255, 255, 0.6);
+        .card-vine:nth-child(1) { margin-left: 0; height: 60px; animation-delay: 0s; }
+        .card-vine:nth-child(2) { margin-left: -15px; height: 50px; animation-delay: 0.3s; }
+        .card-vine:nth-child(3) { margin-left: 15px; height: 55px; animation-delay: 0.6s; }
+        
+        /* 蔦の葉 */
+        .card-vine::before,
+        .card-vine::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 14px;
+            background: radial-gradient(ellipse at 35% 35%, 
+                rgba(0, 255, 170, 0.55), 
+                rgba(0, 255, 170, 0.3) 50%, 
+                rgba(0, 255, 170, 0.12) 100%);
+            border-radius: 50% 0 50% 50%;
+            opacity: 0;
+            animation: leafGrow 2.5s ease-in-out infinite;
+            box-shadow: inset 1px 1px 2px rgba(0, 255, 170, 0.25);
+        }
+        
+        .card-vine::before {
+            top: 35%;
+            left: -7px;
+            transform: rotate(-30deg);
+            animation-delay: inherit;
+        }
+        
+        .card-vine::after {
+            top: 65%;
+            right: -7px;
+            transform: rotate(30deg) scaleX(-1);
+            animation-delay: calc(var(--delay, 0s) + 0.4s);
+        }
+        
+        .card-vine:nth-child(1) { --delay: 0s; }
+        .card-vine:nth-child(2) { --delay: 0.3s; }
+        .card-vine:nth-child(3) { --delay: 0.6s; }
+        
+        @keyframes growCardVine {
+            0%, 100% { 
+                transform: translateX(-50%) scaleY(0); 
+                opacity: 0; 
+            }
+            45% { 
+                transform: translateX(-50%) scaleY(1); 
+                opacity: 1; 
+            }
+            65% { 
+                transform: translateX(-50%) scaleY(0.95); 
+                opacity: 1; 
+            }
+        }
+        
+        @keyframes leafGrow {
+            0%, 20% { 
+                opacity: 0; 
+                transform: scale(0) rotate(0deg); 
+            }
+            45%, 70% { 
+                opacity: 0.9; 
+                transform: scale(1.15) rotate(8deg); 
+            }
+            90%, 100% { 
+                opacity: 0; 
+                transform: scale(0.7) rotate(-5deg); 
+            }
+        }
+        
+        .card-loading-text {
+            color: rgba(255, 255, 255, 0.7);
             font-size: 0.85rem;
-            letter-spacing: 0.2em;
+            letter-spacing: 0.25em;
             font-family: 'Yu Mincho', serif;
+            animation: textBreath 3s ease-in-out infinite;
+            text-shadow: 0 0 10px rgba(0, 255, 170, 0.15);
         }
         
         #ui-image {
@@ -610,11 +748,29 @@
             let sceneLoaded = false;
             const loadStartTime = Date.now();
             const MIN_LOADING_TIME = 2500; // 最低2.5秒間ローディング画面を表示
+            const preloadedImages = {}; // プリロード済み画像のキャッシュ
+
+            // 画像を事前にロードする関数
+            // 理由：ターゲット検出後の初回表示が遅い原因は、
+            // 画像が大きい（1200px幅）ため、初回ロードに時間がかかるため
+            function preloadImages() {
+                episodes.forEach((episode, index) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        preloadedImages[index] = true;
+                        console.log(`Preloaded image ${index + 1}/10`);
+                    };
+                    img.src = episode.image;
+                });
+            }
 
             // A-Frameシーンのロード完了を検知（キャッシュ対策含む）
             const onSceneLoaded = () => {
                 if (sceneLoaded) return; // 2回実行防止
                 sceneLoaded = true;
+                
+                // 画像のプリロードを開始（バックグラウンドで実行）
+                preloadImages();
                 
                 // 経過時間を計算し、最低表示時間を確保
                 const elapsed = Date.now() - loadStartTime;
@@ -660,8 +816,14 @@
                     uiTitle.innerHTML = data.title;
                     uiDesc.innerHTML = data.text;
                     
-                    // ローディング表示を表示
-                    imageLoading.classList.remove('hidden');
+                    // プリロード済みかどうかで表示を調整
+                    const isPreloaded = preloadedImages[index];
+                    
+                    // ローディング表示
+                    if (!isPreloaded) {
+                        // 初回ロード時は蔦アニメーションを表示
+                        imageLoading.classList.remove('hidden');
+                    }
                     uiImage.classList.remove('loaded');
                     
                     // 画像の読み込み完了時にフェードイン
@@ -669,7 +831,7 @@
                         imageLoading.classList.add('hidden');
                         setTimeout(() => {
                             uiImage.classList.add('loaded');
-                        }, 100);
+                        }, isPreloaded ? 50 : 150); // プリロード済みなら高速化
                     };
                     
                     // エラー時もローディングを非表示
@@ -678,7 +840,8 @@
                         console.error('Failed to load image:', data.image);
                     };
                     
-                    uiImage.src = data.image + '?v=' + new Date().getTime(); // キャッシュ回避
+                    // キャッシュバスターを削除してプリロードを活用
+                    uiImage.src = data.image;
                     
                     // アニメーションをリセットして表示
                     setTimeout(() => {
@@ -759,10 +922,14 @@
         <!-- カードUI -->
         <div class='card'>
             <div class='card-image-container'>
-                <!-- 画像ローディング表示 -->
+                <!-- 画像ローディング表示（蔦アニメーション） -->
                 <div class='image-loading' id='image-loading'>
-                    <div class='loading-spinner'></div>
-                    <div class='loading-spinner-text'>画像を読み込み中...</div>
+                    <div class='card-loading-garden'>
+                        <div class='card-vine'></div>
+                        <div class='card-vine'></div>
+                        <div class='card-vine'></div>
+                    </div>
+                    <div class='card-loading-text'>画像を読み込み中...</div>
                 </div>
                 <img id='ui-image' src='' alt='Episode Image'>
                 <div class='close-btn'>×</div>
