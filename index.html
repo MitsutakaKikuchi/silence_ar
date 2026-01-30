@@ -51,28 +51,30 @@
         /* モダンなカードUI */
         .card {
             display: none; /* 初期非表示 */
-            background: rgba(20, 20, 20, 0.85);
+            background: rgba(15, 15, 15, 0.92);
             color: #eee;
             width: 100%;
             max-width: 450px;
             border-radius: 24px 24px 0 0; /* 上部だけ丸く */
             padding: 0;
             margin-bottom: 0;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            transform: translateY(110%);
-            transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 -10px 50px rgba(0,0,0,0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            transform: translateY(100%);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
             pointer-events: auto;
             overflow: hidden;
             display: flex; flex-direction: column;
-            max-height: 85vh; /* 画面が高すぎないように */
+            max-height: 80vh; /* 画面が高すぎないように */
+            opacity: 0;
         }
         
         .card.visible {
             transform: translateY(0);
             display: flex; /* visible時にflexに戻す */
+            opacity: 1;
         }
 
         /* 画像エリア */
@@ -85,17 +87,25 @@
         #ui-image {
             width: 100%;
             height: auto;
-            max-height: 40vh; /* 画像が画面を占有しすぎないように */
+            max-height: 35vh; /* 画像が画面を占有しすぎないように */
             object-fit: contain;
             display: block;
-            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        #ui-image.loaded {
+            opacity: 1;
         }
 
         /* テキストエリア */
         .card-content {
-            padding: 24px 28px 40px 28px;
+            padding: 20px 28px calc(30px + env(safe-area-inset-bottom)) 28px;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            flex: 1;
+            min-height: 0;
         }
 
         h2 { 
@@ -152,52 +162,52 @@
         // エピソードデータ (01-10)
         const episodes = [
             {
-                title: 'No.01 矯正する支柱',
+                title: 'Episode.01 矯正する支柱',
                 text: 'ぐらつく私に無理やり打ち込まれる、錆びた鉄の<strong>支柱</strong>。<br>この痛みだけが、腐りかけた私を立たせている。',
                 image: './images/layerB_0.jpg'
             },
             {
-                title: 'No.02 沈黙の蔦',
+                title: 'Episode.02 沈黙の蔦',
                 text: 'その静けさは、首筋に巻きつく美しい緑の<strong>蔦（つた）</strong>だ。<br>優しさという真綿で、ゆっくりと気道を締め上げられている。',
                 image: './images/layerB_1.jpg'
             },
             {
-                title: 'No.03 拒絶の雨',
+                title: 'Episode.03 拒絶の雨',
                 text: '彼の拒絶は、冷たく鋭い銀色の<strong>雨</strong>だ。<br>私に付着した甘えを、泥のように洗い流していく。',
                 image: './images/layerB_2.jpg'
             },
             {
-                title: 'No.04 言葉の化石',
+                title: 'Episode.04 言葉の化石',
                 text: '飲み込まれた言葉は、二人の地層の奥で<strong>化石</strong>になる。<br>掘り起こして傷ついてでも、そのゴツゴツした形を知りたかった。',
                 image: './images/layerB_3.jpg'
             },
             {
-                title: 'No.05 過保護な檻',
+                title: 'Episode.05 過保護な檻',
                 text: 'この窮屈さは、脆い私を守るための過保護な<strong>檻（おり）</strong>だ。<br>私はその錆びた鉄柵の内側でしか、呼吸を許されていない。',
                 image: './images/layerB_4.jpg'
             },
             {
-                title: 'No.06 相互の呪縛',
+                title: 'Episode.06 相互の呪縛',
                 text: '背中合わせの傷口から、互いの根が癒着してしまった。<br>もう別々の木には戻れない<strong>接ぎ木（つぎき）</strong>のように、呪い合っている。',
                 image: './images/layerB_5.jpg'
             },
             {
-                title: 'No.07 内なる要塞',
+                title: 'Episode.07 内なる要塞',
                 text: 'あれは外敵を威嚇する、武装した<strong>要塞</strong>の姿だ。<br>私はその鋭い棘の内側で、無知なまま守られている。',
                 image: './images/layerB_6.jpg'
             },
             {
-                title: 'No.08 庭師の剪定',
+                title: 'Episode.08 庭師の剪定',
                 text: '庭師が冷徹なハサミで、無駄な枝を<strong>剪定（せんてい）</strong>したのだ。<br>美しさを保つため、切り落とされた本当の感情が散らばっている。',
                 image: './images/layerB_7.jpg'
             },
             {
-                title: 'No.09 庭の全景',
+                title: 'Episode.09 庭の全景',
                 text: '俯瞰してみれば、そこは出口のない巨大な<strong>迷路の庭園</strong>だった。<br>私たちはこの美しい檻の中で、永遠に迷い続けることを選んでいる。',
                 image: './images/layerB_8.jpg'
             },
             {
-                title: 'No.10 真実の種',
+                title: 'Episode.10 真実の種',
                 text: 'それは言い訳という果肉が削ぎ落とされた、冷たく硬い<strong>種</strong>だ。<br>これこそが、私が彼から一番欲しかったものだった。',
                 image: './images/layerB_9.jpg'
             }
@@ -230,17 +240,34 @@
                 if (data) {
                     uiTitle.innerHTML = data.title;
                     uiDesc.innerHTML = data.text;
+                    
+                    // 画像の読み込み完了時にフェードイン
+                    uiImage.classList.remove('loaded');
+                    uiImage.onload = () => {
+                        uiImage.classList.add('loaded');
+                    };
                     uiImage.src = data.image;
                     
                     // アニメーションをリセットして表示
-                    card.classList.add('visible');
+                    setTimeout(() => {
+                        card.classList.add('visible');
+                    }, 50);
                 }
             };
 
             const onTargetLost = (index) => {
                 console.log('Target Lost:', index);
-                // 完全に隠さず、少し残すか、あるいはユーザーが閉じるまで残す仕様に変更も可能
-                // ここでは即座に隠さず、次のターゲットを探しやすいようにする
+                if (currentTargetIndex === index) {
+                    // 1.5秒待ってから非表示（別のターゲットに切り替わる可能性を考慮）
+                    setTimeout(() => {
+                        if (currentTargetIndex === index) {
+                            card.classList.remove('visible');
+                            setTimeout(() => {
+                                scanningGuide.classList.remove('hidden');
+                            }, 600);
+                        }
+                    }, 1500);
+                }
             };
 
             for (let i = 0; i < 10; i++) {
@@ -277,7 +304,7 @@
         </div>
     </div>
 
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: yes; uiError: yes; uiScanning: yes;" 
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: yes; uiError: yes; uiScanning: no;" 
              color-space="sRGB" 
              renderer="colorManagement: true, physicallyCorrectLights" 
              vr-mode-ui="enabled: false" 
