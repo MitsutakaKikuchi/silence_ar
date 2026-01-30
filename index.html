@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>沈黙の解剖図譜 AR</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        /* キャプションUIのスタイル */
+        #ui-overlay {
+            position: absolute; bottom: 30px; left: 0; width: 100%;
+            text-align: center; pointer-events: none; z-index: 999;
+        }
+        .card {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-family: serif; /* 明朝体で雰囲気を出す */
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        h2 { margin: 0 0 5px 0; font-size: 1.2rem; font-weight: normal; letter-spacing: 0.1em; }
+        p { margin: 0; font-size: 0.9rem; opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div id="ui-overlay">
+        <div class="card">
+            <h2>No.02 沈黙の蔦</h2>
+            <p>日常の皮膜を剥がし、<br>沈黙の解剖図を表示中...</p>
+        </div>
+    </div>
+
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001;" 
+             color-space="sRGB" 
+             renderer="colorManagement: true, physicallyCorrectLights" 
+             vr-mode-ui="enabled: false" 
+             device-orientation-permission-ui="enabled: false">
+        
+        <a-assets>
+            <img id="tex" src="./images/layerB.jpg">
+            <img id="depth" src="./depth_maps/layerB_depth.png">
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <a-entity mindar-image-target="targetIndex: 0">
+            
+            <a-light type="directional" position="1 4 2" intensity="1.2" color="#ffffff"></a-light>
+            <a-light type="ambient" intensity="0.4" color="#blue"></a-light>
+
+            <a-plane 
+                position="0 0 0" 
+                width="1" height="1"
+                segments-width="128" segments-height="128"
+                material="src: #tex; 
+                          displacementMap: #depth; 
+                          displacementScale: 0.6; 
+                          displacementBias: -0.3;
+                          transparent: true; 
+                          alphaTest: 0.5;
+                          roughness: 0.4;">
+            </a-plane>
+
+        </a-entity>
+    </a-scene>
+</body>
+</html>
