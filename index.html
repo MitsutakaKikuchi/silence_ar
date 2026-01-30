@@ -48,19 +48,21 @@
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <a-entity mindar-image-target="targetIndex: 0">
+        <!-- targetIndex: 0=Ep1?, 1=Ep10?, 2=Ep2? (ソースのmindファイルが全エピソードを含むため調整が必要) -->
+        <a-entity mindar-image-target="targetIndex: 2">
             
             <a-light type="directional" position="1 4 2" intensity="1.2" color="#ffffff"></a-light>
             <a-light type="ambient" intensity="0.4" color="#blue"></a-light>
 
+            <!-- 2528x1696 (1.49:1) の画像に合わせて plane のサイズを調整 (width=1, height=0.67) -->
             <a-plane 
                 position="0 0 0" 
-                width="1" height="1"
+                width="1" height="0.671"
                 segments-width="128" segments-height="128"
                 material="src: #tex; 
                           displacementMap: #depth; 
-                          displacementScale: 0.6; 
-                          displacementBias: -0.3;
+                          displacementScale: 0.4; 
+                          displacementBias: -0.2;
                           transparent: true; 
                           alphaTest: 0.5;
                           roughness: 0.4;">
