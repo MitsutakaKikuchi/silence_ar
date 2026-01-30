@@ -174,7 +174,7 @@
             // targetIndex 0～9に対応
             for (let i = 0; i < 10; i++) {
                 const entity = document.createElement('a-entity');
-                entity.setAttribute('mindar-image-target', 	argetIndex: );
+                entity.setAttribute('mindar-image-target', `targetIndex: ${i}`);
                 
                 entity.addEventListener('targetFound', () => onTargetFound(i));
                 entity.addEventListener('targetLost', () => onTargetLost(i));
