@@ -32,15 +32,87 @@
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
         }
 
-        /* スキャン用ガイド */
-        #scanning-guide {
+        /* スキャン用ガイド（パーティクルを含むコンテナ） */
+        #scanning-guide-container {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 70%; max-width: 400px; aspect-ratio: 1;
-            /* 枠線をなくし、四隅のマークに変更して有機的に */
-            border: none;
+            pointer-events: none;
             display: flex; justify-content: center; align-items: center;
             opacity: 0; transition: opacity 0.8s ease;
+        }
+        #scanning-guide-container.visible { opacity: 1; }
+
+        /* ガイド本体 */
+        #scanning-guide {
+            position: relative;
+            width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* 枠外に漂う象徴的な光の粒子 */
+        .symbol-particle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(2px);
+            opacity: 0;
             pointer-events: none;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+        }
+
+        /* パーティクル定義：色とサイズを多様に */
+        .p1 { 
+            width: 8px; height: 8px; 
+            background: rgba(200, 255, 220, 0.9);
+            top: -30%; left: 10%; 
+            animation: float1 6s infinite ease-in-out; 
+        }
+        .p2 { 
+            width: 5px; height: 5px; 
+            background: rgba(255, 250, 240, 0.8);
+            top: -15%; right: -25%; 
+            animation: float2 7s infinite ease-in-out 0.5s; 
+        }
+        .p3 { 
+            width: 10px; height: 10px; 
+            background: rgba(255, 255, 255, 0.7);
+            bottom: -40%; left: -15%; 
+            animation: float3 8s infinite ease-in-out 1s; 
+        }
+        .p4 { 
+            width: 4px; height: 4px; 
+            background: rgba(180, 255, 200, 0.9);
+            bottom: 20%; right: -40%; 
+            animation: float4 5s infinite ease-in-out 1.5s; 
+        }
+        .p5 { 
+            width: 6px; height: 6px; 
+            background: rgba(255, 255, 255, 0.8);
+            top: 110%; left: 50%; 
+            animation: float2 6.5s infinite ease-in-out 2s; 
+        }
+        .p6 { 
+            width: 5px; height: 5px; 
+            background: rgba(220, 255, 255, 0.8);
+            top: 40%; left: -50%; 
+            animation: float1 5.5s infinite ease-in-out 2.5s; 
+        }
+
+        /* 浮遊アニメーション */
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+            50% { transform: translate(15px, -20px) scale(1.2); opacity: 0.9; }
+        }
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0) scale(1.1); opacity: 0.5; }
+            50% { transform: translate(-15px, 20px) scale(0.9); opacity: 1; }
+        }
+        @keyframes float3 {
+            0%, 100% { transform: translate(0, 0) scale(0.9); opacity: 0.3; }
+            50% { transform: translate(20px, 10px) scale(1.3); opacity: 0.8; }
+        }
+        @keyframes float4 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+            50% { transform: translate(-10px, -15px) scale(1.2); opacity: 0.2; }
         }
 
         /* 有機的な呼吸するフレーム */
@@ -359,7 +431,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const card = document.querySelector('.card');
-            const scanningGuide = document.getElementById('scanning-guide');
+            const scanningGuide = document.getElementById('scanning-guide-container');
             const customLoading = document.getElementById('custom-loading');
             const uiTitle = document.querySelector('#ui-title');
             const uiImage = document.querySelector('#ui-image');
@@ -473,13 +545,16 @@
         <!-- 全体にかかるノイズ・ヴィネット（世界観の統一） -->
         <div class="world-filter"></div>
 
-        <!-- スキャン枠 -->
-        <div id='scanning-guide'>
-            <div class='scan-mist'></div>
-            <div class='corner corner-tl'></div>
-            <div class='corner corner-tr'></div>
-            <div class='corner corner-bl'></div>
-            <div class='corner corner-br'></div>
+        <!-- スキャン枠とパーティクル -->
+        <div id='scanning-guide-container'>
+            <!-- ガイド本体 -->
+            <div id='scanning-guide'>
+                <div class='scan-mist'></div>
+                <div class='corner corner-tl'></div>
+                <div class='corner corner-tr'></div>
+                <div class='corner corner-bl'></div>
+                <div class='corner corner-br'></div>
+            </div>
 
             <!-- 枠外に散らばる象徴的な光 -->
             <div class="symbol-particle p1"></div>
