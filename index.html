@@ -12,7 +12,10 @@
         
         /* 全画面オーバーレイ（スキャンガイドとUIコンテナ） */
         #ui-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100vh;
+            position: absolute; top: 0; left: 0; 
+            width: 100%; 
+            height: 100vh; /* フォールバック */
+            height: 100dvh; /* モバイルブラウザのアドレスバー対策 */
             pointer-events: none; z-index: 1000;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
         }
@@ -122,8 +125,10 @@
             pointer-events: auto;
             overflow: hidden;
             display: flex; flex-direction: column;
-            max-height: 75vh; /* テキストが見切れないように調整 */
+            max-height: 80vh; /* フォールバック */
+            max-height: 80dvh; 
             opacity: 0;
+            padding-bottom: env(safe-area-inset-bottom); /* カード自体にも下部余白 */
         }
         
         .card.visible {
@@ -156,7 +161,7 @@
 
         /* テキストエリア */
         .card-content {
-            padding: 20px 28px calc(50px + env(safe-area-inset-bottom)) 28px;
+            padding: 20px 28px 80px 28px; /* 下部に十分な余白を確保してスクロールで見切れないように */
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             flex: 1;
@@ -393,7 +398,7 @@
         </div>
     </div>
 
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: yes; uiError: yes; uiScanning: no;" 
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiError: yes; uiScanning: no;" 
              color-space="sRGB" 
              renderer="colorManagement: true, physicallyCorrectLights" 
              vr-mode-ui="enabled: false" 
