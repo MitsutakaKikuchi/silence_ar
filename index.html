@@ -25,7 +25,12 @@
             border-radius: 20px;
             box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.6);
             display: flex; justify-content: center; align-items: center;
-            opacity: 1; transition: opacity 0.5s;
+            opacity: 0; transition: opacity 0.8s ease;
+            pointer-events: none;
+        }
+        #scanning-guide.visible {
+            opacity: 1;
+            pointer-events: auto;
         }
         #scanning-guide::after {
             content: "画像を枠に合わせてください";
@@ -48,6 +53,56 @@
             100% { top: 90%; opacity: 0; }
         }
 
+        /* カスタムローディング画面 */
+        #custom-loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+            z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 1; transition: opacity 0.8s ease;
+        }
+        #custom-loading.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* 植物モチーフのローディングアニメーション */
+        .loading-garden {
+            width: 150px; height: 150px;
+            position: relative;
+        }
+        .vine {
+            position: absolute;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent, rgba(0, 255, 170, 0.3), transparent);
+            animation: growVine 2.5s ease-in-out infinite;
+            transform-origin: bottom center;
+        }
+        .vine:nth-child(1) { left: 50%; height: 80px; animation-delay: 0s; }
+        .vine:nth-child(2) { left: 40%; height: 60px; animation-delay: 0.3s; }
+        .vine:nth-child(3) { left: 60%; height: 70px; animation-delay: 0.6s; }
+        .vine:nth-child(4) { left: 30%; height: 50px; animation-delay: 0.9s; }
+        .vine:nth-child(5) { left: 70%; height: 55px; animation-delay: 1.2s; }
+        
+        @keyframes growVine {
+            0%, 100% { transform: scaleY(0); opacity: 0; }
+            50% { transform: scaleY(1); opacity: 1; }
+        }
+        
+        .loading-text {
+            margin-top: 40px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            letter-spacing: 0.3em;
+            font-family: 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+
         /* モダンなカードUI */
         .card {
             display: none; /* 初期非表示 */
@@ -67,7 +122,7 @@
             pointer-events: auto;
             overflow: hidden;
             display: flex; flex-direction: column;
-            max-height: 80vh; /* 画面が高すぎないように */
+            max-height: 75vh; /* テキストが見切れないように調整 */
             opacity: 0;
         }
         
@@ -101,7 +156,7 @@
 
         /* テキストエリア */
         .card-content {
-            padding: 20px 28px calc(30px + env(safe-area-inset-bottom)) 28px;
+            padding: 20px 28px calc(50px + env(safe-area-inset-bottom)) 28px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             flex: 1;
@@ -216,17 +271,35 @@
         document.addEventListener('DOMContentLoaded', function() {
             const card = document.querySelector('.card');
             const scanningGuide = document.getElementById('scanning-guide');
+            const customLoading = document.getElementById('custom-loading');
             const uiTitle = document.querySelector('#ui-title');
             const uiImage = document.querySelector('#ui-image');
             const uiDesc = document.querySelector('#ui-desc');
             const closeBtn = document.querySelector('.close-btn');
+            const scene = document.querySelector('a-scene');
 
             let currentTargetIndex = -1;
+            let sceneLoaded = false;
+
+            // A-Frameシーンのロード完了を検知
+            scene.addEventListener('loaded', () => {
+                sceneLoaded = true;
+                // ローディング画面をフェードアウト
+                customLoading.classList.add('fade-out');
+                setTimeout(() => {
+                    customLoading.style.display = 'none';
+                    // スキャンガイドを表示
+                    scanningGuide.classList.add('visible');
+                }, 800);
+            });
 
             // 閉じるボタン
             closeBtn.addEventListener('click', () => {
                 card.classList.remove('visible');
-                scanningGuide.classList.remove('hidden');
+                if (sceneLoaded) {
+                    scanningGuide.classList.remove('hidden');
+                    scanningGuide.classList.add('visible');
+                }
             });
 
             const onTargetFound = (index) => {
@@ -234,6 +307,7 @@
                 currentTargetIndex = index;
                 
                 // ガイドを隠す
+                scanningGuide.classList.remove('visible');
                 scanningGuide.classList.add('hidden');
 
                 const data = episodes[index];
@@ -263,7 +337,10 @@
                         if (currentTargetIndex === index) {
                             card.classList.remove('visible');
                             setTimeout(() => {
-                                scanningGuide.classList.remove('hidden');
+                                if (sceneLoaded) {
+                                    scanningGuide.classList.remove('hidden');
+                                    scanningGuide.classList.add('visible');
+                                }
                             }, 600);
                         }
                     }, 1500);
@@ -281,6 +358,18 @@
     </script>
 </head>
 <body>
+    <!-- カスタムローディング画面 -->
+    <div id='custom-loading'>
+        <div class='loading-garden'>
+            <div class='vine'></div>
+            <div class='vine'></div>
+            <div class='vine'></div>
+            <div class='vine'></div>
+            <div class='vine'></div>
+        </div>
+        <div class='loading-text'>読み込み中...</div>
+    </div>
+
     <div id='ui-overlay'>
         <!-- スキャン枠 -->
         <div id='scanning-guide'>
