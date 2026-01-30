@@ -7,58 +7,95 @@
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;500;700&display=swap');
 
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Shippori+Mincho', serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            margin: 0; overflow: hidden; background: #0a0a0a; 
+            font-family: 'Noto Serif JP', serif; color: #fff;
+        }
         
         /* ローディング画面 */
         #loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; align-items: center; justify-content: center;
-            z-index: 2000; color: #fff; transition: opacity 0.8s ease;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 2000; transition: opacity 0.8s ease;
         }
-        .loader { border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+        .loader { 
+            border: 2px solid rgba(255,255,255,0.1); 
+            border-top: 2px solid rgba(255,255,255,0.8); 
+            border-radius: 50%; width: 50px; height: 50px; 
+            animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite; 
+        }
+        .loading-text { margin-top: 20px; font-size: 0.85rem; letter-spacing: 0.2em; opacity: 0.6; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* キャプションUI（モダン・ミニマル） */
+        /* キャプションUI（モダン・グラスモーフィズム） */
         #ui-overlay {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            padding: 50px 0; pointer-events: none; z-index: 999;
-            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
-            opacity: 0; transform: translateY(20px); transition: all 1s ease;
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 0; pointer-events: none; z-index: 999;
+            opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
         #ui-overlay.visible { opacity: 1; transform: translateY(0); }
 
-        .content-container {
-            max-width: 600px; margin: 0 auto; padding: 0 30px; border-left: 1px solid rgba(255,255,255,0.3);
+        .content-card {
+            margin: 0 20px 30px 20px; padding: 30px 25px;
+            background: linear-gradient(135deg, rgba(20,20,30,0.85) 0%, rgba(10,10,20,0.9) 100%);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
+        
+        .episode-number { 
+            display: inline-block; padding: 6px 12px; margin-bottom: 12px;
+            background: rgba(255,255,255,0.08); 
+            border-radius: 6px; border: 1px solid rgba(255,255,255,0.15);
+            font-size: 0.7rem; font-weight: 500; letter-spacing: 0.15em; 
+            color: rgba(255,255,255,0.7); text-transform: uppercase;
+        }
+        
         h2 { 
-            margin: 0; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.2em; color: #ddd;
-            margin-bottom: 15px; text-transform: uppercase;
+            margin: 0 0 18px 0; font-size: 1.25rem; font-weight: 700; 
+            letter-spacing: 0.15em; color: #fff;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
+        
         .poem {
-            line-height: 2; font-size: 0.95rem; color: #fff; letter-spacing: 0.05em;
-            text-shadow: 0 0 20px rgba(0,0,0,0.5);
+            line-height: 2.2; font-size: 0.95rem; font-weight: 300;
+            color: rgba(255,255,255,0.9); letter-spacing: 0.08em;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
         }
 
-        /* 画面端の装飾 */
-        .frame-edge {
-            position: fixed; border: 1px solid rgba(255,255,255,0.1);
-            top: 20px; bottom: 20px; left: 20px; right: 20px;
+        /* ミニマルフレーム */
+        .frame-corner {
+            position: fixed; width: 40px; height: 40px;
+            border: 1px solid rgba(255,255,255,0.15);
             pointer-events: none; z-index: 1000;
         }
+        .frame-corner.top-left { top: 15px; left: 15px; border-right: none; border-bottom: none; }
+        .frame-corner.top-right { top: 15px; right: 15px; border-left: none; border-bottom: none; }
+        .frame-corner.bottom-left { bottom: 15px; left: 15px; border-right: none; border-top: none; }
+        .frame-corner.bottom-right { bottom: 15px; right: 15px; border-left: none; border-top: none; }
     </style>
 </head>
 <body>
     <div id="loading-overlay">
         <div class="loader"></div>
+        <div class="loading-text">INITIALIZING AR</div>
     </div>
     
-    <div class="frame-edge"></div>
+    <div class="frame-corner top-left"></div>
+    <div class="frame-corner top-right"></div>
+    <div class="frame-corner bottom-left"></div>
+    <div class="frame-corner bottom-right"></div>
 
     <div id="ui-overlay">
-        <div class="content-container">
-            <h2>No.02 沈黙の蔦</h2>
+        <div class="content-card">
+            <div class="episode-number">Episode 02</div>
+            <h2>沈黙の蔦</h2>
             <div class="poem">
                 「怒らない」という名の優しさが、<br>
                 音もなく首筋を這い上がる。<br>
@@ -74,8 +111,7 @@
             const loading = document.querySelector('#loading-overlay');
 
             sceneEl.addEventListener("arReady", (event) => {
-                loading.style.opacity = '0';
-                setTimeout(() => loading.style.display = 'none', 800);
+                loading.classList.add('hidden');
             });
 
             // ターゲットが見つかった時
@@ -104,20 +140,16 @@
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- targetIndex: ソースのmindファイルが全エピソードを含む。
-             Ep1=0, Ep10=1, Ep2=2, Ep3=3... と推測。
-             前回2でEp8に反応したとのことなので、インデックスを調整して試行が必要。
-             アルファベット・数字順なら Ep2は index 2 のはずだが、内部データ順を考慮。
-        -->
-        <a-entity mindar-image-target="targetIndex: 2">
+        <!-- targetIndex: 0 (新しくコンパイルしたmindファイルはEpisode2のみを含む) -->
+        <a-entity mindar-image-target="targetIndex: 0">
             
             <a-light type="directional" position="1 4 2" intensity="1.2" color="#ffffff"></a-light>
-            <a-light type="ambient" intensity="0.4" color="#blue"></a-light>
+            <a-light type="ambient" intensity="0.5" color="#a8b5e0"></a-light>
 
-            <!-- 画面いっぱいに表示。アスペクト比を維持しつつスケールを大きく。 -->
+            <!-- 画面いっぱいに表示。アスペクト比 3:2 を維持 -->
             <a-plane 
                 position="0 0 0" 
-                scale="1.2 1.2 1.2"
+                scale="1.3 1.3 1.3"
                 width="1" height="0.671"
                 segments-width="128" segments-height="128"
                 material="src: #tex; 
@@ -127,7 +159,8 @@
                           transparent: true; 
                           opacity: 1;
                           alphaTest: 0.1;
-                          roughness: 0.4;">
+                          roughness: 0.3;
+                          metalness: 0.1;">
             </a-plane>
 
         </a-entity>
