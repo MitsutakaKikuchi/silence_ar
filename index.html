@@ -60,7 +60,7 @@
         #custom-loading {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
-            z-index: 9999;
+            z-index: 999999; /* 最前面に */
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             opacity: 1; transition: opacity 0.8s ease;
         }
@@ -104,6 +104,11 @@
         @keyframes pulse {
             0%, 100% { opacity: 0.4; }
             50% { opacity: 0.8; }
+        }
+
+        /* MindARのデフォルトUIを強制非表示 */
+        .mindar-ui-overlay, .mindar-ui-loading, .mindar-ui-scanning {
+            display: none !important;
         }
 
         /* モダンなカードUI */
@@ -286,9 +291,11 @@
             let currentTargetIndex = -1;
             let sceneLoaded = false;
 
-            // A-Frameシーンのロード完了を検知
-            scene.addEventListener('loaded', () => {
+            // A-Frameシーンのロード完了を検知（キャッシュ対策含む）
+            const onSceneLoaded = () => {
+                if (sceneLoaded) return; // 2回実行防止
                 sceneLoaded = true;
+                
                 // ローディング画面をフェードアウト
                 customLoading.classList.add('fade-out');
                 setTimeout(() => {
@@ -296,7 +303,14 @@
                     // スキャンガイドを表示
                     scanningGuide.classList.add('visible');
                 }, 800);
-            });
+            };
+
+            if (scene.hasLoaded) {
+                onSceneLoaded();
+            } else {
+                scene.addEventListener('loaded', onSceneLoaded);
+                scene.addEventListener('renderstart', onSceneLoaded); // フォールバック
+            }
 
             // 閉じるボタン
             closeBtn.addEventListener('click', () => {
