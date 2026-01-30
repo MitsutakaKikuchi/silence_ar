@@ -112,26 +112,17 @@
 
             sceneEl.addEventListener("arReady", (event) => {
                 loading.classList.add('hidden');
-                console.log("AR Ready");
             });
 
-            // 全てのターゲットエンティティを取得
-            const targets = document.querySelectorAll('[mindar-image-target]');
+            // 単一のターゲット（Episode 2専用）を監視
+            const target = document.querySelector('[mindar-image-target]');
             
-            targets.forEach((target, index) => {
-                target.addEventListener("targetFound", event => {
-                    console.log("Found target index:", index);
-                    // Episode 2 (index 2) が見つかった時だけUIを表示
-                    if(index === 2) {
-                        overlay.classList.add('visible');
-                    }
-                });
+            target.addEventListener("targetFound", event => {
+                overlay.classList.add('visible');
+            });
 
-                target.addEventListener("targetLost", event => {
-                    if(index === 2) {
-                        overlay.classList.remove('visible');
-                    }
-                });
+            target.addEventListener("targetLost", event => {
+                overlay.classList.remove('visible');
             });
         });
     </script>
@@ -149,38 +140,31 @@
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- 全てのインデックス(0-9)を定義し、Episode 2 (Index 2) だけにコンテンツを紐付ける -->
-        <a-entity mindar-image-target="targetIndex: 0"></a-entity>
-        <a-entity mindar-image-target="targetIndex: 1"></a-entity>
-        
-        <a-entity mindar-image-target="targetIndex: 2">
+        <!-- 再出力されたEpisode2単体のmindファイルを使用するため targetIndex: 0 -->
+        <a-entity mindar-image-target="targetIndex: 0">
+            
             <a-light type="directional" position="1 4 2" intensity="1.2" color="#ffffff"></a-light>
             <a-light type="ambient" intensity="0.5" color="#a8b5e0"></a-light>
 
-            <a-plane 
-                position="0 0.8 0" 
-                scale="1.0 1.0 1.0"
-                width="1" height="0.671"
-                segments-width="128" segments-height="128"
-                material="src: #tex; 
-                          displacementMap: #depth; 
-                          displacementScale: 0.4; 
-                          displacementBias: -0.2;
-                          transparent: true; 
-                          opacity: 1;
-                          alphaTest: 0.1;
-                          roughness: 0.3;
-                          metalness: 0.1;">
-            </a-plane>
-        </a-entity>
+            <!-- 傾きによる変化を軽減し、テキスト上部に安定して配置 -->
+            <a-entity position="0 0.82 0" rotation="-15 0 0">
+                <a-plane 
+                    width="1" height="0.671"
+                    segments-width="128" segments-height="128"
+                    material="src: #tex; 
+                              displacementMap: #depth; 
+                              displacementScale: 0.4; 
+                              displacementBias: -0.2;
+                              transparent: true; 
+                              opacity: 1;
+                              alphaTest: 0.1;
+                              roughness: 0.3;
+                              metalness: 0.05;">
+                </a-plane>
+            </a-entity>
 
-        <a-entity mindar-image-target="targetIndex: 3"></a-entity>
-        <a-entity mindar-image-target="targetIndex: 4"></a-entity>
-        <a-entity mindar-image-target="targetIndex: 5"></a-entity>
-        <a-entity mindar-image-target="targetIndex: 6"></a-entity>
-        <a-entity mindar-image-target="targetIndex: 7"></a-entity>
-        <a-entity mindar-image-target="targetIndex: 8"></a-entity>
-        <a-entity mindar-image-target="targetIndex: 9"></a-entity>
+        </a-entity>
     </a-scene>
+
 </body>
 </html>
