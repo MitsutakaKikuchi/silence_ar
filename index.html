@@ -292,105 +292,56 @@
             pointer-events: none;
         }
         
-        /* 植物モチーフのローディングアニメーション（より有機的に） */
+        /* 呼吸する同心円 - 洗練されたローディングアニメーション */
         .loading-garden {
-            width: 180px; height: 180px;
+            width: 200px; height: 200px;
             position: relative;
-            filter: drop-shadow(0 0 20px rgba(0, 255, 170, 0.15));
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .vine {
+        .circle {
             position: absolute;
-            width: 2.5px;
-            background: linear-gradient(to bottom, 
-                transparent 0%, 
-                rgba(0, 255, 170, 0.15) 20%, 
-                rgba(0, 255, 170, 0.45) 50%, 
-                rgba(0, 255, 170, 0.25) 80%, 
-                transparent 100%);
-            animation: growVineOrganic 3.5s ease-in-out infinite;
-            transform-origin: bottom center;
-            border-radius: 2px;
-            bottom: calc(50% - 45px);
-            left: 50%;
-            transform: translateX(-50%);
+            border-radius: 50%;
+            border: 1.5px solid rgba(0, 255, 170, 0.3);
+            animation: breathe 4s ease-in-out infinite;
         }
-        .vine:nth-child(1) { margin-left: 0; height: 90px; animation-delay: 0s; }
-        .vine:nth-child(2) { margin-left: -20px; height: 70px; animation-delay: 0.4s; }
-        .vine:nth-child(3) { margin-left: 20px; height: 80px; animation-delay: 0.8s; }
-        .vine:nth-child(4) { margin-left: -40px; height: 60px; animation-delay: 1.2s; }
-        .vine:nth-child(5) { margin-left: 40px; height: 65px; animation-delay: 1.6s; }
-        
-        /* メインローディングの蔦に葉を追加 */
-        .vine::before,
-        .vine::after {
-            content: '';
-            position: absolute;
-            width: 12px;
-            height: 16px;
-            background: radial-gradient(ellipse at 35% 35%, 
-                rgba(0, 255, 170, 0.5), 
-                rgba(0, 255, 170, 0.25) 50%, 
-                rgba(0, 255, 170, 0.1) 100%);
-            border-radius: 50% 0 50% 50%;
-            opacity: 0;
-            animation: leafGrowMain 3.5s ease-in-out infinite;
-            box-shadow: inset 1px 1px 2px rgba(0, 255, 170, 0.2);
+        .circle:nth-child(1) {
+            width: 40px; height: 40px;
+            animation-delay: 0s;
+            border-color: rgba(0, 255, 170, 0.5);
+        }
+        .circle:nth-child(2) {
+            width: 80px; height: 80px;
+            animation-delay: 0.6s;
+            border-color: rgba(0, 255, 170, 0.4);
+        }
+        .circle:nth-child(3) {
+            width: 120px; height: 120px;
+            animation-delay: 1.2s;
+            border-color: rgba(0, 255, 170, 0.3);
+        }
+        .circle:nth-child(4) {
+            width: 160px; height: 160px;
+            animation-delay: 1.8s;
+            border-color: rgba(0, 255, 170, 0.2);
+        }
+        .circle:nth-child(5) {
+            width: 200px; height: 200px;
+            animation-delay: 2.4s;
+            border-color: rgba(0, 255, 170, 0.15);
         }
         
-        .vine::before {
-            top: 25%;
-            left: -8px;
-            transform: rotate(-35deg);
-        }
-        
-        .vine::after {
-            top: 55%;
-            right: -8px;
-            transform: rotate(35deg) scaleX(-1);
-        }
-        
-        .vine:nth-child(1)::before,
-        .vine:nth-child(1)::after { animation-delay: 0.2s; }
-        .vine:nth-child(2)::before,
-        .vine:nth-child(2)::after { animation-delay: 0.6s; }
-        .vine:nth-child(3)::before,
-        .vine:nth-child(3)::after { animation-delay: 1.0s; }
-        .vine:nth-child(4)::before,
-        .vine:nth-child(4)::after { animation-delay: 1.4s; }
-        .vine:nth-child(5)::before,
-        .vine:nth-child(5)::after { animation-delay: 1.8s; }
-        
-        @keyframes leafGrowMain {
-            0%, 15% { 
-                opacity: 0; 
-                transform: scale(0) rotate(0deg); 
+        @keyframes breathe {
+            0%, 100% {
+                transform: scale(0.95);
+                opacity: 0.2;
+                border-width: 1px;
             }
-            35%, 75% { 
-                opacity: 0.85; 
-                transform: scale(1.1) rotate(5deg); 
-            }
-            90%, 100% { 
-                opacity: 0; 
-                transform: scale(0.8) rotate(-5deg); 
-            }
-        }
-        
-        @keyframes growVineOrganic {
-            0%, 100% { 
-                transform: translateX(-50%) scaleY(0) rotate(0deg); 
-                opacity: 0; 
-            }
-            30% { 
-                transform: translateX(-50%) scaleY(0.7) rotate(2deg); 
-                opacity: 0.8; 
-            }
-            60% { 
-                transform: translateX(-50%) scaleY(1) rotate(-1deg); 
-                opacity: 1; 
-            }
-            85% { 
-                transform: translateX(-50%) scaleY(0.9) rotate(1deg); 
-                opacity: 0.9; 
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+                border-width: 2px;
             }
         }
         
@@ -486,96 +437,34 @@
         
         /* カード内の蔦ローディング */
         .card-loading-garden {
-            width: 120px;
-            height: 120px;
+            width: 120px; height: 120px;
             position: relative;
-            filter: drop-shadow(0 0 15px rgba(0, 255, 170, 0.2));
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        
-        .card-vine {
-            position: absolute;
-            width: 2px;
-            background: linear-gradient(to bottom, 
-                transparent 0%, 
-                rgba(0, 255, 170, 0.2) 20%, 
-                rgba(0, 255, 170, 0.5) 50%, 
-                rgba(0, 255, 170, 0.3) 80%, 
-                transparent 100%);
-            animation: growCardVine 2.5s ease-in-out infinite;
-            transform-origin: bottom center;
-            border-radius: 2px;
-            bottom: calc(50% - 30px);
-            left: 50%;
-            transform: translateX(-50%);
+        .card-loading-garden .circle {
+            border-width: 1.2px;
         }
-        
-        .card-vine:nth-child(1) { margin-left: 0; height: 60px; animation-delay: 0s; }
-        .card-vine:nth-child(2) { margin-left: -15px; height: 50px; animation-delay: 0.3s; }
-        .card-vine:nth-child(3) { margin-left: 15px; height: 55px; animation-delay: 0.6s; }
-        
-        /* 蔦の葉 */
-        .card-vine::before,
-        .card-vine::after {
-            content: '';
-            position: absolute;
-            width: 10px;
-            height: 14px;
-            background: radial-gradient(ellipse at 35% 35%, 
-                rgba(0, 255, 170, 0.55), 
-                rgba(0, 255, 170, 0.3) 50%, 
-                rgba(0, 255, 170, 0.12) 100%);
-            border-radius: 50% 0 50% 50%;
-            opacity: 0;
-            animation: leafGrow 2.5s ease-in-out infinite;
-            box-shadow: inset 1px 1px 2px rgba(0, 255, 170, 0.25);
+        .card-loading-garden .circle:nth-child(1) {
+            width: 25px; height: 25px;
+            animation-delay: 0s;
         }
-        
-        .card-vine::before {
-            top: 35%;
-            left: -7px;
-            transform: rotate(-30deg);
-            animation-delay: inherit;
+        .card-loading-garden .circle:nth-child(2) {
+            width: 50px; height: 50px;
+            animation-delay: 0.5s;
         }
-        
-        .card-vine::after {
-            top: 65%;
-            right: -7px;
-            transform: rotate(30deg) scaleX(-1);
-            animation-delay: calc(var(--delay, 0s) + 0.4s);
+        .card-loading-garden .circle:nth-child(3) {
+            width: 75px; height: 75px;
+            animation-delay: 1.0s;
         }
-        
-        .card-vine:nth-child(1) { --delay: 0s; }
-        .card-vine:nth-child(2) { --delay: 0.3s; }
-        .card-vine:nth-child(3) { --delay: 0.6s; }
-        
-        @keyframes growCardVine {
-            0%, 100% { 
-                transform: translateX(-50%) scaleY(0); 
-                opacity: 0; 
-            }
-            45% { 
-                transform: translateX(-50%) scaleY(1); 
-                opacity: 1; 
-            }
-            65% { 
-                transform: translateX(-50%) scaleY(0.95); 
-                opacity: 1; 
-            }
+        .card-loading-garden .circle:nth-child(4) {
+            width: 100px; height: 100px;
+            animation-delay: 1.5s;
         }
-        
-        @keyframes leafGrow {
-            0%, 20% { 
-                opacity: 0; 
-                transform: scale(0) rotate(0deg); 
-            }
-            45%, 70% { 
-                opacity: 0.9; 
-                transform: scale(1.15) rotate(8deg); 
-            }
-            90%, 100% { 
-                opacity: 0; 
-                transform: scale(0.7) rotate(-5deg); 
-            }
+        .card-loading-garden .circle:nth-child(5) {
+            width: 120px; height: 120px;
+            animation-delay: 2.0s;
         }
         
         .card-loading-text {
@@ -746,8 +635,6 @@
 
             let currentTargetIndex = -1;
             let sceneLoaded = false;
-            const loadStartTime = Date.now();
-            const MIN_LOADING_TIME = 2500; // 最低2.5秒間ローディング画面を表示
             const preloadedImages = {}; // プリロード済み画像のキャッシュ
 
             // 画像を事前にロードする関数
@@ -764,7 +651,7 @@
                 });
             }
 
-            // A-Frameシーンのロード完了を検知（キャッシュ対策含む）
+            // A-Frameシーンのロード完了を検知（AR準備完了まで表示）
             const onSceneLoaded = () => {
                 if (sceneLoaded) return; // 2回実行防止
                 sceneLoaded = true;
@@ -772,19 +659,13 @@
                 // 画像のプリロードを開始（バックグラウンドで実行）
                 preloadImages();
                 
-                // 経過時間を計算し、最低表示時間を確保
-                const elapsed = Date.now() - loadStartTime;
-                const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsed);
-                
+                // AR読み込み完了後、即座にローディング画面をフェードアウト
+                customLoading.classList.add('fade-out');
                 setTimeout(() => {
-                    // ローディング画面をフェードアウト
-                    customLoading.classList.add('fade-out');
-                    setTimeout(() => {
-                        customLoading.style.display = 'none';
-                        // スキャンガイドを表示
-                        scanningGuide.classList.add('visible');
-                    }, 800);
-                }, remainingTime);
+                    customLoading.style.display = 'none';
+                    // スキャンガイドを表示
+                    scanningGuide.classList.add('visible');
+                }, 800);
             };
 
             if (scene.hasLoaded) {
@@ -852,20 +733,20 @@
 
             const onTargetLost = (index) => {
                 console.log('Target Lost:', index);
-                if (currentTargetIndex === index) {
-                    // 1.5秒待ってから非表示（別のターゲットに切り替わる可能性を考慮）
-                    setTimeout(() => {
-                        if (currentTargetIndex === index) {
-                            card.classList.remove('visible');
-                            setTimeout(() => {
-                                if (sceneLoaded) {
-                                    scanningGuide.classList.remove('hidden');
-                                    scanningGuide.classList.add('visible');
-                                }
-                            }, 600);
-                        }
-                    }, 1500);
-                }
+                // ×ボタンを押すまでテキストを表示し続ける（自動クローズなし）
+                // if (currentTargetIndex === index) {
+                //     setTimeout(() => {
+                //         if (currentTargetIndex === index) {
+                //             card.classList.remove('visible');
+                //             setTimeout(() => {
+                //                 if (sceneLoaded) {
+                //                     scanningGuide.classList.remove('hidden');
+                //                     scanningGuide.classList.add('visible');
+                //                 }
+                //             }, 600);
+                //         }
+                //     }, 1500);
+                // }
             };
 
             for (let i = 0; i < 10; i++) {
@@ -882,11 +763,11 @@
     <!-- カスタムローディング画面 -->
     <div id='custom-loading'>
         <div class='loading-garden'>
-            <div class='vine'></div>
-            <div class='vine'></div>
-            <div class='vine'></div>
-            <div class='vine'></div>
-            <div class='vine'></div>
+            <div class='circle'></div>
+            <div class='circle'></div>
+            <div class='circle'></div>
+            <div class='circle'></div>
+            <div class='circle'></div>
         </div>
         <div class='loading-text'>読み込み中...</div>
     </div>
@@ -922,12 +803,14 @@
         <!-- カードUI -->
         <div class='card'>
             <div class='card-image-container'>
-                <!-- 画像ローディング表示（蔦アニメーション） -->
+                <!-- 画像ローディング表示（呼吸する円） -->
                 <div class='image-loading' id='image-loading'>
                     <div class='card-loading-garden'>
-                        <div class='card-vine'></div>
-                        <div class='card-vine'></div>
-                        <div class='card-vine'></div>
+                        <div class='circle'></div>
+                        <div class='circle'></div>
+                        <div class='circle'></div>
+                        <div class='circle'></div>
+                        <div class='circle'></div>
                     </div>
                     <div class='card-loading-text'>画像を読み込み中...</div>
                 </div>
