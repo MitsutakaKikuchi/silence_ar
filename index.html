@@ -401,7 +401,51 @@
             position: relative;
             background: #000;
             line-height: 0;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+        
+        /* 画像ローディング表示 */
+        .image-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+        .image-loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0, 255, 170, 0.1);
+            border-top: 3px solid rgba(0, 255, 170, 0.8);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-spinner-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+            letter-spacing: 0.2em;
+            font-family: 'Yu Mincho', serif;
+        }
+        
         #ui-image {
             width: 100%;
             height: auto;
@@ -436,26 +480,13 @@
             color: #fff;
             position: relative;
             padding-bottom: 14px;
-            opacity: 0;
-            animation: slideInTitle 0.6s ease-out 0.2s forwards;
         }
         h2::after {
             content: '';
             position: absolute; bottom: 0; left: 0;
-            width: 0; height: 1.5px;
+            width: 50px; height: 1.5px;
             background: linear-gradient(to right, #00ffaa, transparent);
             opacity: 0.8;
-            animation: expandLine 0.8s ease-out 0.5s forwards;
-        }
-        
-        @keyframes slideInTitle {
-            0% { opacity: 0; transform: translateY(-10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes expandLine {
-            0% { width: 0; }
-            100% { width: 50px; }
         }
         
         .description-box {
@@ -463,10 +494,8 @@
             line-height: 2.05; /* 行間を広げて読みやすく */
             color: #ccc;
             margin-bottom: 15px;
-            text-align: justify; /* 両端揃え */
+            text-align: left; /* 左揃えに変更（両端揃えは見切れの原因） */
             letter-spacing: 0.06em; /* 文字間を少し空ける */
-            opacity: 0;
-            animation: fadeInText 0.7s ease-out 0.4s forwards;
         }
         .description-box strong {
             color: #fff;
@@ -482,8 +511,6 @@
             margin-top: 25px;
             letter-spacing: 0.25em;
             text-transform: uppercase;
-            opacity: 0;
-            animation: fadeInText 0.5s ease-out 0.6s forwards;
         }
 
         /* 閉じるボタン（より洗練されたデザイン） */
@@ -573,6 +600,7 @@
             const uiImage = document.querySelector('#ui-image');
             const uiDesc = document.querySelector('#ui-desc');
             const closeBtn = document.querySelector('.close-btn');
+            const imageLoading = document.getElementById('image-loading');
             const scene = document.querySelector('a-scene');
 
             let currentTargetIndex = -1;
@@ -621,11 +649,24 @@
                     uiTitle.innerHTML = data.title;
                     uiDesc.innerHTML = data.text;
                     
-                    // 画像の読み込み完了時にフェードイン（キャッシュバスター追加で即時反映）
+                    // ローディング表示を表示
+                    imageLoading.classList.remove('hidden');
                     uiImage.classList.remove('loaded');
+                    
+                    // 画像の読み込み完了時にフェードイン
                     uiImage.onload = () => {
-                        uiImage.classList.add('loaded');
+                        imageLoading.classList.add('hidden');
+                        setTimeout(() => {
+                            uiImage.classList.add('loaded');
+                        }, 100);
                     };
+                    
+                    // エラー時もローディングを非表示
+                    uiImage.onerror = () => {
+                        imageLoading.classList.add('hidden');
+                        console.error('Failed to load image:', data.image);
+                    };
+                    
                     uiImage.src = data.image + '?v=' + new Date().getTime(); // キャッシュ回避
                     
                     // アニメーションをリセットして表示
@@ -707,6 +748,11 @@
         <!-- カードUI -->
         <div class='card'>
             <div class='card-image-container'>
+                <!-- 画像ローディング表示 -->
+                <div class='image-loading' id='image-loading'>
+                    <div class='loading-spinner'></div>
+                    <div class='loading-spinner-text'>画像を読み込み中...</div>
+                </div>
                 <img id='ui-image' src='' alt='Episode Image'>
                 <div class='close-btn'>×</div>
             </div>
