@@ -143,7 +143,6 @@
             const uiTitle = document.querySelector('#ui-title');
             const uiImage = document.querySelector('#ui-image');
             const uiDesc = document.querySelector('#ui-desc');
-            const scene = document.querySelector('a-scene');
 
             // ターゲットが見つかったときの処理
             const onTargetFound = (index) => {
@@ -154,32 +153,25 @@
                     uiDesc.innerHTML = data.text;
                     uiImage.src = data.image;
                     
-                    if (!card.classList.contains('visible')) {
-                        card.classList.remove('hidden'); // アニメーションリセット用
-                        void card.offsetWidth; // リフロー
-                        card.classList.add('visible');
-                    }
+                    card.classList.remove('visible'); // 一度リセット
+                    void card.offsetWidth; 
+                    card.classList.add('visible');
                 }
             };
 
             // ターゲットを見失ったときの処理
             const onTargetLost = (index) => {
                 console.log('Target Lost:', index);
-                // コンテンツを非表示にする
                 card.classList.remove('visible');
-                card.classList.add('hidden');
             };
 
-            // A-Frameのエンティティにイベントリスナーを設定
-            // targetIndex 0～9に対応
+            // すでにHTMLにあるエンティティにイベントを設定
             for (let i = 0; i < 10; i++) {
-                const entity = document.createElement('a-entity');
-                entity.setAttribute('mindar-image-target', `targetIndex: ${i}`);
-                
-                entity.addEventListener('targetFound', () => onTargetFound(i));
-                entity.addEventListener('targetLost', () => onTargetLost(i));
-                
-                scene.appendChild(entity);
+                const entity = document.querySelector(`#target-${i}`);
+                if (entity) {
+                    entity.addEventListener('targetFound', () => onTargetFound(i));
+                    entity.addEventListener('targetLost', () => onTargetLost(i));
+                }
             }
         });
     </script>
@@ -199,7 +191,7 @@
         </div>
     </div>
 
-    <a-scene mindar-image='imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001;' 
+    <a-scene mindar-image='imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;' 
              color-space='sRGB' 
              renderer='colorManagement: true, physicallyCorrectLights' 
              vr-mode-ui='enabled: false' 
@@ -207,7 +199,17 @@
         
         <a-camera position='0 0 0' look-controls='enabled: false'></a-camera>
 
-        <!-- エンティティはJavaScriptで生成 -->
+        <!-- 10枚のターゲットエンティティ -->
+        <a-entity mindar-image-target='targetIndex: 0' id='target-0'></a-entity>
+        <a-entity mindar-image-target='targetIndex: 1' id='target-1'></a-entity>
+        <a-entity mindar-image-target='targetIndex: 2' id='target-2'></a-entity>
+        <a-entity mindar-image-target='targetIndex: 3' id='target-3'></a-entity>
+        <a-entity mindar-image-target='targetIndex: 4' id='target-4'></a-entity>
+        <a-entity mindar-image-target='targetIndex: 5' id='target-5'></a-entity>
+        <a-entity mindar-image-target='targetIndex: 6' id='target-6'></a-entity>
+        <a-entity mindar-image-target='targetIndex: 7' id='target-7'></a-entity>
+        <a-entity mindar-image-target='targetIndex: 8' id='target-8'></a-entity>
+        <a-entity mindar-image-target='targetIndex: 9' id='target-9'></a-entity>
         
     </a-scene>
 </body>
