@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <title>MindAR Target Compiler (Debug)</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; text-align: center; }
+    .container { max-width: 600px; margin: 0 auto; }
+    #status { margin: 20px; color: red; }
+    button { padding: 10px 20px; font-size: 1.2rem; }
+  </style>
+  <!-- Using specific version -->
+  <script src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js'></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const startBtn = document.getElementById('start-btn');
+      const status = document.getElementById('status');
+      const input = document.getElementById('file-input');
+      const downloadLink = document.getElementById('download-link');
+
+      console.log('MindAR state:', window.MINDAR);
+
+      startBtn.addEventListener('click', async () => {
+        status.innerText = 'Starting...';
+        
+        if (!input.files.length) {
+            status.innerText = 'Select files first!';
+            return;
+        }
+
+        try {
+          // Check namespaces
+          if (!window.MINDAR || !window.MINDAR.IMAGE || !window.MINDAR.IMAGE.Compiler) {
+             throw new Error('MindAR library not loaded correctly. MINDAR.IMAGE.Compiler is missing.');
+          }
+
+          const files = Array.from(input.files);
+          // Sort by name for consistency
+          files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+          
+          status.innerText = 'Loading images...';
+          const images = [];
+          for (let i = 0; i < files.length; i++) {
+            status.innerText = Loading image /;
+            await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    images.push(img);
+                    resolve();
+                };
+                img.onerror = (e) => reject('Failed to load image: ' + files[i].name);
+                img.src = URL.createObjectURL(files[i]);
+            });
+          }
+
+          status.innerText = 'Compiling... (Please wait)';
+          const compiler = new window.MINDAR.IMAGE.Compiler();
+          
+          await compiler.compileImageTargets(images, (progress) => {
+            status.innerText = Progress: %;
+          });
+
+          status.innerText = 'Exporting...';
+          const exportedBuffer = await compiler.exportData();
+          
+          const blob = new Blob([exportedBuffer]);
+          const url = URL.createObjectURL(blob);
+          downloadLink.href = url;
+          downloadLink.download = 'targets.mind';
+          downloadLink.style.display = 'block';
+          downloadLink.innerText = 'DOWNLOAD targets.mind';
+          status.innerText = 'Done!';
+          
+        } catch (e) {
+          console.error(e);
+          status.innerText = 'Error: ' + e.message;
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class='container'>
+    <h1>MindAR Compiler (Fixed)</h1>
+    <p>Select images and click Start.</p>
+    <input type='file' id='file-input' multiple accept='image/*'>
+    <br><br>
+    <button id='start-btn'>Start Compilation</button>
+    <div id='status'></div>
+    <a id='download-link' href='#'></a>
+  </div>
+</body>
+</html>
