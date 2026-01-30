@@ -3,7 +3,19 @@
 <head>
     <meta charset='utf-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
+    
     <title>沈黙の解剖図譜 AR</title>
+    <meta name="description" content="不可視の愛に関する空間的考察 —— ARで体験する、言わなかった言葉の庭。">
+    
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="沈黙の解剖図譜 AR">
+    <meta property="og:description" content="不可視の愛に関する空間的考察。ARで体験する、言わなかった言葉の庭。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="./images/layerB.jpg">
+    
+    <!-- Favicon: White Minimal Seed/Moon Symbol -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cfilter id='glow'%3E%3CfeGaussianBlur stdDeviation='4' result='coloredBlur'/%3E%3CfeMerge%3E%3CfeMergeNode in='coloredBlur'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' stroke='white' stroke-width='2' fill='none' opacity='0.5' filter='url(%23glow)'/%3E%3Ccircle cx='50' cy='50' r='5' fill='white' filter='url(%23glow)'/%3E%3Cpath d='M50 5 Q40 50 50 95 Q60 50 50 5' stroke='white' stroke-width='1' fill='none' opacity='0.3'/%3E%3C/svg%3E">
+
     <!-- A-Frame と MindAR -->
     <script src='https://aframe.io/releases/1.5.0/aframe.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js'></script>
@@ -87,6 +99,39 @@
             100% { transform: scale(1.2); opacity: 0; }
         }
 
+        /* 世界観フィルター（ヴィネット + ノイズ） */
+        .world-filter {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle, transparent 60%, rgba(0,0,0,0.4) 120%);
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.5);
+        }
+
+        /* 枠外に漂う象徴的な光の粒子 */
+        .symbol-particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.9), transparent 70%);
+            border-radius: 50%;
+            filter: blur(1px);
+            opacity: 0;
+        }
+
+        /* 各粒子の配置と固有アニメーション（枠外へ散らす） */
+        .p1 { width: 6px; height: 6px; top: -40%; left: 10%; animation: float particleFade 4s infinite ease-in-out 0s; }
+        .p2 { width: 4px; height: 4px; top: -20%; right: -30%; animation: float particleFade 5s infinite ease-in-out 1s; }
+        .p3 { width: 8px; height: 8px; bottom: -50%; left: -20%; animation: float particleFade 6s infinite ease-in-out 0.5s; }
+        .p4 { width: 3px; height: 3px; bottom: 10%; right: -50%; animation: float particleFade 4.5s infinite ease-in-out 2s; }
+        .p5 { width: 5px; height: 5px; top: 120%; left: 40%; animation: float particleFade 5.5s infinite ease-in-out 1.5s; }
+        .p6 { width: 4px; height: 4px; top: 50%; left: -60%; animation: float particleFade 4s infinite ease-in-out 2.5s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(10px, -15px); }
+        }
+        @keyframes particleFade {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 0.8; transform: scale(1.2); box-shadow: 0 0 10px rgba(0,255,170,0.4); }
+        }
 
         /* カスタムローディング画面 */
         #custom-loading {
@@ -424,6 +469,10 @@
     </div>
 
     <div id='ui-overlay'>
+        
+        <!-- 全体にかかるノイズ・ヴィネット（世界観の統一） -->
+        <div class="world-filter"></div>
+
         <!-- スキャン枠 -->
         <div id='scanning-guide'>
             <div class='scan-mist'></div>
@@ -431,6 +480,14 @@
             <div class='corner corner-tr'></div>
             <div class='corner corner-bl'></div>
             <div class='corner corner-br'></div>
+
+            <!-- 枠外に散らばる象徴的な光 -->
+            <div class="symbol-particle p1"></div>
+            <div class="symbol-particle p2"></div>
+            <div class="symbol-particle p3"></div>
+            <div class="symbol-particle p4"></div>
+            <div class="symbol-particle p5"></div>
+            <div class="symbol-particle p6"></div>
         </div>
 
         <!-- カードUI -->
