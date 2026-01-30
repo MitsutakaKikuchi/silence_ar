@@ -7,37 +7,93 @@
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; }
-        /* キャプションUIのスタイル */
+        @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700&display=swap');
+
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Shippori+Mincho', serif; }
+        
+        /* ローディング画面 */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; align-items: center; justify-content: center;
+            z-index: 2000; color: #fff; transition: opacity 0.8s ease;
+        }
+        .loader { border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* キャプションUI（モダン・ミニマル） */
         #ui-overlay {
-            position: absolute; bottom: 30px; left: 0; width: 100%;
-            text-align: center; pointer-events: none; z-index: 999;
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            padding: 50px 0; pointer-events: none; z-index: 999;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+            opacity: 0; transform: translateY(20px); transition: all 1s ease;
         }
-        .card {
-            display: inline-block;
-            background: rgba(0, 0, 0, 0.7);
-            color: #fff;
-            padding: 15px 25px;
-            border-radius: 8px;
-            font-family: serif; /* 明朝体で雰囲気を出す */
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+        #ui-overlay.visible { opacity: 1; transform: translateY(0); }
+
+        .content-container {
+            max-width: 600px; margin: 0 auto; padding: 0 30px; border-left: 1px solid rgba(255,255,255,0.3);
         }
-        h2 { margin: 0 0 5px 0; font-size: 1.2rem; font-weight: normal; letter-spacing: 0.1em; }
-        p { margin: 0; font-size: 0.9rem; opacity: 0.9; }
+        h2 { 
+            margin: 0; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.2em; color: #ddd;
+            margin-bottom: 15px; text-transform: uppercase;
+        }
+        .poem {
+            line-height: 2; font-size: 0.95rem; color: #fff; letter-spacing: 0.05em;
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* 画面端の装飾 */
+        .frame-edge {
+            position: fixed; border: 1px solid rgba(255,255,255,0.1);
+            top: 20px; bottom: 20px; left: 20px; right: 20px;
+            pointer-events: none; z-index: 1000;
+        }
     </style>
 </head>
 <body>
+    <div id="loading-overlay">
+        <div class="loader"></div>
+    </div>
+    
+    <div class="frame-edge"></div>
+
     <div id="ui-overlay">
-        <div class="card">
+        <div class="content-container">
             <h2>No.02 沈黙の蔦</h2>
-            <p>日常の皮膜を剥がし、<br>沈黙の解剖図を表示中...</p>
+            <div class="poem">
+                「怒らない」という名の優しさが、<br>
+                音もなく首筋を這い上がる。<br>
+                美しい蔦は、静かに私の呼吸を奪っていく。
+            </div>
         </div>
     </div>
 
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001;" 
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const sceneEl = document.querySelector('a-scene');
+            const overlay = document.querySelector('#ui-overlay');
+            const loading = document.querySelector('#loading-overlay');
+
+            sceneEl.addEventListener("arReady", (event) => {
+                loading.style.opacity = '0';
+                setTimeout(() => loading.style.display = 'none', 800);
+            });
+
+            // ターゲットが見つかった時
+            const target = document.querySelector('[mindar-image-target]');
+            target.addEventListener("targetFound", event => {
+                overlay.classList.add('visible');
+            });
+
+            // ターゲットを見失った時
+            target.addEventListener("targetLost", event => {
+                overlay.classList.remove('visible');
+            });
+        });
+    </script>
+
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001; uiLoading:no; uiError:no; uiScanning:no;" 
              color-space="sRGB" 
-             renderer="colorManagement: true, physicallyCorrectLights" 
+             renderer="colorManagement: true, physicallyCorrectLights, antialias: true" 
              vr-mode-ui="enabled: false" 
              device-orientation-permission-ui="enabled: false">
         
@@ -48,23 +104,29 @@
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- targetIndex: 0=Ep1?, 1=Ep10?, 2=Ep2? (ソースのmindファイルが全エピソードを含むため調整が必要) -->
+        <!-- targetIndex: ソースのmindファイルが全エピソードを含む。
+             Ep1=0, Ep10=1, Ep2=2, Ep3=3... と推測。
+             前回2でEp8に反応したとのことなので、インデックスを調整して試行が必要。
+             アルファベット・数字順なら Ep2は index 2 のはずだが、内部データ順を考慮。
+        -->
         <a-entity mindar-image-target="targetIndex: 2">
             
             <a-light type="directional" position="1 4 2" intensity="1.2" color="#ffffff"></a-light>
             <a-light type="ambient" intensity="0.4" color="#blue"></a-light>
 
-            <!-- 2528x1696 (1.49:1) の画像に合わせて plane のサイズを調整 (width=1, height=0.67) -->
+            <!-- 画面いっぱいに表示。アスペクト比を維持しつつスケールを大きく。 -->
             <a-plane 
                 position="0 0 0" 
+                scale="1.2 1.2 1.2"
                 width="1" height="0.671"
                 segments-width="128" segments-height="128"
                 material="src: #tex; 
                           displacementMap: #depth; 
-                          displacementScale: 0.4; 
-                          displacementBias: -0.2;
+                          displacementScale: 0.5; 
+                          displacementBias: -0.25;
                           transparent: true; 
-                          alphaTest: 0.5;
+                          opacity: 1;
+                          alphaTest: 0.1;
                           roughness: 0.4;">
             </a-plane>
 
