@@ -11,49 +11,79 @@
         #ui-overlay {
             position: absolute; bottom: 30px; left: 0; width: 100%;
             text-align: center; pointer-events: none; z-index: 999;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 100vh;
+            padding-bottom: 30px;
+            box-sizing: border-box;
         }
         .card {
-            display: inline-block;
-            background: rgba(0, 0, 0, 0.6);
+            display: none; /* 初期状態は非表示 */
+            background: rgba(0, 0, 0, 0.8);
             color: #fff;
-            padding: 15px 25px;
+            padding: 20px 25px;
             border-radius: 8px;
             font-family: serif;
             backdrop-filter: blur(5px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            max-width: 80%;
-            transition: all 0.3s ease;
+            max-width: 85%;
+            width: 400px;
+            transition: opacity 0.5s ease;
             pointer-events: auto;
+            text-align: left;
         }
-        h2 { margin: 0 0 5px 0; font-size: 1.2rem; font-weight: normal; letter-spacing: 0.1em; }
-        p { margin: 0; font-size: 0.9rem; opacity: 0.9; }
+        .card.visible {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h2 { 
+            margin: 10px 0 10px 0; 
+            font-size: 1.1rem; 
+            font-weight: normal; 
+            letter-spacing: 0.1em;
+            text-align: center; 
+            color: #ddd;
+        }
         
         #ui-image {
-            display: none;
-            max-width: 100%;
+            width: 100%;
             height: auto;
-            margin-top: 10px;
-            border-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            border-radius: 2px;
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .description {
+            font-size: 0.85rem;
+            line-height: 1.8;
+            opacity: 0.9;
+            margin-bottom: 5px;
+            white-space: pre-wrap; /* 改行を反映 */
         }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const target = document.querySelector('#target-marker');
-            const uiImage = document.querySelector('#ui-image');
-            const statusText = document.querySelector('#status-text');
+            const card = document.querySelector('.card');
 
             target.addEventListener('targetFound', event => {
                 console.log('target found');
-                uiImage.style.display = 'block';
-                statusText.innerText = '解剖図が検出されました';
+                if (!card.classList.contains('visible')) {
+                    card.classList.add('visible');
+                }
             });
 
             target.addEventListener('targetLost', event => {
                 console.log('target lost');
-                // uiImage.style.display = 'none'; // Optional
-                // statusText.innerText = '対象を探しています...';
+                // 一度表示したら表示し続ける場合は何もしない
+                // 非表示にする場合は: card.classList.remove('visible');
             });
         });
     </script>
@@ -61,9 +91,17 @@
 <body>
     <div id='ui-overlay'>
         <div class='card'>
-            <h2>No.02 沈黙の蔦</h2>
-            <p id='status-text'>対象を探しています...</p>
+            <!-- 画像 -->
             <img id='ui-image' src='./images/layerB.jpg' alt='AR Image'>
+            
+            <!-- 文章 -->
+            <h2>No.02 沈黙の蔦</h2>
+            <div class='description'>
+この蔦は、語られなかった言葉が
+時間をかけて形を成した姿である。
+不可視の想いは、空間を静かに浸食し
+やがて確かな質量を持って、そこに在る。
+            </div>
         </div>
     </div>
 
