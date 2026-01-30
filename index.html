@@ -4,53 +4,56 @@
     <meta charset='utf-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>沈黙の解剖図譜 AR</title>
+    <!-- A-Frame と MindAR -->
     <script src='https://aframe.io/releases/1.5.0/aframe.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js'></script>
     <style>
         body { margin: 0; overflow: hidden; }
+        /* カードUIの配置 */
         #ui-overlay {
-            position: absolute; bottom: 30px; left: 0; width: 100%;
-            text-align: center; pointer-events: none; z-index: 999;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            height: 100vh;
-            padding-bottom: 30px;
-            box-sizing: border-box;
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 100vh;
+            pointer-events: none; z-index: 999;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            padding-bottom: 40px; box-sizing: border-box;
         }
         .card {
-            display: none; /* 初期状態は非表示 */
-            background: rgba(0, 0, 0, 0.8);
+            display: none; /* 初期非表示 */
+            background: rgba(0, 0, 0, 0.85); /* 濃いめの背景 */
             color: #fff;
             padding: 20px 25px;
-            border-radius: 8px;
-            font-family: serif;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            font-family: 'Yu Mincho', 'Times New Roman', serif;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             max-width: 85%;
-            width: 400px;
-            transition: opacity 0.5s ease;
+            width: 380px;
             pointer-events: auto;
             text-align: left;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
         .card.visible {
             display: block;
-            animation: fadeIn 0.5s;
+            animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
         
+        /* エピソードタイトル */
         h2 { 
-            margin: 10px 0 10px 0; 
+            margin: 5px 0 15px 0; 
             font-size: 1.1rem; 
-            font-weight: normal; 
-            letter-spacing: 0.1em;
+            font-weight: 500; 
+            letter-spacing: 0.15em;
             text-align: center; 
-            color: #ddd;
+            color: #eee;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 10px;
         }
         
+        /* AR画像（LayerB） */
         #ui-image {
             width: 100%;
             height: auto;
@@ -58,33 +61,126 @@
             border: 1px solid rgba(255,255,255,0.1);
             margin-bottom: 15px;
             display: block;
+            filter: sepia(0.2) contrast(1.1); /* 雰囲気を合わせる */
         }
 
-        .description {
-            font-size: 0.85rem;
-            line-height: 1.8;
-            opacity: 0.9;
-            margin-bottom: 5px;
-            white-space: pre-wrap; /* 改行を反映 */
+        /* 本文テキスト */
+        .description-box {
+            font-size: 0.9rem;
+            line-height: 1.9;
+            color: #ccc;
+        }
+        .description-box strong {
+            color: #fff;
+            font-weight: normal;
+            border-bottom: 1px dotted #aaa;
+        }
+        .hidden-marker {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 10px;
+            text-align: right;
         }
     </style>
     <script>
+        // エピソードデータ (01-10)
+        // targetIndex: 0 -> Episode 1
+        const episodes = [
+            {
+                title: 'No.01 矯正する支柱',
+                text: 'ぐらつく私に無理やり打ち込まれる、錆びた鉄の<strong>支柱</strong>。<br>この痛みだけが、腐りかけた私を立たせている。',
+                image: './images/layerB_0.jpg'
+            },
+            {
+                title: 'No.02 沈黙の蔦',
+                text: 'その静けさは、首筋に巻きつく美しい緑の<strong>蔦（つた）</strong>だ。<br>優しさという真綿で、ゆっくりと気道を締め上げられている。',
+                image: './images/layerB_1.jpg'
+            },
+            {
+                title: 'No.03 拒絶の雨',
+                text: '彼の拒絶は、冷たく鋭い銀色の<strong>雨</strong>だ。<br>私に付着した甘えを、泥のように洗い流していく。',
+                image: './images/layerB_2.jpg'
+            },
+            {
+                title: 'No.04 言葉の化石',
+                text: '飲み込まれた言葉は、二人の地層の奥で<strong>化石</strong>になる。<br>掘り起こして傷ついてでも、そのゴツゴツした形を知りたかった。',
+                image: './images/layerB_3.jpg'
+            },
+            {
+                title: 'No.05 過保護な檻',
+                text: 'この窮屈さは、脆い私を守るための過保護な<strong>檻（おり）</strong>だ。<br>私はその錆びた鉄柵の内側でしか、呼吸を許されていない。',
+                image: './images/layerB_4.jpg'
+            },
+            {
+                title: 'No.06 相互の呪縛',
+                text: '背中合わせの傷口から、互いの根が癒着してしまった。<br>もう別々の木には戻れない<strong>接ぎ木（つぎき）</strong>のように、呪い合っている。',
+                image: './images/layerB_5.jpg'
+            },
+            {
+                title: 'No.07 内なる要塞',
+                text: 'あれは外敵を威嚇する、武装した<strong>要塞</strong>の姿だ。<br>私はその鋭い棘の内側で、無知なまま守られている。',
+                image: './images/layerB_6.jpg'
+            },
+            {
+                title: 'No.08 庭師の剪定',
+                text: '庭師が冷徹なハサミで、無駄な枝を<strong>剪定（せんてい）</strong>したのだ。<br>美しさを保つため、切り落とされた本当の感情が散らばっている。',
+                image: './images/layerB_7.jpg'
+            },
+            {
+                title: 'No.09 庭の全景',
+                text: '俯瞰してみれば、そこは出口のない巨大な<strong>迷路の庭園</strong>だった。<br>私たちはこの美しい檻の中で、永遠に迷い続けることを選んでいる。',
+                image: './images/layerB_8.jpg'
+            },
+            {
+                title: 'No.10 真実の種',
+                text: 'それは言い訳という果肉が削ぎ落とされた、冷たく硬い<strong>種</strong>だ。<br>これこそが、私が彼から一番欲しかったものだった。',
+                image: './images/layerB_9.jpg'
+            }
+        ];
+
         document.addEventListener('DOMContentLoaded', function() {
-            const target = document.querySelector('#target-marker');
             const card = document.querySelector('.card');
+            const uiTitle = document.querySelector('#ui-title');
+            const uiImage = document.querySelector('#ui-image');
+            const uiDesc = document.querySelector('#ui-desc');
+            const scene = document.querySelector('a-scene');
 
-            target.addEventListener('targetFound', event => {
-                console.log('target found');
-                if (!card.classList.contains('visible')) {
-                    card.classList.add('visible');
+            // ターゲットが見つかったときの処理
+            const onTargetFound = (index) => {
+                console.log('Target Found:', index);
+                const data = episodes[index];
+                if (data) {
+                    uiTitle.innerHTML = data.title;
+                    uiDesc.innerHTML = data.text;
+                    uiImage.src = data.image;
+                    
+                    if (!card.classList.contains('visible')) {
+                        card.classList.remove('hidden'); // アニメーションリセット用
+                        void card.offsetWidth; // リフロー
+                        card.classList.add('visible');
+                    }
                 }
-            });
+            };
 
-            target.addEventListener('targetLost', event => {
-                console.log('target lost');
-                // 一度表示したら表示し続ける場合は何もしない
-                // 非表示にする場合は: card.classList.remove('visible');
-            });
+            // ターゲットを見失ったときの処理
+            const onTargetLost = (index) => {
+                console.log('Target Lost:', index);
+                // コンテンツを非表示にする
+                card.classList.remove('visible');
+                card.classList.add('hidden');
+            };
+
+            // A-Frameのエンティティにイベントリスナーを設定
+            // targetIndex 0～9に対応
+            for (let i = 0; i < 10; i++) {
+                const entity = document.createElement('a-entity');
+                entity.setAttribute('mindar-image-target', 	argetIndex: );
+                
+                entity.addEventListener('targetFound', () => onTargetFound(i));
+                entity.addEventListener('targetLost', () => onTargetLost(i));
+                
+                scene.appendChild(entity);
+            }
         });
     </script>
 </head>
@@ -92,16 +188,14 @@
     <div id='ui-overlay'>
         <div class='card'>
             <!-- 画像 -->
-            <img id='ui-image' src='./images/layerB.jpg' alt='AR Image'>
+            <img id='ui-image' src='' alt='AR Image'>
             
-            <!-- 文章 -->
-            <h2>No.02 沈黙の蔦</h2>
-            <div class='description'>
-この蔦は、語られなかった言葉が
-時間をかけて形を成した姿である。
-不可視の想いは、空間を静かに浸食し
-やがて確かな質量を持って、そこに在る。
+            <!-- コンテンツ -->
+            <h2 id='ui-title'>No.xx Title</h2>
+            <div class='description-box' id='ui-desc'>
+                Text description...
             </div>
+            <div class='hidden-marker'>沈黙の解剖図譜</div>
         </div>
     </div>
 
@@ -113,8 +207,8 @@
         
         <a-camera position='0 0 0' look-controls='enabled: false'></a-camera>
 
-        <a-entity id='target-marker' mindar-image-target='targetIndex: 0'>
-        </a-entity>
+        <!-- エンティティはJavaScriptで生成 -->
+        
     </a-scene>
 </body>
 </html>

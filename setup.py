@@ -1,39 +1,32 @@
 import shutil
 import os
 import glob
+import sys
 
-# 正確なソースディレクトリの取得
-source_base = r"C:\Users\admin\Desktop\提出作品企画案\沈黙の解剖図譜 —— 不可視の愛に関する空間的考察"
+# ソースディレクトリの特定
+source_base = r'C:\Users\admin\Desktop\提出作品企画案\沈黙の解剖図譜  不可視の愛に関する空間的考察'
 if not os.path.exists(source_base):
-    candidates = glob.glob(r"C:\Users\admin\Desktop\提出作品企画案\沈黙の解剖図譜*")
-    source_base = candidates[0] if candidates else ""
+    candidates = glob.glob(r'C:\Users\admin\Desktop\提出作品企画案\沈黙の解剖図譜*')
+    source_base = candidates[0] if candidates else ''
 
-print(f"Source: {source_base}")
-
-# Episode 2 をターゲットにする
-src_img_layerb = os.path.join(source_base, r"images\LayerB\Episode2.jpg")
-dst_img_layerb = r"images\layerB.jpg"
-
-# 再出力された mind ファイル (images\LayerA\jpg\mind\Episode2.mind)
-src_mind = os.path.join(source_base, r"images\LayerA\jpg\mind\Episode2.mind")
-dst_mind = r"targets.mind"
-
-os.makedirs("images", exist_ok=True)
+print(f'Source: {source_base}')
+os.makedirs('images', exist_ok=True)
 
 try:
-    if os.path.exists(src_img_layerb):
-        shutil.copy2(src_img_layerb, dst_img_layerb)
-        print(f"✓ Copied LayerB: {dst_img_layerb}")
-    else:
-        print(f"ERROR: Source image not found at {src_img_layerb}")
-
-    if os.path.exists(src_mind):
-        shutil.copy2(src_mind, dst_mind)
-        print(f"✓ Copied NEW Mind: {dst_mind}")
-    else:
-        print(f"ERROR: Source mind file not found at {src_mind}")
+    # 全エピソードのコピー処理
+    for i in range(1, 11):
+        ep_num = str(i)
+        src_img_layerb = os.path.join(source_base, f'images\\LayerB\\Episode{ep_num}.jpg')
+        # インデックスは 0 から 9 (File 1 -> target 0)
+        dst_img_layerb = f'images\\layerB_{i-1}.jpg'
         
-    print("\nNext: python generate_depth.py")
-except Exception as e:
-    print(f"Error copying files: {e}")
+        if os.path.exists(src_img_layerb):
+            shutil.copy2(src_img_layerb, dst_img_layerb)
+            print(f' Copied LayerB (Ep{ep_num}): {dst_img_layerb}')
+        else:
+            print(f'ERROR: Not found LayerB Ep{ep_num}')
 
+    print('\nNext: Verify targets.mind and run index.html')
+
+except Exception as e:
+    print(f'Error copying files: {e}')
