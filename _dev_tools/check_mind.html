@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>MindAR Target Checker - マッピング確認ツール</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            max-width: 900px; margin: 40px auto; 
+            padding: 30px; background: #f5f5f5;
+        }
+        h1 { color: #333; border-bottom: 3px solid #4CAF50; padding-bottom: 10px; }
+        .info-box { 
+            background: #fff; padding: 20px; margin: 20px 0; 
+            border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .step { margin: 15px 0; padding: 15px; background: #e8f5e9; border-radius: 6px; }
+        .step strong { color: #2e7d32; }
+        #preview { 
+            display: flex; gap: 20px; flex-wrap: wrap; 
+            margin: 20px 0; justify-content: center;
+        }
+        .image-wrapper {
+            text-align: center; background: #fff; padding: 15px;
+            border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .image-wrapper img { 
+            max-width: 350px; border: 2px solid #ddd; 
+            border-radius: 4px; display: block;
+        }
+        .image-wrapper p { margin: 10px 0 0 0; font-weight: bold; color: #555; }
+        button { 
+            padding: 12px 24px; font-size: 16px; margin: 10px 5px; 
+            cursor: pointer; background: #4CAF50; color: #fff; 
+            border: none; border-radius: 6px; font-weight: bold;
+        }
+        button:hover { background: #45a049; }
+        .note { color: #666; font-size: 0.9rem; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>📷 MindAR マッピング確認ツール</h1>
+    
+    <div class="info-box">
+        <h2>現在のマッピング状況</h2>
+        <div class="step">
+            <strong>Step 1:</strong> 使用しているmindファイル: <code>targets.mind</code>
+        </div>
+        <div class="step">
+            <strong>Step 2:</strong> ターゲット画像（認識用）: <code>images/layerA.jpg</code> ← この画像をカメラに向けると反応します
+        </div>
+        <div class="step">
+            <strong>Step 3:</strong> AR表示画像（深度付き）: <code>images/layerB.jpg</code> + <code>depth_maps/layerB_depth.png</code>
+        </div>
+        <div class="step">
+            <strong>Step 4:</strong> ターゲットインデックス: <code>targetIndex: 0</code> （Episode 2専用）
+        </div>
+    </div>
+
+    <div class="info-box">
+        <h2>画像プレビュー</h2>
+        <button onclick="loadImages()">画像を読み込む</button>
+        <div id="preview"></div>
+        <p class="note">※ このツールをsilence_arフォルダと同じ階層で開いてください</p>
+    </div>
+
+    <div class="info-box">
+        <h2>マッピングが正しいか確認する方法</h2>
+        <ol>
+            <li><strong>LayerA（トラッカー画像）を印刷またはスマホ画面に表示</strong><br>
+                → <code>images/layerA.jpg</code> を開いて、別のデバイスに表示するか印刷してください。</li>
+            <li><strong>GitHub PagesのARアプリを開く</strong><br>
+                → <a href="https://mitsutakakikuchi.github.io/silence_ar/" target="_blank">https://mitsutakakikuchi.github.io/silence_ar/</a></li>
+            <li><strong>カメラをLayerA画像に向ける</strong><br>
+                → 正しくマッピングされていれば、LayerB画像が3D表示されます。</li>
+            <li><strong>別の画像（Episode 8など）に反応する場合</strong><br>
+                → <code>targets.mind</code> ファイルに複数のエピソードが含まれています。<br>
+                → <code>index.html</code> の <code>targetIndex: 0</code> を 1, 2, 3... と変えて試してください。</li>
+        </ol>
+    </div>
+
+    <div class="info-box">
+        <h2>トラブルシューティング</h2>
+        <ul>
+            <li><strong>何も反応しない：</strong> カメラ権限を許可しているか確認</li>
+            <li><strong>別のエピソードに反応：</strong> mindファイルが全エピソード含む可能性あり</li>
+            <li><strong>画像が歪む：</strong> 深度マップの縁が黒くなっているか確認（depth_maps/layerB_depth.png）</li>
+        </ul>
+    </div>
+
+    <script>
+        function loadImages() {
+            const preview = document.getElementById('preview');
+            preview.innerHTML = '';
+            
+            const images = [
+                { src: './images/layerA.jpg', label: 'LayerA (認識用ターゲット)' },
+                { src: './images/layerB.jpg', label: 'LayerB (AR表示画像)' },
+                { src: './depth_maps/layerB_depth.png', label: '深度マップ（縁が黒いか確認）' }
+            ];
+            
+            images.forEach(img => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'image-wrapper';
+                
+                const image = document.createElement('img');
+                image.src = img.src;
+                image.onerror = () => {
+                    image.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text x="50%" y="50%" text-anchor="middle" fill="red">画像が見つかりません</text></svg>';
+                };
+                
+                const label = document.createElement('p');
+                label.textContent = img.label;
+                
+                wrapper.appendChild(image);
+                wrapper.appendChild(label);
+                preview.appendChild(wrapper);
+            });
+        }
+    </script>
+</body>
+</html>

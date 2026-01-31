@@ -1,60 +1,20 @@
-# 沈黙の解剖図譜 —— 不可視の愛に関する空間的考察
+﻿# WebAR: 沈黙の解剖図譜
 
-WebAR体験作品
+「沈黙の解剖図譜 —— 不可視の愛に関する空間的考察」のWebAR実装リポジトリ。
 
-## 作品概要
+## ディレクトリ構成
+- **/ (Root)**: 本番公開用ファイル
+  - index.html: ARアプリ本体
+  - 	argets.mind: MindAR用ターゲットデータ（Compiled）
+  - images/: アプリ内で使用する軽量化画像（LayerB）
+  
+- **/_dev_tools/**: 開発用・ビルド用ツール（公開不要）
+  - compiler_images/: ターゲット画像の元データ（高画質）
+  - *_script.js, *.py: ビルド用スクリプト
+  - COMPILER.html: ブラウザ用コンパイラアプリ
 
-「言わなかった言葉」が庭の中でどんな植物や構造として存在しているのかを、ARで体験する作品です。
-
-日常の写真（LayerA）をスキャンすると、その背後にある「本音の庭」（LayerB）が現れます。
-
-## 鑑賞方法
-
-1. スマートフォンまたはタブレットでこのページにアクセス
-2. カメラを使用して、LayerAの画像（日常の写真）をスキャン
-3. LayerBの庭の画像とテキストが表示されます
-
-## 技術仕様
-
-- **WebAR**: MindAR 1.2.5 + A-Frame 1.5.0
-- **画像トラッキング**: MINDファイルによる高精度AR認識
-- **エピソード数**: 10話
-
-## ファイル構成
-
-```
-silence_ar/
-├── index.html          # メインARビューア
-├── targets.mind        # 10エピソードのARターゲット
-├── images/             # LayerB画像（本音の庭）
-│   ├── layerB_0.jpg    # Episode 1
-│   ├── layerB_1.jpg    # Episode 2
-│   └── ...
-└── README.md
-```
-
-## ローカルテスト
-
-HTTPSまたはlocalhostで実行する必要があります。
-
-```bash
-# Pythonの簡易サーバーを使用
-python -m http.server 8080
-
-# ブラウザでアクセス
-# http://localhost:8080/index.html
-```
-
-## 使用技術
-
-- [MindAR](https://hiukim.github.io/mind-ar-js-doc/)
-- [A-Frame](https://aframe.io/)
-- Gemini Nano Banana Pro (画像生成)
-
-## コンセプト
-
-沈黙の中にある、言葉にならなかった感情を「庭」というメタファーで可視化。日常の裏側に潜む「本音の庭」を、ARという技術を通じて鑑賞者に体験してもらいます。
-
-## ライセンス
-
-© 2026 NanoBanana. All rights reserved.
+## 更新手順
+1. _dev_tools/compiler_images/ 内の画像を差し替える。
+2. コンパイルを実行して 	argets.mind を更新する。
+   - COMPILER.html を使うか、Pythonスクリプトを使用。
+3. 	argets.mind をルートディレクトリに配置する（上書き）。
