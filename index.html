@@ -430,8 +430,8 @@
             pointer-events: auto;
             overflow: hidden;
             display: flex; flex-direction: column;
-            max-height: 80vh; /* フォールバック */
-            max-height: 80dvh; 
+            height: 90vh; /* 基本高さ調整 */
+            max-height: 90dvh; /* モバイル対応 */
             opacity: 0;
             padding-bottom: env(safe-area-inset-bottom); /* カード自体にも下部余白 */
         }
