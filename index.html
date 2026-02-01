@@ -104,7 +104,7 @@
                 opacity: 1;
             }
             100% {
-                transform: translate(-50%, -50%) scale(20);
+                transform: translate(-50%, -50%) scale(8);
                 opacity: 0;
             }
         }
@@ -115,7 +115,7 @@
                 opacity: 0.8;
             }
             100% {
-                transform: translate(-50%, -50%) scale(15);
+                transform: translate(-50%, -50%) scale(5);
                 opacity: 0;
             }
         }
@@ -2517,6 +2517,12 @@
                     completionOverlay.classList.remove('visible');
                     completionShown = true; /* 永続的に非表示化するためtrueを維持 */
                     
+                    // スキャンガイドを再表示
+                    if (sceneLoaded) {
+                        scanningGuide.classList.remove('hidden');
+                        scanningGuide.classList.add('visible');
+                    }
+                    
                     updateEpisodeIndicator(-1); 
                     
                     // シードのカレント表示のみリセット
@@ -2824,8 +2830,12 @@
             });
 
             const onTargetFound = (index) => {
-                // エピソードカードまたは完了画面が表示されている間はスキャン結果を無視する
-                if (card.classList.contains('visible') || completionOverlay.classList.contains('visible')) return;
+                // エピソードカード、完了画面、またはプロフィールが表示されている間はスキャン結果を無視する
+                const isUIActive = card.classList.contains('visible') || 
+                                  completionOverlay.classList.contains('visible') || 
+                                  profileOverlay.classList.contains('visible');
+                
+                if (isUIActive) return;
 
                 console.log('Target Found:', index);
                 currentTargetIndex = index;
