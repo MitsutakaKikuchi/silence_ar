@@ -2826,6 +2826,9 @@
             });
 
             const onTargetFound = (index) => {
+                // エピソードカードまたは完了画面が表示されている間はスキャン結果を無視する
+                if (card.classList.contains('visible') || completionOverlay.classList.contains('visible')) return;
+
                 console.log('Target Found:', index);
                 currentTargetIndex = index;
                 
