@@ -1197,17 +1197,17 @@
             }
         ];
         
-        // 詩のフラグメント（シアターモード用）
+        // 詩のフラグメント（シアターモード用）14文字
         const poemFragments = [
-            '言わなかった言葉は、消えない——',
-            '暗い土の中で、静かに根を張る',
-            '沈黙もまた、一つの愛の形',
-            '言えば壊れてしまうものを守るために',
-            'その庭は、二度と出られない迷宮でもある',
-            '祈りのように静か、呪いのように重い',
-            '私たちが選んだ沈黙の庭',
-            '飲み込んだ本音、我慢した反論',
-            '見えない庭は、今も繁茂し続ける'
+            '言わなかった言葉は消えない',
+            '暗い土の中で静かに根を張る',
+            '沈黙もまた一つの愛の形だ',
+            '壊れるものを守るための沈黙',
+            '二度と出られない迷宮の庭園',
+            '祈りのように静か呪いのよう',
+            '私たちが選んだ沈黙という庭',
+            '飲み込んだ本音/我慢した反論',
+            '見えない庭は今も繁茂してる'
         ];
 
         // ==========================================
@@ -1486,7 +1486,7 @@
                 
                 // マスターボリューム
                 this.masterGain = this.audioContext.createGain();
-                this.masterGain.gain.value = 0.15;
+                this.masterGain.gain.value = 0.12;
                 this.masterGain.connect(this.audioContext.destination);
                 
                 // 雨音風のノイズ
@@ -1494,6 +1494,12 @@
                 
                 // 低周波のドローン
                 this.createDrone();
+                
+                // 風のノイズ
+                this.createWindNoise();
+                
+                // 水滴音（ランダム）
+                this.createWaterDrops();
             }
             
             createRainNoise() {
@@ -1565,6 +1571,78 @@
                 this.nodes.drone = { osc, osc2, lfo, gain: droneGain };
             }
             
+            createWindNoise() {
+                // 風の音（より高周波のノイズ）
+                const bufferSize = 2 * this.audioContext.sampleRate;
+                const noiseBuffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = (Math.random() * 2 - 1) * 0.03;
+                }
+                
+                const wind = this.audioContext.createBufferSource();
+                wind.buffer = noiseBuffer;
+                wind.loop = true;
+                
+                const windFilter = this.audioContext.createBiquadFilter();
+                windFilter.type = 'bandpass';
+                windFilter.frequency.value = 800;
+                windFilter.Q.value = 0.5;
+                
+                const windGain = this.audioContext.createGain();
+                windGain.gain.value = 0;
+                
+                // LFOで風の強弱
+                const windLFO = this.audioContext.createOscillator();
+                windLFO.type = 'sine';
+                windLFO.frequency.value = 0.08;
+                
+                const windLFOGain = this.audioContext.createGain();
+                windLFOGain.gain.value = 0.15;
+                
+                windLFO.connect(windLFOGain);
+                windLFOGain.connect(windGain.gain);
+                
+                wind.connect(windFilter);
+                windFilter.connect(windGain);
+                windGain.connect(this.masterGain);
+                
+                this.nodes.wind = { source: wind, gain: windGain, lfo: windLFO };
+            }
+            
+            createWaterDrops() {
+                // 水滴音のシミュレーション（ランダムなピッチのトーン）
+                this.nodes.drops = { timers: [] };
+            }
+            
+            playWaterDrop() {
+                if (!this.audioContext || !this.enabled) return;
+                
+                const osc = this.audioContext.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.value = 800 + Math.random() * 400;
+                
+                const dropGain = this.audioContext.createGain();
+                dropGain.gain.value = 0.02;
+                
+                osc.connect(dropGain);
+                dropGain.connect(this.masterGain);
+                
+                const now = this.audioContext.currentTime;
+                osc.start(now);
+                dropGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.stop(now + 0.3);
+                
+                // 次の水滴（ランダムな間隔）
+                if (this.enabled) {
+                    const nextDrop = setTimeout(() => {
+                        this.playWaterDrop();
+                    }, 3000 + Math.random() * 7000);
+                    this.nodes.drops.timers.push(nextDrop);
+                }
+            }
+            
             toggle() {
                 if (!this.audioContext) {
                     this.init();
@@ -1581,12 +1659,23 @@
                     this.nodes.drone.osc.start();
                     this.nodes.drone.osc2.start();
                     this.nodes.drone.lfo.start();
+                    this.nodes.wind.source.start();
+                    this.nodes.wind.lfo.start();
                     
                     // フェードイン
-                    this.masterGain.gain.linearRampToValueAtTime(0.15, this.audioContext.currentTime + 2);
+                    this.masterGain.gain.linearRampToValueAtTime(0.12, this.audioContext.currentTime + 2);
+                    
+                    // 水滴音開始
+                    setTimeout(() => this.playWaterDrop(), 2000);
                 } else {
                     // フェードアウト
                     this.masterGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 1);
+                    
+                    // 水滴タイマーをクリア
+                    if (this.nodes.drops && this.nodes.drops.timers) {
+                        this.nodes.drops.timers.forEach(timer => clearTimeout(timer));
+                        this.nodes.drops.timers = [];
+                    }
                     
                     setTimeout(() => {
                         try {
@@ -1594,6 +1683,8 @@
                             this.nodes.drone.osc.stop();
                             this.nodes.drone.osc2.stop();
                             this.nodes.drone.lfo.stop();
+                            this.nodes.wind.source.stop();
+                            this.nodes.wind.lfo.stop();
                         } catch (e) {}
                         
                         // 再作成のため初期化
@@ -1647,18 +1738,23 @@
                 particleSystem.updateGyro(x, y);
             });
             
-            // タッチリップル
+            // タッチリップル（カード非表示時のみ）
             document.addEventListener('touchstart', (e) => {
                 // ジャイロパーミッションリクエスト（iOS）
                 gyroParallax.requestPermission();
                 
-                // リップル生成
-                const touch = e.touches[0];
-                rippleEffect.create(touch.clientX, touch.clientY);
+                // リップル生成（カード非表示時のみ）
+                if (!card.classList.contains('visible')) {
+                    const touch = e.touches[0];
+                    rippleEffect.create(touch.clientX, touch.clientY);
+                }
             });
             
             document.addEventListener('click', (e) => {
-                rippleEffect.create(e.clientX, e.clientY);
+                // カード非表示時のみリップル生成
+                if (!card.classList.contains('visible')) {
+                    rippleEffect.create(e.clientX, e.clientY);
+                }
             });
             
             // シアターモードボタン
