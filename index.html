@@ -4,12 +4,12 @@
     <meta charset='utf-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     
-    <title>沈黙の解剖図譜 AR</title>
-    <meta name="description" content="不可視の愛に関する空間的考察 —— ARで体験する、言わなかった言葉の庭。">
+    <title>沈黙�E解剖図譁EAR</title>
+    <meta name="description" content="不可視�E愛に関する空間的老E��E— EARで体験する、言わなかった言葉�E庭、E>
     
     <!-- Open Graph Tags -->
-    <meta property="og:title" content="沈黙の解剖図譜 AR">
-    <meta property="og:description" content="不可視の愛に関する空間的考察。ARで体験する、言わなかった言葉の庭。">
+    <meta property="og:title" content="沈黙�E解剖図譁EAR">
+    <meta property="og:description" content="不可視�E愛に関する空間的老E��、ERで体験する、言わなかった言葉�E庭、E>
     <meta property="og:type" content="website">
     <meta property="og:image" content="./images/layerB.jpg">
     
@@ -22,17 +22,17 @@
     <style>
         body { margin: 0; overflow: hidden; font-family: 'Yu Mincho', 'Hiragino Mincho ProN', 'serif'; }
         
-        /* 全画面オーバーレイ（スキャンガイドとUIコンテナ） */
+        /* 全画面オーバ�Eレイ�E�スキャンガイドとUIコンチE���E�E*/
         #ui-overlay {
             position: absolute; top: 0; left: 0; 
             width: 100%; 
             height: 100vh; /* フォールバック */
-            height: 100dvh; /* モバイルブラウザのアドレスバー対策 */
+            height: 100dvh; /* モバイルブラウザのアドレスバ�E対筁E*/
             pointer-events: none; z-index: 1000;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
         }
 
-        /* スキャン用ガイド（パーティクルと蔦アニメーションを含むコンテナ） */
+        /* スキャン用ガイド（パーチE��クルと蔦アニメーションを含むコンチE���E�E*/
         #scanning-guide-container {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 70%; max-width: 400px; aspect-ratio: 1;
@@ -42,14 +42,14 @@
         }
         #scanning-guide-container.visible { opacity: 1; }
 
-        /* ガイド本体 */
+        /* ガイド本佁E*/
         #scanning-guide {
             position: relative;
             width: 100%; height: 100%;
             display: flex; justify-content: center; align-items: center;
         }
         
-        /* スキャンガイド内の蔦アニメーション */
+        /* スキャンガイド�Eの蔦アニメーション */
         .scan-loading-garden {
             position: absolute;
             width: 140px; height: 140px;
@@ -90,7 +90,7 @@
             border-color: rgba(0, 255, 170, 0.2);
         }
 
-        /* 枠外に漂う象徴的な光の粒子（有機的・詩的） */
+        /* 枠外に漂う象徴皁E��光�E粒子（有機的・詩皁E��E*/
         .symbol-particle {
             position: absolute;
             border-radius: 50%;
@@ -99,7 +99,7 @@
             will-change: transform, opacity;
         }
 
-        /* 各粒子の個性：色・サイズ・配置・動きを緻密に設計 */
+        /* 吁E��子�E個性�E�色・サイズ・配置・動きを緻寁E��設訁E*/
         .p1 { 
             width: 12px; height: 12px; 
             background: radial-gradient(circle, rgba(180, 255, 220, 1) 0%, rgba(100, 255, 200, 0.4) 60%, transparent 100%);
@@ -143,7 +143,7 @@
             animation: floatOrganic1 6.2s infinite ease-in-out 3.5s; 
         }
 
-        /* 有機的な浮遊アニメーション（呼吸と漂い） */
+        /* 有機的な浮遊アニメーション�E�呼吸と漂い�E�E*/
         @keyframes floatOrganic1 {
             0%, 100% { 
                 transform: translate(0, 0) scale(0.85); 
@@ -213,7 +213,7 @@
             }
         }
 
-        /* 有機的な呼吸するフレーム（より滑らかに） */
+        /* 有機的な呼吸するフレーム�E�より滑らかに�E�E*/
         #scanning-guide::before {
             content: '';
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -224,7 +224,7 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        /* 四隅の装飾（より有機的に脈動） */
+        /* 四隅の裁E���E�より有機的に脈動�E�E*/
         #scanning-guide .corner {
             position: absolute;
             width: 45px; height: 45px;
@@ -269,7 +269,7 @@
             pointer-events: auto;
         }
 
-        /* ガイドテキスト（ローディング完了後に表示） */
+        /* ガイドテキスト（ローチE��ング完亁E��に表示�E�E*/
         .scanning-guide-text {
             position: absolute; 
             bottom: -60px; 
@@ -290,7 +290,7 @@
             100% { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
-        /* ミストエフェクト（より詩的に） */
+        /* ミストエフェクト（より詩皁E���E�E*/
         .scan-mist {
             width: 100%; height: 100%;
             background: radial-gradient(circle, rgba(0,255,170,0.08) 0%, transparent 65%);
@@ -312,7 +312,7 @@
             }
         }
 
-        /* 世界観フィルター（ヴィネット + ノイズ） */
+        /* 世界観フィルター�E�ヴィネッチE+ ノイズ�E�E*/
         .world-filter {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
@@ -320,7 +320,7 @@
             box-shadow: inset 0 0 100px rgba(0,0,0,0.5);
         }
 
-        /* カスタムローディング画面 */
+        /* カスタムローチE��ング画面 */
         #custom-loading {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
@@ -333,7 +333,7 @@
             pointer-events: none;
         }
         
-        /* 呼吸する同心円 - 洗練されたローディングアニメーション */
+        /* 呼吸する同忁E�E - 洗練されたローチE��ングアニメーション */
         .loading-garden {
             width: 200px; height: 200px;
             position: relative;
@@ -401,19 +401,19 @@
             50% { opacity: 0.85; transform: translateY(-3px); }
         }
 
-        /* MindARのデフォルトUIを強制非表示 */
+        /* MindARのチE��ォルチEIを強制非表示 */
         .mindar-ui-overlay, .mindar-ui-loading, .mindar-ui-scanning {
             display: none !important;
         }
 
-        /* モダンなカードUI（より滑らかなアニメーション） */
+        /* モダンなカードUI�E�より滑らかなアニメーション�E�E*/
         .card {
             display: none; /* 初期非表示 */
             background: rgba(15, 15, 15, 0.94);
             color: #eee;
             width: 100%;
             max-width: 450px;
-            border-radius: 26px 26px 0 0; /* 上部だけ丸く */
+            border-radius: 26px 26px 0 0; /* 上部だけ丸ぁE*/
             padding: 0;
             margin-bottom: 0;
             backdrop-filter: blur(20px);
@@ -431,14 +431,14 @@
             overflow: hidden;
             display: flex; flex-direction: column;
             height: 90vh; /* 基本高さ調整 */
-            max-height: 90dvh; /* モバイル対応 */
+            max-height: 90dvh; /* モバイル対忁E*/
             opacity: 0;
-            padding-bottom: env(safe-area-inset-bottom); /* カード自体にも下部余白 */
+            padding-bottom: env(safe-area-inset-bottom); /* カード�E体にも下部余白 */
         }
         
         .card.visible {
             transform: translateY(0);
-            display: flex; /* visible時にflexに戻す */
+            display: flex; /* visible時にflexに戻ぁE*/
             opacity: 1;
             box-shadow: 
                 0 -15px 60px rgba(0,0,0,0.8),
@@ -457,7 +457,7 @@
             justify-content: center;
         }
         
-        /* 画像ローディング表示（蔦アニメーション） */
+        /* 画像ローチE��ング表示�E�蔦アニメーション�E�E*/
         .image-loading {
             position: absolute;
             top: 50%;
@@ -476,7 +476,7 @@
             pointer-events: none;
         }
         
-        /* カード内の蔦ローディング */
+        /* カード�Eの蔦ローチE��ング */
         .card-loading-garden {
             width: 120px; height: 120px;
             position: relative;
@@ -520,8 +520,8 @@
         #ui-image {
             width: 100%;
             height: auto;
-            aspect-ratio: 1 / 1; /* 1:1アスペクト比を維持 */
-            object-fit: cover; /* 1:1で横幅いっぱいに表示 */
+            aspect-ratio: 1 / 1; /* 1:1アスペクト比を維持E*/
+            object-fit: cover; /* 1:1で横幁E��っぱぁE��表示 */
             display: block;
             mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
             -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
@@ -534,9 +534,9 @@
             transform: scale(1);
         }
 
-        /* テキストエリア */
+        /* チE��ストエリア */
         .card-content {
-            padding: 20px 28px 80px 28px; /* 下部に十分な余白を確保してスクロールで見切れないように */
+            padding: 20px 28px 80px 28px; /* 下部に十�Eな余白を確保してスクロールで見�EれなぁE��ぁE�� */
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             flex: 1;
@@ -562,11 +562,11 @@
         
         .description-box {
             font-size: 0.96rem;
-            line-height: 2.05; /* 行間を広げて読みやすく */
+            line-height: 2.05; /* 行間を庁E��て読みめE��ぁE*/
             color: #ccc;
             margin-bottom: 15px;
-            text-align: left; /* 左揃えに変更（両端揃えは見切れの原因） */
-            letter-spacing: 0.06em; /* 文字間を少し空ける */
+            text-align: left; /* 左揁E��に変更�E�両端揁E��は見�Eれ�E原因�E�E*/
+            letter-spacing: 0.06em; /* 斁E��間を少し空ける */
         }
         .description-box strong {
             color: #fff;
@@ -584,7 +584,7 @@
             text-transform: uppercase;
         }
 
-        /* 閉じるボタン（より洗練されたデザイン） */
+        /* 閉じる�Eタン�E�より洗練されたデザイン�E�E*/
         .close-btn {
             position: absolute; top: 12px; right: 12px;
             width: 34px; height: 34px;
@@ -613,52 +613,52 @@
         const episodes = [
             {
                 title: 'Episode.01 矯正する支柱',
-                text: 'ぐらつく私に無理やり打ち込まれる、錆びた鉄の<strong>支柱</strong>。<br>この痛みだけが、腐りかけた私を立たせている。',
+                text: 'ぐらつく私に無琁E��り打ち込まれる、E��びた鉄の<strong>支柱</strong>、Ebr>こ�E痛みだけが、�Eりかけた私を立たせてぁE��、E,
                 image: './images/layerB_0.jpg?v=800'
             },
             {
-                title: 'Episode.02 沈黙の蔦',
-                text: 'その静けさは、首筋に巻きつく美しい緑の<strong>蔦（つた）</strong>だ。<br>優しさという真綿で、ゆっくりと気道を締め上げられている。',
+                title: 'Episode.02 沈黙�E蔦',
+                text: 'そ�E静けさ�E、E��筋に巻きつく美しぁE���E<strong>蔦�E�つた！E/strong>だ、Ebr>優しさとぁE��真綿で、ゆっくりと気道を締め上げられてぁE��、E,
                 image: './images/layerB_1.jpg?v=800'
             },
             {
                 title: 'Episode.03 拒絶の雨',
-                text: '彼の拒絶は、冷たく鋭い銀色の<strong>雨</strong>だ。<br>私に付着した甘えを、泥のように洗い流していく。',
+                text: '彼の拒絶は、�Eたく鋭ぁE��色の<strong>雨</strong>だ、Ebr>私に付着した甘えを、泥のように洗い流してぁE��、E,
                 image: './images/layerB_2.jpg?v=800'
             },
             {
-                title: 'Episode.04 言葉の化石',
-                text: '飲み込まれた言葉は、二人の地層の奥で<strong>化石</strong>になる。<br>掘り起こして傷ついてでも、そのゴツゴツした形を知りたかった。',
+                title: 'Episode.04 言葉�E化石',
+                text: '飲み込まれた言葉�E、二人の地層の奥で<strong>化石</strong>になる、Ebr>掘り起こして傷つぁE��でも、そのゴチE��チE��た形を知りたかった、E,
                 image: './images/layerB_3.jpg?v=800'
             },
             {
                 title: 'Episode.05 過保護な檻',
-                text: 'この窮屈さは、脆い私を守るための過保護な<strong>檻（おり）</strong>だ。<br>私はその錆びた鉄柵の内側でしか、呼吸を許されていない。',
+                text: 'こ�E窮屈さは、脆ぁE��を守るための過保護な<strong>檻�E�おり！E/strong>だ、Ebr>私�Eそ�E錁E�Eた鉄柵の冁E�Eでしか、呼吸を許されてぁE��ぁE��E,
                 image: './images/layerB_4.jpg?v=800'
             },
             {
-                title: 'Episode.06 相互の呪縛',
-                text: '背中合わせの傷口から、互いの根が癒着してしまった。<br>もう別々の木には戻れない<strong>接ぎ木（つぎき）</strong>のように、呪い合っている。',
+                title: 'Episode.06 相互�E呪縁E,
+                text: '背中合わせ�E傷口から、互いの根が癒着してしまった、Ebr>もう別、E�E木には戻れなぁEstrong>接ぎ木�E�つぎき�E�E/strong>のように、呪ぁE��ってぁE��、E,
                 image: './images/layerB_5.jpg?v=800'
             },
             {
-                title: 'Episode.07 内なる要塞',
-                text: 'あれは外敵を威嚇する、武装した<strong>要塞</strong>の姿だ。<br>私はその鋭い棘の内側で、無知なまま守られている。',
+                title: 'Episode.07 冁E��る要塁E,
+                text: 'あれは外敵を威嚇する、武裁E��ぁEstrong>要塁E/strong>の姿だ、Ebr>私�Eそ�E鋭ぁE���E冁E�Eで、無知なまま守られてぁE��、E,
                 image: './images/layerB_6.jpg?v=800'
             },
             {
-                title: 'Episode.08 庭師の剪定',
-                text: '庭師が冷徹なハサミで、無駄な枝を<strong>剪定（せんてい）</strong>したのだ。<br>美しさを保つため、切り落とされた本当の感情が散らばっている。',
+                title: 'Episode.08 庭師の剪宁E,
+                text: '庭師が�E徹なハサミで、無駁E��枝を<strong>剪定（せんてぁE��E/strong>したのだ、Ebr>美しさを保つため、�Eり落とされた本当�E感情が散ら�EってぁE��、E,
                 image: './images/layerB_7.jpg?v=800'
             },
             {
                 title: 'Episode.09 庭の全景',
-                text: '俯瞰してみれば、そこは出口のない巨大な<strong>迷路の庭園</strong>だった。<br>私たちはこの美しい檻の中で、永遠に迷い続けることを選んでいる。',
+                text: '俯瞰してみれ�E、そこ�E出口のなぁE��大な<strong>迷路の庭圁E/strong>だった、Ebr>私たちはこ�E美しぁE��の中で、永遠に迷ぁE��けることを選んでぁE��、E,
                 image: './images/layerB_8.jpg?v=800'
             },
             {
-                title: 'Episode.10 真実の種',
-                text: 'それは言い訳という果肉が削ぎ落とされた、冷たく硬い<strong>種</strong>だ。<br>これこそが、私が彼から一番欲しかったものだった。',
+                title: 'Episode.10 真実�E種',
+                text: 'それは言ぁE��とぁE��果肉が削ぎ落とされた、�Eたく硬ぁEstrong>種</strong>だ、Ebr>これこそが、私が彼から一番欲しかったものだった、E,
                 image: './images/layerB_9.jpg?v=800'
             }
         ];
@@ -676,11 +676,11 @@
 
             let currentTargetIndex = -1;
             let sceneLoaded = false;
-            const preloadedImages = {}; // プリロード済み画像のキャッシュ
+            const preloadedImages = {}; // プリロード済み画像�EキャチE��ュ
 
             // 画像を事前にロードする関数
-            // 理由：ターゲット検出後の初回表示が遅い原因は、
-            // 画像が大きい（1200px幅）ため、初回ロードに時間がかかるため
+            // 琁E���E�ターゲチE��検�E後�E初回表示が遅ぁE��因は、E
+            // 画像が大きい�E�E200px幁E��ため、�E回ロードに時間がかかるため
             function preloadImages() {
                 episodes.forEach((episode, index) => {
                     const img = new Image();
@@ -692,15 +692,15 @@
                 });
             }
 
-            // A-Frameシーンのロード完了を検知（AR準備完了まで表示）
+            // A-Frameシーンのロード完亁E��検知�E�ER準備完亁E��で表示�E�E
             const onSceneLoaded = () => {
                 if (sceneLoaded) return; // 2回実行防止
                 sceneLoaded = true;
                 
-                // 画像のプリロードを開始（バックグラウンドで実行）
+                // 画像�Eプリロードを開始（バチE��グラウンドで実行！E
                 preloadImages();
                 
-                // AR読み込み完了後、即座にローディング画面をフェードアウト
+                // AR読み込み完亁E��、即座にローチE��ング画面をフェードアウチE
                 customLoading.classList.add('fade-out');
                 setTimeout(() => {
                     customLoading.style.display = 'none';
@@ -716,7 +716,7 @@
                 scene.addEventListener('renderstart', onSceneLoaded); // フォールバック
             }
 
-            // 閉じるボタン
+            // 閉じる�Eタン
             closeBtn.addEventListener('click', () => {
                 card.classList.remove('visible');
                 if (sceneLoaded) {
@@ -729,7 +729,7 @@
                 console.log('Target Found:', index);
                 currentTargetIndex = index;
                 
-                // ガイドを隠す
+                // ガイドを隠ぁE
                 scanningGuide.classList.remove('visible');
                 scanningGuide.classList.add('hidden');
 
@@ -738,17 +738,17 @@
                     uiTitle.innerHTML = data.title;
                     uiDesc.innerHTML = data.text;
                     
-                    // プリロード済みかどうかで表示を調整
+                    // プリロード済みかどぁE��で表示を調整
                     const isPreloaded = preloadedImages[index];
                     
-                    // ローディング表示
+                    // ローチE��ング表示
                     if (!isPreloaded) {
                         // 初回ロード時は蔦アニメーションを表示
                         imageLoading.classList.remove('hidden');
                     }
                     uiImage.classList.remove('loaded');
                     
-                    // 画像の読み込み完了時にフェードイン
+                    // 画像�E読み込み完亁E��にフェードイン
                     uiImage.onload = () => {
                         imageLoading.classList.add('hidden');
                         setTimeout(() => {
@@ -756,16 +756,16 @@
                         }, isPreloaded ? 50 : 150); // プリロード済みなら高速化
                     };
                     
-                    // エラー時もローディングを非表示
+                    // エラー時もローチE��ングを非表示
                     uiImage.onerror = () => {
                         imageLoading.classList.add('hidden');
                         console.error('Failed to load image:', data.image);
                     };
                     
-                    // キャッシュバスターを削除してプリロードを活用
+                    // キャチE��ュバスターを削除してプリロードを活用
                     uiImage.src = data.image;
                     
-                    // アニメーションをリセットして表示
+                    // アニメーションをリセチE��して表示
                     setTimeout(() => {
                         card.classList.add('visible');
                     }, 50);
@@ -774,7 +774,7 @@
 
             const onTargetLost = (index) => {
                 console.log('Target Lost:', index);
-                // ×ボタンを押すまでテキストを表示し続ける（自動クローズなし）
+                // ×�Eタンを押すまでチE��ストを表示し続ける（�E動クローズなし！E
                 // if (currentTargetIndex === index) {
                 //     setTimeout(() => {
                 //         if (currentTargetIndex === index) {
@@ -801,7 +801,7 @@
     </script>
 </head>
 <body>
-    <!-- カスタムローディング画面 -->
+    <!-- カスタムローチE��ング画面 -->
     <div id='custom-loading'>
         <div class='loading-garden'>
             <div class='circle'></div>
@@ -810,10 +810,10 @@
             <div class='circle'></div>
             <div class='circle'></div>
         </div>
-        <div class='loading-text'>記憶の庭へ接続しています...</div>
-            <!-- ガイド本体 -->
+        <div class='loading-text'>記�Eの庭へ接続してぁE��ぁE..</div>
+            <!-- ガイド本佁E-->
             <div id='scanning-guide'>
-                <!-- 蔦アニメーション（スキャン待機中） -->
+                <!-- 蔦アニメーション�E�スキャン征E��中�E�E-->
                 <div class='scan-loading-garden'>
                     <div class='circle'></div>
                     <div class='circle'></div>
@@ -828,10 +828,10 @@
                 <div class='corner corner-br'></div>
             </div>
 
-            <!-- ガイドテキスト -->
-            <div class='scanning-guide-text'>沈黙の断片を、枠の中へ...</div>
+            <!-- ガイドテキスチE-->
+            <div class='scanning-guide-text'>沈黙�E断牁E��、枠の中へ...</div>
 
-            <!-- 枠外に散らばる象徴的な光 -->
+            <!-- 枠外に散ら�Eる象徴皁E��允E-->
             <div class="symbol-particle p1"></div>
             <div class="symbol-particle p2"></div>
             <div class="symbol-particle p3"></div>
@@ -843,7 +843,7 @@
         <!-- カードUI -->
         <div class='card'>
             <div class='card-image-container'>
-                <!-- 画像ローディング表示（呼吸する円） -->
+                <!-- 画像ローチE��ング表示�E�呼吸する冁E��E-->
                 <div class='image-loading' id='image-loading'>
                     <div class='card-loading-garden'>
                         <div class='circle'></div>
@@ -855,7 +855,7 @@
                     <div class='card-loading-text'>真実を解剖中...</div>
                 </div>
                 <img id='ui-image' src='' alt='Episode Image'>
-                <div class='close-btn'>×</div>
+                <div class='close-btn'>ÁE/div>
             </div>
             
             <div class='card-content'>
@@ -863,7 +863,7 @@
                 <div class='description-box' id='ui-desc'>
                     Text description...
                 </div>
-                <div class='footer-note'>沈黙の解剖図譜</div>
+                <div class='footer-note'>沈黙�E解剖図譁E/div>
             </div>
         </div>
     </div>
@@ -876,7 +876,7 @@
         
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- 10枚のターゲットエンティティ -->
+        <!-- 10枚�EターゲチE��エンチE��チE�� -->
         <a-entity mindar-image-target="targetIndex: 0" id="target-0"></a-entity>
         <a-entity mindar-image-target="targetIndex: 1" id="target-1"></a-entity>
         <a-entity mindar-image-target="targetIndex: 2" id="target-2"></a-entity>
