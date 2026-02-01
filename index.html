@@ -1731,12 +1731,12 @@
         const episodes = [
             {
                 title: 'Episode.01 矯正する支柱',
-                text: 'ぐらつく私に無理やり打ち込まれる、錆びた鉄の<strong>支柱</strong>。<br>この痛みだけが、腐りかけた私を立たせている。',
+                text: 'ぐらつく私に無理やり打ち込まれる、<br>錆びた鉄の<strong>支柱</strong>。<br>この痛みだけが、腐りかけた私を立たせて<br>いる。',
                 image: './images/layerB_0.jpg?v=800'
             },
             {
                 title: 'Episode.02 沈黙の蔦',
-                text: 'その静けさは、首筋に巻きつく美しい緑の<strong>蔦</strong>だ。<br>優しさという真綿で、ゆっくりと気道を締め上げられている。',
+                text: 'その静けさは、首筋に巻きつく美しい<br>緑の<strong>蔦</strong>だ。<br>優しさという真綿で、ゆっくりと気道を<br>締め上げられている。',
                 image: './images/layerB_1.jpg?v=800'
             },
             {
@@ -1746,12 +1746,12 @@
             },
             {
                 title: 'Episode.04 言葉の化石',
-                text: '飲み込まれた言葉は、二人の地層の奥で<strong>化石</strong>になる。<br>掘り起こして傷ついてでも、そのゴツゴツした形を知りたかった。',
+                text: '飲み込まれた言葉は、二人の地層の奥で<br><strong>化石</strong>になる。<br>掘り起こして傷ついてでも、そのゴツゴツ<br>した形を知りたかった。',
                 image: './images/layerB_3.jpg?v=800'
             },
             {
                 title: 'Episode.05 過保護な檻',
-                text: 'この窮屈さは、脆い私を守るための過保護な<strong>檻</strong>だ。<br>私はその錆びた鉄柵の内側でしか、呼吸を許されていない。',
+                text: 'この窮屈さは、脆い私を守るための過保護な<br><strong>檻</strong>だ。<br>私はその錆びた鉄柵の内側でしか、呼吸を<br>許されていない。',
                 image: './images/layerB_4.jpg?v=800'
             },
             {
@@ -1761,17 +1761,17 @@
             },
             {
                 title: 'Episode.07 内なる要塞',
-                text: 'あれは外敵を威嚇する、武装した<strong>要塞</strong>の姿だ。<br>私はその鋭い棘の内側で、無知なまま守られている。',
+                text: 'あれは外敵を威嚇する、武装した<strong>要塞</strong>の<br>姿だ。<br>私はその鋭い棘の内側で、無知なまま守られている。',
                 image: './images/layerB_6.jpg?v=800'
             },
             {
                 title: 'Episode.08 庭師の剪定',
-                text: '庭師が冷徹なハサミで、無駄な枝を<strong>剪定</strong>したのだ。<br>美しさを保つため、切り落とされた本当の感情が散らばっている。',
+                text: '庭師が冷徹なハサミで、無駄な枝を<strong>剪定</strong>したのだ。<br>美しさを保つため、切り落とされた本当の<br>感情が散らばっている。',
                 image: './images/layerB_7.jpg?v=800'
             },
             {
                 title: 'Episode.09 庭の全景',
-                text: '俯瞰してみれば、そこは出口のない巨大な<strong>迷路の庭園</strong>だった。<br>私たちはこの美しい檻の中で、永遠に迷い続けることを選んでいる。',
+                text: '俯瞰してみれば、そこは出口のない巨大な<br><strong>迷路の庭園</strong>だった。<br>私たちはこの美しい檻の中で、永遠に迷い<br>続けることを選んでいる。',
                 image: './images/layerB_8.jpg?v=800'
             },
             {
@@ -2822,6 +2822,7 @@
                 
                 // ボタンを再表示
                 if (theaterBtn) theaterBtn.style.display = '';
+                if (persistentProfileBtn) persistentProfileBtn.style.display = '';
             });
 
             const onTargetFound = (index) => {
@@ -2873,6 +2874,7 @@
                         
                         // カード表示時はボタンを非表示
                         if (theaterBtn) theaterBtn.style.display = 'none';
+                        if (persistentProfileBtn) persistentProfileBtn.style.display = 'none';
                         
                         // 全エピソード閲覧完了チェック
                         if (viewedEpisodes.size === 10 && !completionShown) {
