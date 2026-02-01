@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MindAR Image Compiler (Fixed API)</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .log { background: #f0f0f0; padding: 10px; border: 1px solid #ccc; max-height: 300px; overflow-y: scroll; margin-top: 20px; white-space: pre-wrap; font-family: monospace; }
+        .error { color: red; background: #ffeeee; }
+        .success { color: green; font-weight: bold; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        h1 { margin-bottom: 10px; }
+        .note { color: #666; font-size: 0.9em; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>MindAR Compiler (Corrected API)</h1>
+    <p class="note">This tool loads episode images (episode_1.jpg etc) and compiles them.</p>
+    
+    <button id="startBtn">Start Compilation</button>
+    
+    <div id="status">Initializing...</div>
+    <div id="log" class="log"></div>
+    <div id="downloadArea"></div>
+
+    <script>
+        // Global logger
+        function log(msg, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const el = document.createElement('div');
+            el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            if (type === 'error') el.className = 'error';
+            if (type === 'success') el.className = 'success';
+            logDiv.appendChild(el);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        window.onerror = function(msg, url, line) {
+            log(`Global Error: ${msg}`, 'error');
+            return false;
+        };
+    </script>
+
+    <script type="module">
+        import { Compiler } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js';
+        
+        const statusDiv = document.getElementById('status');
+        const startBtn = document.getElementById('startBtn');
+
+        // CORRECTED File List
+        const fileList = [
+            'episode_1.jpg', 
+            'episode_2.jpg', 
+            'episode_3.jpg', 
+            'episode_4.jpg', 
+            'episode_5.jpg',
+            'episode_6.jpg', 
+            'episode_7.jpg', 
+            'episode_8.jpg', 
+            'episode_9.jpg', 
+            'episode_10.jpg'
+        ];
+        
+        const imagePath = './compiler_images/';
+
+        log("Module loaded. Checking file list configuration...", 'success');
+        statusDiv.textContent = "Ready to compile.";
+        
+        async function loadImage(filename) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = (e) => reject(`Failed to load image: ${filename} (Check if file exists in ${imagePath})`);
+                img.src = imagePath + filename;
+            });
+        }
+
+        async function runCompilation() {
+            startBtn.disabled = true;
+            statusDiv.textContent = "Processing...";
+            log("Starting process...");
+
+            try {
+                // 1. Load Images
+                log(`Looking for images in: ${imagePath}`);
+                const images = [];
+                for (const file of fileList) {
+                    log(`Loading ${file}...`);
+                    const img = await loadImage(file);
+                    images.push(img);
+                }
+                log(`All ${images.length} images loaded successfully.`, 'success');
+
+                // 2. Compile
+                log("Starting MindAR Compiler...");
+                const compiler = new Compiler();
+                
+                log("Compiling feature points... (This takes 10-30 seconds)");
+                
+                // FIXED: Use compileImageTargets instead of compileFiles
+                const dataList = await compiler.compileImageTargets(images, (progress) => {
+                    log(`Progress: ${progress.toFixed(2)}%`);
+                });
+                
+                log("Compilation complete. Generating export...", 'success');
+                
+                // 3. Export
+                const buffer = await compiler.exportData();
+                
+                const blob = new Blob([buffer]);
+                const url = URL.createObjectURL(blob);
+                
+                // 4. Download Link
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'targets.mind';
+                a.textContent = 'Download targets.mind';
+                a.style.display = 'block';
+                a.style.marginTop = '20px';
+                a.style.fontSize = '24px';
+                a.style.fontWeight = 'bold';
+                a.style.backgroundColor = '#e6fffa';
+                a.style.padding = '20px';
+                a.style.textAlign = 'center';
+                a.style.textDecoration = 'none';
+                a.style.border = '2px solid #28a745';
+                a.style.borderRadius = '10px';
+                a.style.color = '#28a745';
+                
+                document.getElementById('downloadArea').innerHTML = '';
+                document.getElementById('downloadArea').appendChild(a);
+                
+                a.click(); // Auto-click
+                
+                statusDiv.textContent = "Finished!";
+                log("Success! File downloaded. Please overwrite existing targets.mind.", 'success');
+
+            } catch (err) {
+                console.error(err);
+                const msg = err.message || err.toString();
+                log(`ERROR: ${msg}`, 'error');
+                statusDiv.textContent = "Error occurred";
+            } finally {
+                startBtn.disabled = false;
+            }
+        }
+
+        startBtn.addEventListener('click', runCompilation);
+
+    </script>
+</body>
+</html>
