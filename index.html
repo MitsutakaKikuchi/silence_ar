@@ -293,13 +293,16 @@
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             cursor: pointer;
-            pointer-events: auto;
-            transform: translateY(150%); /* 初期は非表示 */
+            pointer-events: none; /* 初期はクリック不可 */
+            opacity: 0; /* 初期は透明 */
+            transform: translateY(20px);
             transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
         #persistent-profile-btn.visible {
             transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
         }
         
         #persistent-profile-btn:hover {
@@ -2742,22 +2745,11 @@
                 sceneLoaded = true;
                 
                 loadingManager.setStageComplete('targets');
-                loadingManager.setStageActive('images');
                 
-                // 画像プリロード状況を定期的にチェック
-                const imageCheckInterval = setInterval(() => {
-                    if (checkImagesLoaded()) {
-                        clearInterval(imageCheckInterval);
-                        loadingManager.setStageActive('camera');
-                    }
-                }, 200);
-                
-                // タイムアウト（10秒）で画像ロードを強制完了
-                setTimeout(() => {
-                    clearInterval(imageCheckInterval);
-                    loadingManager.setStageComplete('images');
-                    loadingManager.setStageActive('camera');
-                }, 10000);
+                // 画像読み込みを待たずに、即座にカメラ準備へ移行（UX改善）
+                // 背景で画像読み込みは継続される
+                loadingManager.setStageComplete('images'); 
+                loadingManager.setStageActive('camera');
             };
             
             // AR準備完了（カメラ起動後）
