@@ -2494,25 +2494,21 @@
             let sceneLoaded = false;
             let arReady = false;
             let introShown = false;
-            let // introShown = true; // ここではフラグだけ立てない。ローディング完了まで待つ
-            }
+            let completionShown = false;
+            const viewedEpisodes = new Set();
+            const hasVisited = sessionStorage.getItem('silence_ar_visited') === 'true';
             
             // イントロ開始ボタン
             if (introStartBtn) {
                 introStartBtn.addEventListener('click', () => {
-                    introOverlay.classList.remove('visible'); // visibleクラスを削除する運用に変更
+                    introOverlay.classList.remove('visible');
                     introOverlay.classList.add('hidden');
                     introShown = true;
                     sessionStorage.setItem('silence_ar_visited', 'true');
                     
                     // イントロ終了後にガイドを表示
-                    scanningGuide.classList.add('visibl
-            // イントロ開始ボタン
-            if (introStartBtn) {
-                introStartBtn.addEventListener('click', () => {
-                    introOverlay.classList.add('hidden');
-                    introShown = true;
-                    sessionStorage.setItem('silence_ar_visited', 'true');
+                    scanningGuide.classList.add('visible');
+                    showInstruction('日常の断片を、枠の中へ導いてください', 5000);
                 });
             }
             
@@ -2710,6 +2706,18 @@
                 }
                 return false;
             }
+
+            // ロード完了判定（画像とカメラ両方準備OKか）
+            function checkAndFinishLoading() {
+                const imagesDone = loadingManager.stages.images.complete;
+                const cameraDone = loadingManager.stages.camera.complete;
+                
+                console.log(`Check finish: Images=${imagesDone}, Camera=${cameraDone}`);
+
+                if (imagesDone && cameraDone) {
+                    onAllReady();
+                }
+            }
             
             // タイポグラフィアニメーション
             function animateText(element, html) {
@@ -2733,20 +2741,20 @@
                 if (arReady) return;
                 arReady = true;
                 
-                loadingManager.setStageComplete('camera');
-                
                 // 少し待ってからフェードアウト
                 setTimeout(() => {
-                    cust
+                    customLoading.classList.add('fade-out');
+                    
+                    setTimeout(() => {
                         // 初回かつ未訪問ならイントロを表示、そうでなければ即ガイド
                         if (!hasVisited && !introShown) {
+                            introOverlay.classList.remove('hidden');
                             introOverlay.classList.add('visible');
                         } else {
+                            scanningGuide.classList.remove('hidden');
                             scanningGuide.classList.add('visible');
+                            showInstruction('日常の断片を、枠の中へ導いてください', 5000);
                         }
-                        
-                        // ウェルカムメッセージ
-                        // showInstruction('日常の断片を、枠の中へ導いてください', 5000);
                     }, 800);
                 }, 500);
             }
@@ -2764,6 +2772,7 @@
                     if (checkImagesLoaded()) {
                         clearInterval(imageCheckInterval);
                         loadingManager.setStageActive('camera');
+                        checkAndFinishLoading();
                     }
                 }, 200);
                 
@@ -2772,13 +2781,15 @@
                     clearInterval(imageCheckInterval);
                     loadingManager.setStageComplete('images');
                     loadingManager.setStageActive('camera');
+                    checkAndFinishLoading();
                 }, 15000);
             };
             
             // AR準備完了（カメラ起動後）
             const onArReady = () => {
                 console.log('AR is ready');
-                onAllReady();
+                loadingManager.setStageComplete('camera');
+                checkAndFinishLoading();
             };
 
             if (scene.hasLoaded) {
