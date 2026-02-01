@@ -2632,21 +2632,20 @@
                 particleSystem.updateGyro(x, y);
             });
             
-            // タッチリップル（カード非表示時のみ）
             document.addEventListener('touchstart', (e) => {
                 // ジャイロパーミッションリクエスト（iOS）
                 gyroParallax.requestPermission();
                 
-                // リップル生成（カード非表示時のみ）
-                if (!card.classList.contains('visible')) {
+                // リップル生成（没入モード有効時のみ）
+                if (theaterMode.enabled && !card.classList.contains('visible')) {
                     const touch = e.touches[0];
                     rippleEffect.create(touch.clientX, touch.clientY);
                 }
             });
             
             document.addEventListener('click', (e) => {
-                // カード非表示時のみリップル生成
-                if (!card.classList.contains('visible')) {
+                // リップル生成（没入モード有効時のみ）
+                if (theaterMode.enabled && !card.classList.contains('visible')) {
                     rippleEffect.create(e.clientX, e.clientY);
                 }
             });
@@ -2830,9 +2829,11 @@
             });
 
             const onTargetFound = (index) => {
-                // エピソードカード、完了画面、またはプロフィールが表示されている間はスキャン結果を無視する
-                const isUIActive = card.classList.contains('visible') || 
-                                  completionOverlay.classList.contains('visible') || 
+                // 同じエピソードが表示されている場合は無視
+                if (card.classList.contains('visible') && currentTargetIndex === index) return;
+                
+                // 完了画面、またはプロフィールが表示されている間はスキャン結果を無視する
+                const isUIActive = completionOverlay.classList.contains('visible') || 
                                   profileOverlay.classList.contains('visible');
                 
                 if (isUIActive) return;
