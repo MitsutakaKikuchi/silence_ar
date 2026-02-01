@@ -325,33 +325,49 @@
             align-items: center;
             gap: 8px;
             padding: 12px 18px;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6); /* 無効時は濃い背景 */
             border-radius: 25px;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15); /* 無効時は白いボーダー */
             cursor: pointer;
             pointer-events: auto;
             transition: all 0.4s ease;
         }
         
         #theater-mode-btn:hover {
-            background: rgba(0, 0, 0, 0.6);
-            border-color: rgba(0, 255, 170, 0.3);
+            background: rgba(0, 0, 0, 0.7);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        #theater-mode-btn.active:hover {
+            background: rgba(0, 255, 170, 0.25);
+            border-color: rgba(0, 255, 170, 1);
         }
         
         #theater-mode-btn svg {
             width: 18px;
             height: 18px;
-            fill: rgba(255, 255, 255, 0.7);
+            fill: rgba(255, 255, 255, 0.5); /* 無効時は薄い白 */
             transition: fill 0.3s ease;
         }
         
         /* 没入モード有効時のスタイル強化 */
         #theater-mode-btn.active {
-            background: rgba(0, 255, 170, 0.15);
-            border-color: rgba(0, 255, 170, 0.6);
-            box-shadow: 0 0 20px rgba(0, 255, 170, 0.3), inset 0 0 10px rgba(0, 255, 170, 0.1);
+            background: rgba(0, 255, 170, 0.2);
+            border-color: rgba(0, 255, 170, 0.8);
+            border-width: 2px;
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.4);
+            animation: theaterPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes theaterPulse {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(0, 255, 170, 0.6);
+            }
         }
         
         #theater-mode-btn.active svg {
@@ -367,6 +383,13 @@
             font-size: 0.7rem;
             color: rgba(255, 255, 255, 0.6);
             letter-spacing: 0.1em;
+            transition: color 0.3s ease;
+        }
+        
+        /* 有効時のラベル色 */
+        #theater-mode-btn.active span {
+            color: rgba(0, 255, 170, 0.95);
+            font-weight: 500;
         }
         
         /* シアターモード時のオーバーレイ詩 */
@@ -2148,13 +2171,13 @@
                 
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 
-                // リバーブ（残響）ノードを作成
-                this.createReverbNode();
-                
-                // マスターボリューム
+                // マスターボリューム（先に作成）
                 this.masterGain = this.audioContext.createGain();
                 this.masterGain.gain.value = 0.12;
                 this.masterGain.connect(this.audioContext.destination);
+                
+                // リバーブ（残響）ノードを作成
+                this.createReverbNode();
                 
                 // 雨音風のノイズ
                 this.createRainNoise();
