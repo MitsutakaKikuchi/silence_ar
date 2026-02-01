@@ -268,6 +268,13 @@
            サウンドコントロール
            ======================================== */
         #sound-control {
+            display: none; /* 統合のため非表示 */
+        }
+        
+        /* ========================================
+           没入モードボタン（統合）
+           ======================================== */
+        #theater-mode-btn {
             position: fixed;
             left: 15px;
             bottom: 25px;
@@ -275,59 +282,15 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 14px;
-            background: rgba(0, 0, 0, 0.4);
+            padding: 12px 18px;
+            background: rgba(0, 0, 0, 0.5);
             border-radius: 25px;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             cursor: pointer;
             pointer-events: auto;
-            transition: all 0.3s ease;
-        }
-        
-        #sound-control:hover {
-            background: rgba(0, 0, 0, 0.6);
-            border-color: rgba(0, 255, 170, 0.3);
-        }
-        
-        #sound-control svg {
-            width: 18px;
-            height: 18px;
-            fill: rgba(255, 255, 255, 0.7);
-            transition: fill 0.3s ease;
-        }
-        
-        #sound-control.active svg {
-            fill: rgba(0, 255, 170, 0.9);
-        }
-        
-        #sound-control span {
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 0.1em;
-        }
-        
-        /* ========================================
-           シアターモード（没入モード）
-           ======================================== */
-        #theater-mode-btn {
-            position: fixed;
-            left: 15px;
-            bottom: 75px;
-            z-index: 1500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 25px;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            cursor: pointer;
-            pointer-events: auto;
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
         }
         
         #theater-mode-btn:hover {
@@ -798,9 +761,9 @@
             border-top: 1px solid rgba(0, 255, 170, 0.15);
             transform: translateY(100%);
             transition: 
-                transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), 
-                opacity 0.5s ease,
-                box-shadow 0.5s ease;
+                transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                opacity 0.6s ease,
+                box-shadow 0.6s ease;
             pointer-events: auto;
             overflow: hidden;
             display: flex; flex-direction: column;
@@ -1152,7 +1115,7 @@
             },
             {
                 title: 'Episode.02 沈黙の蔦',
-                text: 'その静けさは、首筋に巻きつく美しい緑の<strong>蔦（つた）</strong>だ。<br>優しさという真綿で、ゆっくりと気道を締め上げられている。',
+                text: 'その静けさは、首筋に巻きつく美しい緑の<strong>蔦</strong>だ。<br>優しさという真綿で、ゆっくりと気道を締め上げられている。',
                 image: './images/layerB_1.jpg?v=800'
             },
             {
@@ -1167,12 +1130,12 @@
             },
             {
                 title: 'Episode.05 過保護な檻',
-                text: 'この窮屈さは、脆い私を守るための過保護な<strong>檻（おり）</strong>だ。<br>私はその錆びた鉄柵の内側でしか、呼吸を許されていない。',
+                text: 'この窮屈さは、脆い私を守るための過保護な<strong>檻</strong>だ。<br>私はその錆びた鉄柵の内側でしか、呼吸を許されていない。',
                 image: './images/layerB_4.jpg?v=800'
             },
             {
                 title: 'Episode.06 相互の呪縛',
-                text: '背中合わせの傷口から、互いの根が癒着してしまった。<br>もう別々の木には戻れない<strong>接ぎ木（つぎき）</strong>のように、呪い合っている。',
+                text: '背中合わせの傷口から、互いの根が癒着してしまった。<br>もう別々の木には戻れない<strong>接ぎ木</strong>のように、呪い合っている。',
                 image: './images/layerB_5.jpg?v=800'
             },
             {
@@ -1182,7 +1145,7 @@
             },
             {
                 title: 'Episode.08 庭師の剪定',
-                text: '庭師が冷徹なハサミで、無駄な枝を<strong>剪定（せんてい）</strong>したのだ。<br>美しさを保つため、切り落とされた本当の感情が散らばっている。',
+                text: '庭師が冷徹なハサミで、無駄な枝を<strong>剪定</strong>したのだ。<br>美しさを保つため、切り落とされた本当の感情が散らばっている。',
                 image: './images/layerB_7.jpg?v=800'
             },
             {
@@ -1199,13 +1162,13 @@
         
         // 詩のフラグメント（シアターモード用）14文字
         const poemFragments = [
-            '言わなかった言葉は消えない',
+            '言わなかった事実は消えない',
             '暗い土の中で静かに根を張る',
             '沈黙もまた一つの愛の形だ',
             '壊れるものを守るための沈黙',
             '二度と出られない迷宮の庭園',
-            '祈りのように静か呪いのよう',
-            '私たちが選んだ沈黙という庭',
+            'それは祈りか、あるいは呪いか',
+            '私たちが選んだ、沈黙という庭',
             '飲み込んだ本音/我慢した反論',
             '見えない庭は今も繁茂してる'
         ];
@@ -1500,6 +1463,12 @@
                 
                 // 水滴音（ランダム）
                 this.createWaterDrops();
+                
+                // 鳥のさえずり
+                this.createBirdChirps();
+                
+                // ベルの音
+                this.createBells();
             }
             
             createRainNoise() {
@@ -1616,6 +1585,95 @@
                 this.nodes.drops = { timers: [] };
             }
             
+            createBirdChirps() {
+                // 鳥のさえずり（ランダムな高周波トーン）
+                this.nodes.birds = { timers: [] };
+            }
+            
+            createBells() {
+                // ベル（風鈴）の音
+                this.nodes.bells = { timers: [] };
+            }
+            
+            playBirdChirp() {
+                if (!this.audioContext || !this.enabled) return;
+                
+                // ランダムな鳥の鳴き声（短いFM合成）
+                const carrier = this.audioContext.createOscillator();
+                const modulator = this.audioContext.createOscillator();
+                const modGain = this.audioContext.createGain();
+                const birdGain = this.audioContext.createGain();
+                
+                const baseFreq = 2000 + Math.random() * 1500;
+                carrier.type = 'sine';
+                carrier.frequency.value = baseFreq;
+                
+                modulator.type = 'sine';
+                modulator.frequency.value = 10 + Math.random() * 20;
+                modGain.gain.value = 100 + Math.random() * 200;
+                
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+                
+                birdGain.gain.value = 0.008;
+                carrier.connect(birdGain);
+                birdGain.connect(this.masterGain);
+                
+                const now = this.audioContext.currentTime;
+                carrier.start(now);
+                modulator.start(now);
+                
+                // 短いチャープ
+                birdGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                carrier.stop(now + 0.15);
+                modulator.stop(now + 0.15);
+                
+                // 次の鳥（ランダムな間隔）
+                if (this.enabled) {
+                    const nextChirp = setTimeout(() => {
+                        this.playBirdChirp();
+                    }, 8000 + Math.random() * 15000);
+                    this.nodes.birds.timers.push(nextChirp);
+                }
+            }
+            
+            playBell() {
+                if (!this.audioContext || !this.enabled) return;
+                
+                // 風鈴のような音（減衰するサイン波）
+                const frequencies = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                const freq = frequencies[Math.floor(Math.random() * frequencies.length)];
+                
+                const osc = this.audioContext.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                
+                // フィルターでベルっぽい音に
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 400;
+                
+                const bellGain = this.audioContext.createGain();
+                bellGain.gain.value = 0.015;
+                
+                osc.connect(filter);
+                filter.connect(bellGain);
+                bellGain.connect(this.masterGain);
+                
+                const now = this.audioContext.currentTime;
+                osc.start(now);
+                bellGain.gain.exponentialRampToValueAtTime(0.001, now + 2);
+                osc.stop(now + 2);
+                
+                // 次のベル（ランダムな間隔）
+                if (this.enabled) {
+                    const nextBell = setTimeout(() => {
+                        this.playBell();
+                    }, 12000 + Math.random() * 20000);
+                    this.nodes.bells.timers.push(nextBell);
+                }
+            }
+            
             playWaterDrop() {
                 if (!this.audioContext || !this.enabled) return;
                 
@@ -1667,6 +1725,10 @@
                     
                     // 水滴音開始
                     setTimeout(() => this.playWaterDrop(), 2000);
+                    // 鳥のさえずり開始
+                    setTimeout(() => this.playBirdChirp(), 5000);
+                    // ベル開始
+                    setTimeout(() => this.playBell(), 8000);
                 } else {
                     // フェードアウト
                     this.masterGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 1);
@@ -1675,6 +1737,16 @@
                     if (this.nodes.drops && this.nodes.drops.timers) {
                         this.nodes.drops.timers.forEach(timer => clearTimeout(timer));
                         this.nodes.drops.timers = [];
+                    }
+                    // 鳥のタイマーをクリア
+                    if (this.nodes.birds && this.nodes.birds.timers) {
+                        this.nodes.birds.timers.forEach(timer => clearTimeout(timer));
+                        this.nodes.birds.timers = [];
+                    }
+                    // ベルのタイマーをクリア
+                    if (this.nodes.bells && this.nodes.bells.timers) {
+                        this.nodes.bells.timers.forEach(timer => clearTimeout(timer));
+                        this.nodes.bells.timers = [];
                     }
                     
                     setTimeout(() => {
@@ -1757,16 +1829,18 @@
                 }
             });
             
-            // シアターモードボタン
+            // 没入モードボタン（統合）
             const theaterBtn = document.getElementById('theater-mode-btn');
             if (theaterBtn) {
                 theaterBtn.addEventListener('click', () => {
-                    const enabled = theaterMode.toggle();
-                    theaterBtn.classList.toggle('active', enabled);
+                    // シアターモードと環境音を同時に制御
+                    const theaterEnabled = theaterMode.toggle();
+                    const soundEnabled = ambientSound.toggle();
+                    theaterBtn.classList.toggle('active', theaterEnabled);
                 });
             }
             
-            // サウンドコントロール
+            // サウンドコントロール（互換性のため残す）
             const soundControl = document.getElementById('sound-control');
             if (soundControl) {
                 soundControl.addEventListener('click', () => {
@@ -1869,7 +1943,6 @@
                 
                 // ボタンを再表示
                 if (theaterBtn) theaterBtn.style.display = '';
-                if (soundControl) soundControl.style.display = '';
             });
 
             const onTargetFound = (index) => {
@@ -1882,6 +1955,10 @@
 
                 const data = episodes[index];
                 if (data) {
+                    // テキストスクロールをトップに
+                    const cardContent = document.querySelector('.card-content');
+                    if (cardContent) cardContent.scrollTop = 0;
+                    
                     uiTitle.innerHTML = data.title;
                     animateText(uiDesc, data.text);
                     
@@ -1917,8 +1994,7 @@
                         
                         // カード表示時はボタンを非表示
                         if (theaterBtn) theaterBtn.style.display = 'none';
-                        if (soundControl) soundControl.style.display = 'none';
-                    }, 50);
+                    }, 80);
                 }
             };
 
