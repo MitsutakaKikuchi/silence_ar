@@ -16,7 +16,12 @@
     <!-- Favicon: White Minimal Seed/Moon Symbol -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cfilter id='glow'%3E%3CfeGaussianBlur stdDeviation='4' result='coloredBlur'/%3E%3CfeMerge%3E%3CfeMergeNode in='coloredBlur'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' stroke='white' stroke-width='2' fill='none' opacity='0.5' filter='url(%23glow)'/%3E%3Ccircle cx='50' cy='50' r='5' fill='white' filter='url(%23glow)'/%3E%3Cpath d='M50 5 Q40 50 50 95 Q60 50 50 5' stroke='white' stroke-width='1' fill='none' opacity='0.3'/%3E%3C/svg%3E">
 
-    <!-- A-Frame と MindAR -->
+    <!-- A-Frame と MindAR (プリロード最適化) -->
+    <link rel="preconnect" href="https://aframe.io" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preload" href="https://aframe.io/releases/1.5.0/aframe.min.js" as="script">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js" as="script">
+    <link rel="preload" href="./targets.mind" as="fetch" crossorigin>
     <script src='https://aframe.io/releases/1.5.0/aframe.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js'></script>
     <style>
@@ -736,6 +741,232 @@
             0%, 100% { opacity: 0.35; transform: translateY(0); }
             50% { opacity: 0.85; transform: translateY(-3px); }
         }
+        
+        /* ローディング進捗バー */
+        .loading-progress-container {
+            margin-top: 40px;
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .loading-progress-bar {
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 1px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .loading-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, rgba(0, 255, 170, 0.3), rgba(0, 255, 170, 0.8));
+            border-radius: 1px;
+            transition: width 0.3s ease-out;
+            box-shadow: 0 0 10px rgba(0, 255, 170, 0.5);
+        }
+        
+        .loading-progress-text {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.15em;
+        }
+        
+        /* ローディング段階表示 */
+        .loading-stages {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .loading-stage {
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 0.2em;
+            transition: all 0.5s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .loading-stage.active {
+            color: rgba(0, 255, 170, 0.8);
+        }
+        
+        .loading-stage.complete {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .loading-stage::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.5s ease;
+        }
+        
+        .loading-stage.active::before {
+            background: rgba(0, 255, 170, 0.8);
+            box-shadow: 0 0 8px rgba(0, 255, 170, 0.6);
+            animation: stagePulse 1s infinite;
+        }
+        
+        .loading-stage.complete::before {
+            background: rgba(0, 255, 170, 0.5);
+        }
+        
+        @keyframes stagePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+        
+        /* 完了エンディング演出 */
+        .completion-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease;
+        }
+        
+        .completion-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .completion-text {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            letter-spacing: 0.4em;
+            line-height: 2.5;
+            text-align: center;
+            max-width: 80%;
+            animation: completionFadeIn 2s ease forwards;
+        }
+        
+        .completion-text .line {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        @keyframes completionFadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        .completion-close {
+            margin-top: 50px;
+            padding: 15px 30px;
+            background: transparent;
+            border: 1px solid rgba(0, 255, 170, 0.5);
+            color: rgba(0, 255, 170, 0.8);
+            font-size: 0.8rem;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            border-radius: 30px;
+            transition: all 0.4s ease;
+            opacity: 0;
+            animation: completionBtnFadeIn 1s ease forwards 3s;
+        }
+        
+        .completion-close:hover {
+            background: rgba(0, 255, 170, 0.1);
+            border-color: rgba(0, 255, 170, 0.8);
+        }
+        
+        @keyframes completionBtnFadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 初回訪問時のイントロ */
+        .intro-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999998;
+            opacity: 1;
+            transition: opacity 1.5s ease;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+        
+        .intro-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .intro-title {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.5em;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .intro-subtitle {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.3em;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+        
+        .intro-poem {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 0.15em;
+            line-height: 2.2;
+            text-align: center;
+            max-width: 320px;
+            margin-bottom: 60px;
+        }
+        
+        .intro-start {
+            padding: 18px 45px;
+            background: transparent;
+            border: 1px solid rgba(0, 255, 170, 0.5);
+            color: rgba(0, 255, 170, 0.9);
+            font-size: 0.85rem;
+            letter-spacing: 0.25em;
+            cursor: pointer;
+            border-radius: 35px;
+            transition: all 0.4s ease;
+            font-family: 'Yu Mincho', serif;
+        }
+        
+        .intro-start:hover {
+            background: rgba(0, 255, 170, 0.1);
+            border-color: rgba(0, 255, 170, 0.8);
+            transform: scale(1.05);
+        }
+        
+        .intro-start:active {
+            transform: scale(0.98);
+        }
 
         /* MindARのデフォルトUIを強制非表示 */
         .mindar-ui-overlay, .mindar-ui-loading, .mindar-ui-scanning {
@@ -1105,6 +1336,120 @@
     </style>
     <script>
         // ==========================================
+        // ローディングマネージャー（進捗管理）
+        // ==========================================
+        class LoadingManager {
+            constructor() {
+                this.stages = {
+                    library: { weight: 20, complete: false },
+                    targets: { weight: 30, complete: false },
+                    images: { weight: 40, complete: false },
+                    camera: { weight: 10, complete: false }
+                };
+                this.imageProgress = 0;
+                this.totalImages = 10;
+                this.loadedImages = 0;
+                
+                this.progressFill = document.getElementById('loading-progress-fill');
+                this.progressText = document.getElementById('loading-progress-text');
+                this.mainText = document.getElementById('loading-main-text');
+            }
+            
+            setStageActive(stageName) {
+                const stageEl = document.getElementById(`stage-${stageName}`);
+                if (stageEl) {
+                    stageEl.classList.remove('complete');
+                    stageEl.classList.add('active');
+                }
+                this.updateMainText(stageName);
+            }
+            
+            setStageComplete(stageName) {
+                const stageEl = document.getElementById(`stage-${stageName}`);
+                if (stageEl) {
+                    stageEl.classList.remove('active');
+                    stageEl.classList.add('complete');
+                }
+                this.stages[stageName].complete = true;
+                this.updateProgress();
+            }
+            
+            updateImageProgress(loaded) {
+                this.loadedImages = loaded;
+                this.imageProgress = (loaded / this.totalImages) * this.stages.images.weight;
+                this.updateProgress();
+            }
+            
+            updateProgress() {
+                let total = 0;
+                for (const [key, stage] of Object.entries(this.stages)) {
+                    if (stage.complete) {
+                        total += stage.weight;
+                    } else if (key === 'images') {
+                        total += this.imageProgress;
+                    }
+                }
+                
+                const percent = Math.min(Math.round(total), 100);
+                if (this.progressFill) {
+                    this.progressFill.style.width = percent + '%';
+                }
+                if (this.progressText) {
+                    this.progressText.textContent = percent + '%';
+                }
+            }
+            
+            updateMainText(stage) {
+                if (!this.mainText) return;
+                const texts = {
+                    library: '記憶の庭へ接続しています...',
+                    targets: '沈黙の断片を探しています...',
+                    images: '真実を収集しています...',
+                    camera: '視界を開いています...'
+                };
+                this.mainText.textContent = texts[stage] || '準備しています...';
+            }
+        }
+        
+        // グローバルローディングマネージャー
+        let loadingManager = null;
+        
+        // 即座に画像プリロードを開始（DOMContentLoaded前に）
+        const preloadedImageCache = {};
+        let preloadStarted = false;
+        
+        function startEarlyPreload() {
+            if (preloadStarted) return;
+            preloadStarted = true;
+            
+            const imagePaths = [];
+            for (let i = 0; i < 10; i++) {
+                imagePaths.push(`./images/layerB_${i}.jpg?v=800`);
+            }
+            
+            imagePaths.forEach((src, index) => {
+                const img = new Image();
+                img.onload = () => {
+                    preloadedImageCache[index] = true;
+                    if (loadingManager) {
+                        loadingManager.updateImageProgress(Object.keys(preloadedImageCache).length);
+                    }
+                };
+                img.onerror = () => {
+                    console.warn(`Failed to preload image ${index}`);
+                    preloadedImageCache[index] = false;
+                    if (loadingManager) {
+                        loadingManager.updateImageProgress(Object.keys(preloadedImageCache).length);
+                    }
+                };
+                img.src = src;
+            });
+        }
+        
+        // ページロード直後にプリロード開始
+        startEarlyPreload();
+
+        // ==========================================
         // エピソードデータ (01-10)
         // ==========================================
         const episodes = [
@@ -1172,6 +1517,85 @@
             '飲み込んだ本音/我慢した反論',
             '見えない庭は今も繁茂してる'
         ];
+        
+        // ==========================================
+        // 時間帯による環境変化（インスタレーション要素）
+        // ==========================================
+        class TimeBasedEnvironment {
+            constructor() {
+                this.currentPeriod = this.getTimePeriod();
+                this.applyEnvironment();
+            }
+            
+            getTimePeriod() {
+                const hour = new Date().getHours();
+                if (hour >= 5 && hour < 10) return 'morning';
+                if (hour >= 10 && hour < 17) return 'day';
+                if (hour >= 17 && hour < 20) return 'evening';
+                return 'night';
+            }
+            
+            applyEnvironment() {
+                const root = document.documentElement;
+                const loadingBg = document.getElementById('custom-loading');
+                
+                const themes = {
+                    morning: {
+                        accent: 'rgba(255, 200, 150, 0.8)',
+                        accentDim: 'rgba(255, 200, 150, 0.3)',
+                        gradient: 'linear-gradient(135deg, #1a1512 0%, #2a201a 50%, #1f1815 100%)',
+                        welcomeText: '朝靄の中、庭園が目覚めます...'
+                    },
+                    day: {
+                        accent: 'rgba(0, 255, 170, 1)',
+                        accentDim: 'rgba(0, 255, 170, 0.3)',
+                        gradient: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)',
+                        welcomeText: '記憶の庭へ接続しています...'
+                    },
+                    evening: {
+                        accent: 'rgba(255, 150, 100, 0.9)',
+                        accentDim: 'rgba(255, 150, 100, 0.3)',
+                        gradient: 'linear-gradient(135deg, #1a0f0a 0%, #2a1510 50%, #1f100a 100%)',
+                        welcomeText: '夕暮れの庭へ、ようこそ...'
+                    },
+                    night: {
+                        accent: 'rgba(100, 180, 255, 0.8)',
+                        accentDim: 'rgba(100, 180, 255, 0.3)',
+                        gradient: 'linear-gradient(135deg, #050510 0%, #0a0a1a 50%, #05050f 100%)',
+                        welcomeText: '夜の静寂に、沈黙が響きます...'
+                    }
+                };
+                
+                const theme = themes[this.currentPeriod];
+                
+                // CSS変数を更新（任意の場所で使用可能）
+                root.style.setProperty('--time-accent', theme.accent);
+                root.style.setProperty('--time-accent-dim', theme.accentDim);
+                
+                // ローディング背景
+                if (loadingBg) {
+                    loadingBg.style.background = theme.gradient;
+                }
+                
+                // ローディングテキスト更新
+                const loadingText = document.getElementById('loading-main-text');
+                if (loadingText) {
+                    loadingText.textContent = theme.welcomeText;
+                }
+                
+                console.log(`Environment set to: ${this.currentPeriod}`);
+            }
+        }
+        
+        // 初期化（DOMContentLoaded前に実行可能）
+        let timeEnvironment = null;
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                timeEnvironment = new TimeBasedEnvironment();
+            });
+        } else {
+            timeEnvironment = new TimeBasedEnvironment();
+        }
 
         // ==========================================
         // パーティクルシステム（花びら・光の粒子）
@@ -1782,11 +2206,88 @@
             const closeBtn = document.querySelector('.close-btn');
             const imageLoading = document.getElementById('image-loading');
             const scene = document.querySelector('a-scene');
+            const introOverlay = document.getElementById('intro-overlay');
+            const introStartBtn = document.getElementById('intro-start-btn');
+            const completionOverlay = document.getElementById('completion-overlay');
+            const completionCloseBtn = document.getElementById('completion-close-btn');
 
             let currentTargetIndex = -1;
             let sceneLoaded = false;
-            const preloadedImages = {};
+            let arReady = false;
+            let introShown = false;
+            let completionShown = false;
             const viewedEpisodes = new Set();
+            
+            // 初回訪問チェック（セッション内）
+            const hasVisited = sessionStorage.getItem('silence_ar_visited');
+            if (hasVisited) {
+                introOverlay.classList.add('hidden');
+                introShown = true;
+            }
+            
+            // イントロ開始ボタン
+            if (introStartBtn) {
+                introStartBtn.addEventListener('click', () => {
+                    introOverlay.classList.add('hidden');
+                    introShown = true;
+                    sessionStorage.setItem('silence_ar_visited', 'true');
+                });
+            }
+            
+            // 完了画面閉じるボタン
+            if (completionCloseBtn) {
+                completionCloseBtn.addEventListener('click', () => {
+                    completionOverlay.classList.remove('visible');
+                    completionShown = false;
+                    viewedEpisodes.clear();
+                    updateEpisodeIndicator(-1);
+                    
+                    // シードをリセット
+                    document.querySelectorAll('.episode-seed').forEach(seed => {
+                        seed.classList.remove('viewed', 'current');
+                    });
+                });
+            }
+            
+            // 全エピソード閲覧時のエンディング表示
+            function showCompletion() {
+                if (completionShown) return;
+                completionShown = true;
+                
+                // テキストを順番にアニメーション
+                const lines = completionOverlay.querySelectorAll('.line');
+                lines.forEach((line, index) => {
+                    setTimeout(() => {
+                        line.style.opacity = '1';
+                        line.style.transform = 'translateY(0)';
+                        line.style.transition = 'all 1s ease';
+                    }, 500 + index * 800);
+                });
+                
+                completionOverlay.classList.add('visible');
+            }
+            
+            // ローディングマネージャー初期化
+            loadingManager = new LoadingManager();
+            loadingManager.setStageActive('library');
+            
+            // ライブラリ読み込み完了をチェック
+            if (window.AFRAME && window.MINDAR) {
+                loadingManager.setStageComplete('library');
+                loadingManager.setStageActive('targets');
+            } else {
+                // 少し待ってから再チェック
+                setTimeout(() => {
+                    loadingManager.setStageComplete('library');
+                    loadingManager.setStageActive('targets');
+                }, 500);
+            }
+            
+            // 画像プリロード状況を反映
+            const loadedCount = Object.keys(preloadedImageCache).length;
+            if (loadedCount > 0) {
+                loadingManager.updateImageProgress(loadedCount);
+            }
             
             // インスタレーション機能の初期化
             const particleCanvas = document.getElementById('particle-canvas');
@@ -1878,24 +2379,21 @@
                 });
             });
 
-            // 画像を事前にロードする関数
-            function preloadImages() {
-                episodes.forEach((episode, index) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        preloadedImages[index] = true;
-                        console.log(`Preloaded image ${index + 1}/10`);
-                    };
-                    img.src = episode.image;
-                });
+            // 画像プリロード完了チェック
+            function checkImagesLoaded() {
+                const loaded = Object.keys(preloadedImageCache).length;
+                loadingManager.updateImageProgress(loaded);
+                
+                if (loaded >= 10) {
+                    loadingManager.setStageComplete('images');
+                    return true;
+                }
+                return false;
             }
             
             // タイポグラフィアニメーション
             function animateText(element, html) {
                 element.innerHTML = html;
-                // strongタグ内のテキストにもアニメーションを適用
-                // HTMLを保持しながら文字単位のアニメーションは複雑なので、
-                // フェードイン+translateYで代替
             }
             
             // インストラクション表示
@@ -1909,19 +2407,55 @@
                     }, duration);
                 }
             }
+            
+            // 全ての準備完了時の処理
+            function onAllReady() {
+                if (arReady) return;
+                arReady = true;
+                
+                loadingManager.setStageComplete('camera');
+                
+                // 少し待ってからフェードアウト
+                setTimeout(() => {
+                    customLoading.classList.add('fade-out');
+                    setTimeout(() => {
+                        customLoading.style.display = 'none';
+                        scanningGuide.classList.add('visible');
+                        
+                        // ウェルカムメッセージ
+                        showInstruction('日常の断片を、枠の中へ導いてください', 5000);
+                    }, 800);
+                }, 500);
+            }
 
-            // A-Frameシーンのロード完了を検知（AR準備完了まで表示）
+            // A-Frameシーンのロード完了を検知
             const onSceneLoaded = () => {
                 if (sceneLoaded) return;
                 sceneLoaded = true;
                 
-                preloadImages();
+                loadingManager.setStageComplete('targets');
+                loadingManager.setStageActive('images');
                 
-                customLoading.classList.add('fade-out');
+                // 画像プリロード状況を定期的にチェック
+                const imageCheckInterval = setInterval(() => {
+                    if (checkImagesLoaded()) {
+                        clearInterval(imageCheckInterval);
+                        loadingManager.setStageActive('camera');
+                    }
+                }, 200);
+                
+                // タイムアウト（10秒）で画像ロードを強制完了
                 setTimeout(() => {
-                    customLoading.style.display = 'none';
-                    scanningGuide.classList.add('visible');
-                }, 800);
+                    clearInterval(imageCheckInterval);
+                    loadingManager.setStageComplete('images');
+                    loadingManager.setStageActive('camera');
+                }, 10000);
+            };
+            
+            // AR準備完了（カメラ起動後）
+            const onArReady = () => {
+                console.log('AR is ready');
+                onAllReady();
             };
 
             if (scene.hasLoaded) {
@@ -1930,6 +2464,17 @@
                 scene.addEventListener('loaded', onSceneLoaded);
                 scene.addEventListener('renderstart', onSceneLoaded);
             }
+            
+            // MindAR の arReady イベントを監視
+            scene.addEventListener('arReady', onArReady);
+            
+            // フォールバック：一定時間後に強制的に準備完了
+            setTimeout(() => {
+                if (!arReady) {
+                    console.log('Forcing AR ready state');
+                    onAllReady();
+                }
+            }, 8000);
 
             // 閉じるボタン
             closeBtn.addEventListener('click', () => {
@@ -1962,7 +2507,7 @@
                     uiTitle.innerHTML = data.title;
                     animateText(uiDesc, data.text);
                     
-                    const isPreloaded = preloadedImages[index];
+                    const isPreloaded = preloadedImageCache[index];
                     
                     if (!isPreloaded) {
                         imageLoading.classList.remove('hidden');
@@ -1994,6 +2539,13 @@
                         
                         // カード表示時はボタンを非表示
                         if (theaterBtn) theaterBtn.style.display = 'none';
+                        
+                        // 全エピソード閲覧完了チェック
+                        if (viewedEpisodes.size === 10 && !completionShown) {
+                            setTimeout(() => {
+                                showCompletion();
+                            }, 3000);
+                        }
                     }, 80);
                 }
             };
@@ -2013,6 +2565,31 @@
     </script>
 </head>
 <body>
+    <!-- 初回訪問時イントロ -->
+    <div id="intro-overlay" class="intro-overlay">
+        <div class="intro-title">沈黙の解剖図譜</div>
+        <div class="intro-subtitle">不可視の愛に関する空間的考察</div>
+        <div class="intro-poem">
+            言葉にしなかった想いは、<br>
+            どこへ行くのだろう。<br><br>
+            飲み込んだ本音、我慢した反論、<br>
+            伝えられなかった愛。<br><br>
+            それらは「無かったこと」にはならない。
+        </div>
+        <button class="intro-start" id="intro-start-btn">庭へ入る</button>
+    </div>
+    
+    <!-- 完了エンディング -->
+    <div id="completion-overlay" class="completion-overlay">
+        <div class="completion-text">
+            <div class="line">この庭を歩き終えて気づく。</div>
+            <div class="line">私たちが選んだ『沈黙』は、</div>
+            <div class="line">決して逃げではなく、</div>
+            <div class="line">一つの愛の形だったのかもしれない。</div>
+        </div>
+        <button class="completion-close" id="completion-close-btn">もう一度、庭を歩く</button>
+    </div>
+    
     <!-- 環境エフェクト -->
     <div id="environment-effects">
         <div class="mist-layer"></div>
@@ -2086,7 +2663,7 @@
     <!-- インストラクションツールチップ -->
     <div id="instruction-tooltip"></div>
     
-    <!-- カスタムローディング画面 -->
+    <!-- カスタムローディング画面（進捗表示付き） -->
     <div id='custom-loading'>
         <div class='loading-garden'>
             <div class='circle'></div>
@@ -2095,7 +2672,23 @@
             <div class='circle'></div>
             <div class='circle'></div>
         </div>
-        <div class='loading-text'>記憶の庭へ接続しています...</div>
+        <div class='loading-text' id='loading-main-text'>記憶の庭へ接続しています...</div>
+        
+        <!-- 進捗バー -->
+        <div class='loading-progress-container'>
+            <div class='loading-progress-bar'>
+                <div class='loading-progress-fill' id='loading-progress-fill'></div>
+            </div>
+            <div class='loading-progress-text' id='loading-progress-text'>0%</div>
+        </div>
+        
+        <!-- 段階表示 -->
+        <div class='loading-stages'>
+            <div class='loading-stage' id='stage-library' data-stage='library'>ライブラリ初期化</div>
+            <div class='loading-stage' id='stage-targets' data-stage='targets'>認識データ読込</div>
+            <div class='loading-stage' id='stage-images' data-stage='images'>断片の収集</div>
+            <div class='loading-stage' id='stage-camera' data-stage='camera'>視界の確保</div>
+        </div>
     </div>
     
     <!-- UIオーバーレイ -->
