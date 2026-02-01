@@ -1177,10 +1177,16 @@
             justify-content: center;
             align-items: center;
             z-index: 999998;
-            opacity: 1;
+            opacity: 0; /* 初期は非表示(ローディング後に表示) */
+            pointer-events: none;
             transition: opacity 1.5s ease;
             padding: 40px;
             box-sizing: border-box;
+        }
+
+        .intro-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
         }
         
         .intro-overlay.hidden {
@@ -2488,16 +2494,19 @@
             let sceneLoaded = false;
             let arReady = false;
             let introShown = false;
-            let completionShown = false;
-            const viewedEpisodes = new Set();
-            
-            // 初回訪問チェック（セッション内）
-            const hasVisited = sessionStorage.getItem('silence_ar_visited');
-            if (hasVisited) {
-                introOverlay.classList.add('hidden');
-                introShown = true;
+            let // introShown = true; // ここではフラグだけ立てない。ローディング完了まで待つ
             }
             
+            // イントロ開始ボタン
+            if (introStartBtn) {
+                introStartBtn.addEventListener('click', () => {
+                    introOverlay.classList.remove('visible'); // visibleクラスを削除する運用に変更
+                    introOverlay.classList.add('hidden');
+                    introShown = true;
+                    sessionStorage.setItem('silence_ar_visited', 'true');
+                    
+                    // イントロ終了後にガイドを表示
+                    scanningGuide.classList.add('visibl
             // イントロ開始ボタン
             if (introStartBtn) {
                 introStartBtn.addEventListener('click', () => {
@@ -2728,10 +2737,13 @@
                 
                 // 少し待ってからフェードアウト
                 setTimeout(() => {
-                    customLoading.classList.add('fade-out');
-                    setTimeout(() => {
-                        customLoading.style.display = 'none';
-                        scanningGuide.classList.add('visible');
+                    cust
+                        // 初回かつ未訪問ならイントロを表示、そうでなければ即ガイド
+                        if (!hasVisited && !introShown) {
+                            introOverlay.classList.add('visible');
+                        } else {
+                            scanningGuide.classList.add('visible');
+                        }
                         
                         // ウェルカムメッセージ
                         // showInstruction('日常の断片を、枠の中へ導いてください', 5000);
@@ -2745,11 +2757,22 @@
                 sceneLoaded = true;
                 
                 loadingManager.setStageComplete('targets');
+                loadingManager.setStageActive('images');
                 
-                // 画像読み込みを待たずに、即座にカメラ準備へ移行（UX改善）
-                // 背景で画像読み込みは継続される
-                loadingManager.setStageComplete('images'); 
-                loadingManager.setStageActive('camera');
+                // 画像プリロード状況を定期的にチェック（全画像ロード待機）
+                const imageCheckInterval = setInterval(() => {
+                    if (checkImagesLoaded()) {
+                        clearInterval(imageCheckInterval);
+                        loadingManager.setStageActive('camera');
+                    }
+                }, 200);
+                
+                // タイムアウト（15秒）で画像ロードを強制完了
+                setTimeout(() => {
+                    clearInterval(imageCheckInterval);
+                    loadingManager.setStageComplete('images');
+                    loadingManager.setStageActive('camera');
+                }, 15000);
             };
             
             // AR準備完了（カメラ起動後）
