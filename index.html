@@ -938,7 +938,7 @@
 
         /* テキストエリア */
         .card-content {
-            padding: 24px 28px 80px 28px; /* 下部に十分な余白を確保してスクロールで見切れないように */
+            padding: 14px 28px 50px 28px; /* 上下余白を縮小 */
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             flex: 1;
@@ -1847,11 +1847,6 @@
                 setTimeout(() => {
                     customLoading.style.display = 'none';
                     scanningGuide.classList.add('visible');
-                    
-                    // 初回インストラクション
-                    setTimeout(() => {
-                        showInstruction('画面をタップすると波紋が広がります', 5000);
-                    }, 2000);
                 }, 800);
             };
 
@@ -1871,6 +1866,10 @@
                     scanningGuide.classList.add('visible');
                 }
                 updateEpisodeIndicator(-1);
+                
+                // ボタンを再表示
+                if (theaterBtn) theaterBtn.style.display = '';
+                if (soundControl) soundControl.style.display = '';
             });
 
             const onTargetFound = (index) => {
@@ -1915,6 +1914,10 @@
                         card.classList.add('visible');
                         card.classList.add('pulse-effect');
                         updateEpisodeIndicator(index, true);
+                        
+                        // カード表示時はボタンを非表示
+                        if (theaterBtn) theaterBtn.style.display = 'none';
+                        if (soundControl) soundControl.style.display = 'none';
                     }, 50);
                 }
             };
