@@ -281,7 +281,7 @@
         #persistent-profile-btn {
             position: fixed;
             left: 15px;
-            bottom: 80px; /* 没入ボタンの上に配置 */
+            bottom: 25px; /* 没入ボタンの下に配置 */
             z-index: 1500;
             display: flex;
             align-items: center;
@@ -295,13 +295,7 @@
             cursor: pointer;
             pointer-events: auto; /* 常にクリック可能 */
             opacity: 1; /* 常に表示 */
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        #persistent-profile-btn.visible {
-            transform: translateY(0);
-            opacity: 1;
-            pointer-events: auto;
+            transition: all 0.4s ease;
         }
         
         #persistent-profile-btn:hover {
@@ -325,7 +319,7 @@
         #theater-mode-btn {
             position: fixed;
             left: 15px;
-            bottom: 25px;
+            bottom: 80px; /* プロフィールボタンの上に配置 */
             z-index: 1500;
             display: flex;
             align-items: center;
@@ -341,11 +335,6 @@
             transition: all 0.4s ease;
         }
         
-        #theater-mode-btn.shifted {
-            transform: translateY(-55px); /* プロフィールボタン出現時に上に移動 */
-        }
-
-        
         #theater-mode-btn:hover {
             background: rgba(0, 0, 0, 0.6);
             border-color: rgba(0, 255, 170, 0.3);
@@ -355,10 +344,23 @@
             width: 18px;
             height: 18px;
             fill: rgba(255, 255, 255, 0.7);
+            transition: fill 0.3s ease;
+        }
+        
+        /* 没入モード有効時のスタイル強化 */
+        #theater-mode-btn.active {
+            background: rgba(0, 255, 170, 0.15);
+            border-color: rgba(0, 255, 170, 0.6);
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.3), inset 0 0 10px rgba(0, 255, 170, 0.1);
         }
         
         #theater-mode-btn.active svg {
-            fill: rgba(0, 255, 170, 0.9);
+            fill: rgba(0, 255, 170, 0.95);
+            filter: drop-shadow(0 0 4px rgba(0, 255, 170, 0.8));
+        }
+        
+        #theater-mode-btn.active span {
+            color: rgba(0, 255, 170, 0.9);
         }
         
         #theater-mode-btn span {
@@ -2569,9 +2571,7 @@
                         seed.classList.remove('current');
                     });
 
-                    // インターフェース更新：没入ボタンを上にずらす
-                    const theaterBtn = document.getElementById('theater-mode-btn');
-                    if (theaterBtn) theaterBtn.classList.add('shifted');
+                    // 完了演出後はボタンの配置は変更しない（既に正しい位置にある）
                 });
             }
 
