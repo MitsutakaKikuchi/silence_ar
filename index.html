@@ -851,18 +851,31 @@
         }
         
         .completion-text {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1.1rem;
-            letter-spacing: 0.4em;
-            line-height: 2.5;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.95rem; /* サイズ調整: 1.1rem -> 0.95rem */
+            letter-spacing: 0.3em;
+            line-height: 2.8; /* 行間拡大で読みやすく */
             text-align: center;
-            max-width: 80%;
+            max-width: 85%;
+            font-weight: 300;
             animation: completionFadeIn 2s ease forwards;
         }
         
         .completion-text .line {
             opacity: 0;
             transform: translateY(20px);
+            white-space: nowrap; /* 強制改行を防ぐ */
+        }
+        
+        /* モバイル対応：画面幅が狭い場合 */
+        @media screen and (max-width: 380px) {
+            .completion-text {
+                font-size: 0.85rem;
+                letter-spacing: 0.25em;
+            }
+            .completion-text .line {
+                white-space: normal; /* 極端に狭い場合は折り返し許可 */
+            }
         }
         
         @keyframes completionFadeIn {
@@ -870,29 +883,235 @@
             100% { opacity: 1; }
         }
         
-        .completion-close {
-            margin-top: 50px;
-            padding: 15px 30px;
-            background: transparent;
-            border: 1px solid rgba(0, 255, 170, 0.5);
-            color: rgba(0, 255, 170, 0.8);
-            font-size: 0.8rem;
-            letter-spacing: 0.2em;
-            cursor: pointer;
-            border-radius: 30px;
-            transition: all 0.4s ease;
+        .completion-actions {
+            margin-top: 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
             opacity: 0;
-            animation: completionBtnFadeIn 1s ease forwards 3s;
+            animation: completionBtnFadeIn 1s ease forwards 3.5s;
         }
         
-        .completion-close:hover {
+        .completion-btn {
+            padding: 12px 35px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            border-radius: 40px;
+            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            text-decoration: none;
+            display: inline-block;
+            font-family: 'Yu Mincho', serif;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* リスタートボタン（プライマリ） */
+        .restart-btn {
+            border: 1px solid rgba(0, 255, 170, 0.4);
+            color: rgba(0, 255, 170, 0.9);
+        }
+        
+        .restart-btn:hover {
             background: rgba(0, 255, 170, 0.1);
             border-color: rgba(0, 255, 170, 0.8);
+            letter-spacing: 0.3em;
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.2);
+        }
+
+        /* プロフィールボタン（セカンダリ） */
+        .profile-btn {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.7rem;
+        }
+        
+        .profile-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 0.25em;
         }
         
         @keyframes completionBtnFadeIn {
             0% { opacity: 0; transform: translateY(10px); }
             100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========================================
+           独創的なプロフィールオーバーレイ
+           ======================================== */
+        #profile-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 5, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 3000;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.6s ease;
+        }
+        
+        #profile-overlay.visible {
+            opacity: 1; pointer-events: auto;
+        }
+        
+        /* 浮遊するガラスカード */
+        .profile-card {
+            width: 85%; max-width: 400px;
+            min-height: 500px;
+            position: relative;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        
+        .profile-content {
+            background: linear-gradient(135deg, rgba(25, 25, 25, 0.6) 0%, rgba(10, 10, 10, 0.8) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px; /* あえて角張らせて「標本」感を出す */
+            padding: 40px 30px;
+            position: relative;
+            transform: translateY(30px) rotateX(10deg);
+            opacity: 0;
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+        
+        #profile-overlay.visible .profile-content {
+            transform: translateY(0) rotateX(0);
+            opacity: 1;
+        }
+        
+        /* 装飾的な四隅（標本タグ風） */
+        .profile-corner {
+            position: absolute; width: 20px; height: 20px;
+            border-color: rgba(0, 255, 170, 0.4); border-style: solid;
+            pointer-events: none;
+        }
+        .pc-tl { top: 10px; left: 10px; border-width: 1px 0 0 1px; }
+        .pc-tr { top: 10px; right: 10px; border-width: 1px 1px 0 0; }
+        .pc-bl { bottom: 10px; left: 10px; border-width: 0 0 1px 1px; }
+        .pc-br { bottom: 10px; right: 10px; border-width: 0 1px 1px 0; }
+        
+        /* プロフィール写真（円形 + グロー） */
+        .profile-image-box {
+            width: 120px; height: 120px;
+            margin: 0 auto 35px auto;
+            position: relative;
+        }
+        
+        .profile-img {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            filter: grayscale(100%) contrast(1.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: filter 0.5s ease;
+        }
+        
+        .profile-img:hover {
+            filter: grayscale(0%) contrast(1);
+        }
+        
+        /* オービット（軌道）アニメーション */
+        .profile-orbit {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1px solid rgba(0, 255, 170, 0.15);
+            animation: orbitSpin 10s linear infinite;
+        }
+        .orbit-1 { width: 140px; height: 140px; border-left-color: transparent; border-right-color: transparent; }
+        .orbit-2 { width: 160px; height: 160px; border-top-color: transparent; border-bottom-color: transparent; animation-duration: 15s; animation-direction: reverse; }
+        
+        @keyframes orbitSpin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        /* テキスト情報 */
+        .profile-role {
+            font-size: 0.65rem; color: rgba(0, 255, 170, 0.7);
+            text-align: center; letter-spacing: 0.3em;
+            text-transform: uppercase; margin-bottom: 12px;
+            font-family: 'Helvetica Neue', sans-serif;
+        }
+        
+        .profile-name {
+            font-size: 1.4rem; color: #fff;
+            text-align: center; margin-bottom: 8px;
+            font-family: 'Yu Mincho', serif;
+            letter-spacing: 0.2em;
+        }
+        
+        .profile-name-en {
+            font-size: 0.7rem; color: rgba(255, 255, 255, 0.4);
+            text-align: center; margin-bottom: 30px;
+            letter-spacing: 0.1em;
+            font-family: 'Helvetica Neue', sans-serif;
+        }
+        
+        .profile-desc {
+            font-size: 0.8rem; color: rgba(220, 220, 220, 0.8);
+            line-height: 2; text-align: center; margin-bottom: 40px;
+            font-family: 'Yu Mincho', serif;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 0;
+        }
+        
+        /* インスタグラムリンク（糸のようなデザイン） */
+        .profile-link {
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px;
+            color: #fff; text-decoration: none;
+            font-size: 0.8rem; letter-spacing: 0.15em;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 10px;
+        }
+        
+        .profile-link::before {
+            content: '';
+            position: absolute; bottom: 0; left: 50%;
+            width: 0; height: 1px;
+            background: #fff;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .profile-link:hover::before {
+            width: 100%;
+        }
+        
+        .profile-link svg {
+            width: 18px; height: 18px; fill: currentColor;
+        }
+        
+        .profile-close {
+            position: absolute; top: 20px; right: 20px;
+            width: 30px; height: 30px;
+            cursor: pointer; opacity: 0.6; transition: opacity 0.3s;
+            display: flex; justify-content: center; align-items: center;
+        }
+        
+        .profile-close:hover { opacity: 1; }
+        .profile-close::before, .profile-close::after {
+            content: ''; position: absolute;
+            width: 100%; height: 1px; background: #fff;
+        }
+        .profile-close::before { transform: rotate(45deg); }
+        .profile-close::after { transform: rotate(-45deg); }
+        
+        /* 背景の方眼紙エフェクト */
+        .grid-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none; z-index: -1;
         }
         
         /* 初回訪問時のイントロ */
@@ -2209,7 +2428,10 @@
             const introOverlay = document.getElementById('intro-overlay');
             const introStartBtn = document.getElementById('intro-start-btn');
             const completionOverlay = document.getElementById('completion-overlay');
-            const completionCloseBtn = document.getElementById('completion-close-btn');
+            const completionRestartBtn = document.getElementById('completion-restart-btn');
+            const completionProfileBtn = document.getElementById('completion-profile-btn');
+            const profileOverlay = document.getElementById('profile-overlay');
+            const profileCloseBtn = document.getElementById('profile-close-btn');
 
             let currentTargetIndex = -1;
             let sceneLoaded = false;
@@ -2234,9 +2456,9 @@
                 });
             }
             
-            // 完了画面閉じるボタン
-            if (completionCloseBtn) {
-                completionCloseBtn.addEventListener('click', () => {
+            // 完了画面: リスタートボタン
+            if (completionRestartBtn) {
+                completionRestartBtn.addEventListener('click', () => {
                     completionOverlay.classList.remove('visible');
                     completionShown = false;
                     viewedEpisodes.clear();
@@ -2246,6 +2468,29 @@
                     document.querySelectorAll('.episode-seed').forEach(seed => {
                         seed.classList.remove('viewed', 'current');
                     });
+                });
+            }
+            
+            // 完了画面: プロフィールボタン
+            if (completionProfileBtn) {
+                completionProfileBtn.addEventListener('click', () => {
+                    profileOverlay.classList.add('visible');
+                });
+            }
+            
+            // プロフィール: 閉じるボタン
+            if (profileCloseBtn) {
+                profileCloseBtn.addEventListener('click', () => {
+                    profileOverlay.classList.remove('visible');
+                });
+            }
+            
+            // プロフィール・オーバーレイクリックで閉じる（外側）
+            if (profileOverlay) {
+                profileOverlay.addEventListener('click', (e) => {
+                    if (e.target === profileOverlay) {
+                        profileOverlay.classList.remove('visible');
+                    }
                 });
             }
             
@@ -2587,7 +2832,50 @@
             <div class="line">決して逃げではなく、</div>
             <div class="line">一つの愛の形だったのかもしれない。</div>
         </div>
-        <button class="completion-close" id="completion-close-btn">もう一度、庭を歩く</button>
+        
+        <div class="completion-actions">
+            <button class="completion-btn restart-btn" id="completion-restart-btn">もう一度、庭を歩く</button>
+            <button class="completion-btn profile-btn" id="completion-profile-btn">庭師の記録を見る</button>
+        </div>
+    </div>
+    
+    <!-- プロフィールオーバーレイ -->
+    <div id="profile-overlay">
+        <div class="profile-card">
+            <div class="profile-content">
+                <div class="grid-bg"></div>
+                <div class="profile-corner pc-tl"></div>
+                <div class="profile-corner pc-tr"></div>
+                <div class="profile-corner pc-bl"></div>
+                <div class="profile-corner pc-br"></div>
+                
+                <div class="profile-close" id="profile-close-btn"></div>
+                
+                <div class="profile-image-box">
+                    <div class="profile-orbit orbit-1"></div>
+                    <div class="profile-orbit orbit-2"></div>
+                    <img src="./images/profile_kikuchi.jpg" alt="Mitsutaka Kikuchi" class="profile-img">
+                </div>
+                
+                <div class="profile-role">Silence Anatomist</div>
+                <div class="profile-name">菊池 光峰</div>
+                <div class="profile-name-en">Mitsutaka Kikuchi</div>
+                
+                <div class="profile-desc">
+                    東京藝術大学音楽学部<br>
+                    邦楽科 長唄三味線専攻<br>
+                    <br>
+                    不可視の感情を空間に実装する。<br>
+                    音と静寂の狭間で、<br>
+                    新たな解剖図を描き続けている。
+                </div>
+                
+                <a href="https://www.instagram.com/_mitsu_yoshi_taka?igsh=ejAwZTZ5djNmcHl5&utm_source=qr" target="_blank" class="profile-link">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    <span>Connect on Instagram</span>
+                </a>
+            </div>
+        </div>
     </div>
     
     <!-- 環境エフェクト -->
