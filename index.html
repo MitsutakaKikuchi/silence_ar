@@ -933,6 +933,9 @@
             pointer-events: none;
             transition: opacity 1.5s ease;
             background-image: var(--paper-texture);
+            padding: 20px; /* パディング追加 */
+            box-sizing: border-box;
+            overflow-y: auto; /* スクロール可能に */
         }
         
         .completion-overlay.visible {
@@ -942,29 +945,31 @@
         
         .completion-text {
             color: rgba(255, 255, 255, 0.85);
-            font-size: 0.95rem; /* サイズ調整: 1.1rem -> 0.95rem */
-            letter-spacing: 0.3em;
-            line-height: 2.8; /* 行間拡大で読みやすく */
+            font-size: 0.9rem; /* サイズ微調整 */
+            letter-spacing: 0.25em;
+            line-height: 2.4; /* 間隔を少し詰める */
             text-align: center;
-            max-width: 85%;
+            width: 100%;
+            max-width: 600px;
             font-weight: 300;
             animation: completionFadeIn 2s ease forwards;
+            margin: auto 0; /* 上下中央配置 */
         }
         
         .completion-text .line {
             opacity: 0;
             transform: translateY(20px);
-            white-space: nowrap; /* 強制改行を防ぐ */
+            white-space: normal; /* 折り返しを許可 */
+            display: block; /* ブロック要素として扱う */
+            margin-bottom: 0.5em; /* 行間調整 */
         }
         
         /* モバイル対応：画面幅が狭い場合 */
-        @media screen and (max-width: 380px) {
+        @media screen and (max-width: 480px) {
             .completion-text {
-                font-size: 0.85rem;
-                letter-spacing: 0.25em;
-            }
-            .completion-text .line {
-                white-space: normal; /* 極端に狭い場合は折り返し許可 */
+                font-size: 0.8rem;
+                letter-spacing: 0.15em;
+                line-height: 2.0;
             }
         }
         
@@ -974,13 +979,15 @@
         }
         
         .completion-actions {
-            margin-top: 60px;
+            margin-top: 40px; /* 余白縮小 */
+            margin-bottom: 40px; /* 下部余白確保 */
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
             align-items: center;
             opacity: 0;
             animation: completionBtnFadeIn 1s ease forwards 3.5s;
+            flex-shrink: 0; /* 縮小しない */
         }
         
         .completion-btn {
@@ -3097,14 +3104,16 @@
     <!-- 完了エンディング -->
     <div id="completion-overlay" class="completion-overlay">
         <div class="completion-text">
-            <div class="line">この庭を歩き終えて気づく。</div>
-            <div class="line">私たちが選んだ『沈黙』は、決して逃げではなく、</div>
+            <div class="line">私たちが選んだ『沈黙』は、</div>
+            <div class="line">決して逃げではなく</div>
             <div class="line">一つの愛の形だったのかもしれない。</div>
-            <div class="line">言えば壊れてしまうものを守るために、私たちは口を閉ざした。</div>
-            <div class="line"></div>
-            <div class="line">その沈黙は、時に呪いのように重く、時に祈りのように静かだ。</div>
-            <div class="line">もしあなたが、誰かに対して言葉を飲み込んだことがあるなら。</div>
-            <div class="line">その言葉もまた、この庭のどこかで、密かに花を咲かせているはずだ。</div>
+            <div class="line"><br></div>
+            <div class="line">壊れてしまうものを守るため</div>
+            <div class="line">私たちは口を閉ざした。</div>
+            <div class="line"><br></div>
+            <div class="line">その言葉は今も</div>
+            <div class="line">この庭のどこかで</div>
+            <div class="line">密かに花を咲かせている。</div>
         </div>
         
         <div class="completion-actions">
