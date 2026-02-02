@@ -2212,7 +2212,7 @@
                 this.createBirdChirps();
                 this.createBells();
                 this.createWoodCreaks();
-                this.createInsects();
+                this.createGrassRustle();
             }
             
             createReverbNode() {
@@ -2506,69 +2506,93 @@
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
                 
                 // わずかにノイズを混ぜて質感を出す
-                const filter = this.audioContext.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.value = 200;
+            playWoodCreak() {
+                if (!this.audioContext || !this.enabled) return;
                 
-                osc.connect(filter);
-                filter.connect(gain);
-                gain.connect(this.masterGain);
-                gain.connect(this.reverbNode);
+                const now = this.audioContext.currentTime;
+                // 木のきしみ（より深みのある複数レイヤー）
+                const count = 2 + Math.floor(Math.random() * 2);
                 
-                osc.start(now);
-                osc.stop(now + 3);
+                for (let i = 0; i < count; i++) {
+                    const osc = this.audioContext.createOscillator();
+                    const gain = this.audioContext.createGain();
+                    const filter = this.audioContext.createBiquadFilter();
+                    
+                    osc.type = 'sine';
+                    const baseFreq = 50 + Math.random() * 50;
+                    osc.frequency.setValueAtTime(baseFreq, now + i * 0.15);
+                    osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.7, now + 2);
+                    
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 250;
+                    
+                    gain.gain.setValueAtTime(0, now + i * 0.15);
+                    gain.gain.linearRampToValueAtTime(0.02, now + i * 0.15 + 0.3);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+                    
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.masterGain);
+                    gain.connect(this.reverbNode);
+                    
+                    osc.start(now + i * 0.15);
+                    osc.stop(now + 3);
+                }
                 
                 if (this.enabled) {
                     const nextCreak = setTimeout(() => {
                         this.playWoodCreak();
-                    }, 15000 + Math.random() * 20000);
+                    }, 12000 + Math.random() * 15000);
                     this.nodes.creaks.timers.push(nextCreak);
                 }
             }
 
-            createInsects() {
-                // 秋の虫（鈴虫風）
-                this.nodes.insects = { timers: [] };
+            createGrassRustle() {
+                // 草のたなびき（ノイズをフィルタリングして再現）
+                this.nodes.grass = { timers: [] };
             }
 
-            playInsectChirp() {
+            playGrassRustle() {
                 if (!this.audioContext || !this.enabled) return;
                 
                 const now = this.audioContext.currentTime;
-                // 鈴虫（高い倍音とトレモロ）
-                for (let i = 0; i < 2; i++) {
-                    const osc = this.audioContext.createOscillator();
-                    const g = this.audioContext.createGain();
-                    
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(3500 + i * 800, now);
-                    
-                    const lfo = this.audioContext.createOscillator();
-                    lfo.frequency.value = 40 + (Math.random() * 10);
-                    const lfoGain = this.audioContext.createGain();
-                    lfoGain.gain.value = 0.5;
-                    lfo.connect(lfoGain);
-                    lfoGain.connect(g.gain);
-                    lfo.start(now);
-                    lfo.stop(now + 2.5);
-                    
-                    g.gain.setValueAtTime(0, now);
-                    g.gain.linearRampToValueAtTime(0.003, now + 0.2);
-                    g.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
-                    
-                    osc.connect(g);
-                    g.connect(this.masterGain);
-                    g.connect(this.reverbNode);
-                    
-                    osc.start(now);
-                    osc.stop(now + 2.5);
+                const bufferSize = this.audioContext.sampleRate * 5;
+                const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                // 柔らかいノイズ
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * 0.5;
                 }
                 
+                const source = this.audioContext.createBufferSource();
+                source.buffer = buffer;
+                
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(600, now);
+                filter.Q.value = 0.4;
+                
+                // 風による周波数のたなびき
+                filter.frequency.exponentialRampToValueAtTime(1000, now + 2);
+                filter.frequency.exponentialRampToValueAtTime(500, now + 5);
+                
+                const gain = this.audioContext.createGain();
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.015, now + 2);
+                gain.gain.linearRampToValueAtTime(0, now + 5);
+                
+                source.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                
+                source.start(now);
+                source.stop(now + 5);
+                
                 if (this.enabled) {
-                    const nextInsects = setTimeout(() => {
-                        this.playInsectChirp();
-                    }, 20000 + Math.random() * 30000);
-                    this.nodes.insects.timers.push(nextInsects);
+                    const nextRustle = setTimeout(() => {
+                        this.playGrassRustle();
+                    }, 15000 + Math.random() * 20000);
+                    this.nodes.grass.timers.push(nextRustle);
                 }
             }
             
@@ -2598,13 +2622,13 @@
                     setTimeout(() => this.playBirdChirp(), 8000);
                     setTimeout(() => this.playBell(), 15000);
                     setTimeout(() => this.playWoodCreak(), 5000);
-                    setTimeout(() => this.playInsectChirp(), 12000);
+                    setTimeout(() => this.playGrassRustle(), 12000);
                 } else {
                     // フェードアウト
                     this.masterGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 1.5);
                     
                     // 全てのタイマーをクリア
-                    const timerNodes = ['drops', 'birds', 'bells', 'creaks', 'insects'];
+                    const timerNodes = ['drops', 'birds', 'bells', 'creaks', 'grass'];
                     timerNodes.forEach(nodeName => {
                         if (this.nodes[nodeName] && this.nodes[nodeName].timers) {
                             this.nodes[nodeName].timers.forEach(timer => clearTimeout(timer));
