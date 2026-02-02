@@ -933,9 +933,10 @@
             pointer-events: none;
             transition: opacity 1.5s ease;
             background-image: var(--paper-texture);
-            padding: 20px; /* パディング追加 */
+            padding: 20px;
             box-sizing: border-box;
-            overflow-y: auto; /* スクロール可能に */
+            overflow-y: auto;
+            overflow-x: hidden; /* 横スクロール無効化 */
         }
         
         .completion-overlay.visible {
@@ -962,7 +963,7 @@
             transform: translateY(20px);
             white-space: normal; /* 折り返しを許可 */
             display: block; /* ブロック要素として扱う */
-            margin-bottom: 0.8em; /* 行間を広く */
+            margin-bottom: 0.3em; /* 段落間余白を縮小 */
         }
         
         /* モバイル対応：画面幅が狭い場合 */
@@ -1828,7 +1829,7 @@
             },
             {
                 title: 'Episode.10 真実の種',
-                text: '遅すぎる本音は、冷たく硬い<strong>種</strong>のように<br>手渡された。<br>でもこれこそが、私がずっと欲しかったものだった。',
+                text: '言わなかった言葉は、冷たく硬い<strong>種</strong>となって埋まる。<br>その沈黙こそが、私たちの関係を支える<br>最後の<strong>種</strong>だった。',
                 image: './images/layerB_9.jpg?v=800'
             }
         ];
