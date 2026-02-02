@@ -944,16 +944,17 @@
         }
         
         .completion-text {
-            color: rgba(255, 255, 255, 0.85);
-            font-size: 0.9rem; /* サイズ微調整 */
-            letter-spacing: 0.25em;
-            line-height: 2.4; /* 間隔を少し詰める */
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.05rem; /* フォントサイズを大きく */
+            letter-spacing: 0.15em; /* 字間を少し狭めて読みやすく */
+            line-height: 2.6; /* 行間を広く */
             text-align: center;
             width: 100%;
-            max-width: 600px;
+            max-width: 650px;
             font-weight: 300;
             animation: completionFadeIn 2s ease forwards;
             margin: auto 0; /* 上下中央配置 */
+            padding: 0 30px; /* 左右に余白 */
         }
         
         .completion-text .line {
@@ -961,15 +962,16 @@
             transform: translateY(20px);
             white-space: normal; /* 折り返しを許可 */
             display: block; /* ブロック要素として扱う */
-            margin-bottom: 0.5em; /* 行間調整 */
+            margin-bottom: 0.8em; /* 行間を広く */
         }
         
         /* モバイル対応：画面幅が狭い場合 */
         @media screen and (max-width: 480px) {
             .completion-text {
-                font-size: 0.8rem;
-                letter-spacing: 0.15em;
-                line-height: 2.0;
+                font-size: 0.95rem; /* モバイルでも読みやすいサイズに */
+                letter-spacing: 0.1em;
+                line-height: 2.4;
+                padding: 0 20px;
             }
         }
         
@@ -1826,7 +1828,7 @@
             },
             {
                 title: 'Episode.10 真実の種',
-                text: 'それは言い訳という果肉が削ぎ落とされた、冷たく硬い<strong>種</strong>だ。<br>これこそが、私が彼から一番欲しかったものだった。',
+                text: '遅すぎる本音は、冷たく硬い<strong>種</strong>のように<br>手渡された。<br>でもこれこそが、私がずっと欲しかったものだった。',
                 image: './images/layerB_9.jpg?v=800'
             }
         ];
@@ -3108,12 +3110,17 @@
             <div class="line">決して逃げではなく</div>
             <div class="line">一つの愛の形だったのかもしれない。</div>
             <div class="line"><br></div>
-            <div class="line">壊れてしまうものを守るため</div>
+            <div class="line">言えば壊れてしまうものを守るため</div>
             <div class="line">私たちは口を閉ざした。</div>
             <div class="line"><br></div>
-            <div class="line">その言葉は今も</div>
-            <div class="line">この庭のどこかで</div>
-            <div class="line">密かに花を咲かせている。</div>
+            <div class="line">その沈黙は、</div>
+            <div class="line">時に呪いのように重く、</div>
+            <div class="line">時に祈りのように静かだった。</div>
+            <div class="line"><br></div>
+            <div class="line">もしあなたが、誰かに対して</div>
+            <div class="line">言葉を飲み込んだことがあるなら</div>
+            <div class="line">その言葉もまた、この庭のどこかで、</div>
+            <div class="line">密かに花を咲かせているはずだ。</div>
         </div>
         
         <div class="completion-actions">
