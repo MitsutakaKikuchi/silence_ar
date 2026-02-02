@@ -1451,7 +1451,7 @@
 
         /* テキストエリア */
         .card-content {
-            padding: 14px 28px 50px 28px; /* 上下余白を縮小 */
+            padding: 8px 28px 45px 28px; /* 上下余白を縮小 */
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             flex: 1;
@@ -1466,21 +1466,21 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 20px;
+            height: 15px; /* 厚みを少し抑える */
             background: linear-gradient(180deg, rgba(10, 10, 10, 1) 0%, transparent 100%);
-            margin: -24px -28px 10px -28px;
+            margin: -10px -28px 5px -28px; /* ネガティブマージンを調整 */
             pointer-events: none;
             z-index: 5;
         }
 
         h2 { 
-            margin: 0 0 18px 0; 
+            margin: 0 0 14px 0; 
             font-size: 1.28rem; 
             font-weight: 500; 
             letter-spacing: 0.12em;
             color: #fff;
             position: relative;
-            padding-bottom: 14px;
+            padding-bottom: 12px; /* パディングも少し詰める */
             opacity: 0;
             transform: translateY(15px);
             transition: opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;
@@ -1496,7 +1496,7 @@
             position: absolute; bottom: 0; left: 0;
             width: 0;
             height: 1.5px;
-            background: linear-gradient(to right, #00ffaa, transparent);
+            background: linear-gradient(to right, var(--accent-moss), transparent);
             opacity: 0.8;
             transition: width 0.8s ease 0.3s;
         }
@@ -2212,6 +2212,7 @@
                 this.createBirdChirps();
                 this.createBells();
                 this.createWoodCreaks();
+                this.createInsects();
             }
             
             createReverbNode() {
@@ -2282,7 +2283,7 @@
             createDrone() {
                 // 低周波の深いドローン（お輪/シンギングボウル風の深い倍音）
                 const droneGain = this.audioContext.createGain();
-                droneGain.gain.value = 0.05;
+                droneGain.gain.value = 0.025; // 音量をより控えめに
                 
                 const frequencies = [55, 110, 165, 220, 330]; // 基本周波数とその倍音
                 const oscillators = frequencies.map((freq, i) => {
@@ -2524,6 +2525,52 @@
                     this.nodes.creaks.timers.push(nextCreak);
                 }
             }
+
+            createInsects() {
+                // 秋の虫（鈴虫風）
+                this.nodes.insects = { timers: [] };
+            }
+
+            playInsectChirp() {
+                if (!this.audioContext || !this.enabled) return;
+                
+                const now = this.audioContext.currentTime;
+                // 鈴虫（高い倍音とトレモロ）
+                for (let i = 0; i < 2; i++) {
+                    const osc = this.audioContext.createOscillator();
+                    const g = this.audioContext.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(3500 + i * 800, now);
+                    
+                    const lfo = this.audioContext.createOscillator();
+                    lfo.frequency.value = 40 + (Math.random() * 10);
+                    const lfoGain = this.audioContext.createGain();
+                    lfoGain.gain.value = 0.5;
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(g.gain);
+                    lfo.start(now);
+                    lfo.stop(now + 2.5);
+                    
+                    g.gain.setValueAtTime(0, now);
+                    g.gain.linearRampToValueAtTime(0.003, now + 0.2);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+                    
+                    osc.connect(g);
+                    g.connect(this.masterGain);
+                    g.connect(this.reverbNode);
+                    
+                    osc.start(now);
+                    osc.stop(now + 2.5);
+                }
+                
+                if (this.enabled) {
+                    const nextInsects = setTimeout(() => {
+                        this.playInsectChirp();
+                    }, 20000 + Math.random() * 30000);
+                    this.nodes.insects.timers.push(nextInsects);
+                }
+            }
             
             toggle() {
                 if (!this.audioContext) {
@@ -2551,12 +2598,13 @@
                     setTimeout(() => this.playBirdChirp(), 8000);
                     setTimeout(() => this.playBell(), 15000);
                     setTimeout(() => this.playWoodCreak(), 5000);
+                    setTimeout(() => this.playInsectChirp(), 12000);
                 } else {
                     // フェードアウト
                     this.masterGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 1.5);
                     
                     // 全てのタイマーをクリア
-                    const timerNodes = ['drops', 'birds', 'bells', 'creaks'];
+                    const timerNodes = ['drops', 'birds', 'bells', 'creaks', 'insects'];
                     timerNodes.forEach(nodeName => {
                         if (this.nodes[nodeName] && this.nodes[nodeName].timers) {
                             this.nodes[nodeName].timers.forEach(timer => clearTimeout(timer));
@@ -3006,7 +3054,7 @@
                         if (viewedEpisodes.size === 10 && !completionShown) {
                             setTimeout(() => {
                                 showCompletion();
-                            }, 3000);
+                            }, 6000); // 3秒から6秒に延長
                         }
                     }, 80);
                 }
@@ -3043,9 +3091,13 @@
     <div id="completion-overlay" class="completion-overlay">
         <div class="completion-text">
             <div class="line">この庭を歩き終えて気づく。</div>
-            <div class="line">私たちが選んだ『沈黙』は、</div>
-            <div class="line">決して逃げではなく、</div>
-            <div class="line">一つの愛の形だったのだと。</div>
+            <div class="line">私たちが選んだ『沈黙』は、決して逃げではなく、</div>
+            <div class="line">一つの愛の形だったのかもしれない。</div>
+            <div class="line">言えば壊れてしまうものを守るために、私たちは口を閉ざした。</div>
+            <div class="line"></div>
+            <div class="line">その沈黙は、時に呪いのように重く、時に祈りのように静かだ。</div>
+            <div class="line">もしあなたが、誰かに対して言葉を飲み込んだことがあるなら。</div>
+            <div class="line">その言葉もまた、この庭のどこかで、密かに花を咲かせているはずだ。</div>
         </div>
         
         <div class="completion-actions">
