@@ -2201,20 +2201,17 @@
                 // 雨音風のノイズ
                 this.createRainNoise();
                 
-                // 低周波のドローン
+                // 低周波のドローン（お輪/シンギングボウル風の深い倍音）
                 this.createDrone();
                 
                 // 風のノイズ
                 this.createWindNoise();
                 
-                // 水滴音（ランダム）
+                // 各種環境音
                 this.createWaterDrops();
-                
-                // 鳥のさえずり
                 this.createBirdChirps();
-                
-                // ベルの音
                 this.createBells();
+                this.createWoodCreaks();
             }
             
             createReverbNode() {
@@ -2283,35 +2280,37 @@
             }
             
             createDrone() {
-                // 低周波のシンプルなドローン
-                const osc = this.audioContext.createOscillator();
-                osc.type = 'sine';
-                osc.frequency.value = 55; // 低いA音
-                
-                const osc2 = this.audioContext.createOscillator();
-                osc2.type = 'sine';
-                osc2.frequency.value = 82.5; // 5度上
-                
+                // 低周波の深いドローン（お輪/シンギングボウル風の深い倍音）
                 const droneGain = this.audioContext.createGain();
-                droneGain.gain.value = 0.08;
+                droneGain.gain.value = 0.05;
                 
-                // LFOでゆらぎを追加
-                const lfo = this.audioContext.createOscillator();
-                lfo.type = 'sine';
-                lfo.frequency.value = 0.1;
+                const frequencies = [55, 110, 165, 220, 330]; // 基本周波数とその倍音
+                const oscillators = frequencies.map((freq, i) => {
+                    const osc = this.audioContext.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq + (Math.random() - 0.5) * 0.5; // 微弱なデチューン
+                    
+                    const g = this.audioContext.createGain();
+                    g.gain.value = 1 / (i + 1); // 倍音ほど小さく
+                    
+                    // 個別にLFOをかけて複雑な鳴りに
+                    const lfo = this.audioContext.createOscillator();
+                    lfo.frequency.value = 0.05 + Math.random() * 0.1;
+                    const lg = this.audioContext.createGain();
+                    lg.gain.value = 0.2 + Math.random() * 0.3;
+                    lfo.connect(lg);
+                    lg.connect(g.gain);
+                    lfo.start();
+                    
+                    osc.connect(g);
+                    g.connect(droneGain);
+                    return osc;
+                });
                 
-                const lfoGain = this.audioContext.createGain();
-                lfoGain.gain.value = 3;
-                
-                lfo.connect(lfoGain);
-                lfoGain.connect(osc.frequency);
-                
-                osc.connect(droneGain);
-                osc2.connect(droneGain);
                 droneGain.connect(this.masterGain);
-                droneGain.connect(this.reverbNode); // リバーブにも送る
+                droneGain.connect(this.reverbNode);
                 
-                this.nodes.drone = { osc, osc2, lfo, gain: droneGain };
+                this.nodes.drone = { oscillators, gain: droneGain };
             }
             
             createWindNoise() {
@@ -2378,6 +2377,11 @@
                 this.nodes.bells = { timers: [] };
             }
             
+            createWoodCreaks() {
+                // 木のきしみ音
+                this.nodes.creaks = { timers: [] };
+            }
+            
             playBirdChirp() {
                 if (!this.audioContext || !this.enabled) return;
                 
@@ -2415,7 +2419,7 @@
                 if (this.enabled) {
                     const nextChirp = setTimeout(() => {
                         this.playBirdChirp();
-                    }, 8000 + Math.random() * 15000);
+                    }, 15000 + Math.random() * 25000);
                     this.nodes.birds.timers.push(nextChirp);
                 }
             }
@@ -2452,7 +2456,7 @@
                 if (this.enabled) {
                     const nextBell = setTimeout(() => {
                         this.playBell();
-                    }, 12000 + Math.random() * 20000);
+                    }, 20000 + Math.random() * 30000);
                     this.nodes.bells.timers.push(nextBell);
                 }
             }
@@ -2479,8 +2483,45 @@
                 if (this.enabled) {
                     const nextDrop = setTimeout(() => {
                         this.playWaterDrop();
-                    }, 3000 + Math.random() * 7000);
+                    }, 5000 + Math.random() * 10000);
                     this.nodes.drops.timers.push(nextDrop);
+                }
+            }
+
+            playWoodCreak() {
+                if (!this.audioContext || !this.enabled) return;
+                
+                const now = this.audioContext.currentTime;
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                // 低い周波数での揺らぎ（木のきしみ）
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(60 + Math.random() * 40, now);
+                osc.frequency.exponentialRampToValueAtTime(40 + Math.random() * 20, now + 2);
+                
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.03, now + 0.5);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+                
+                // わずかにノイズを混ぜて質感を出す
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 200;
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                gain.connect(this.reverbNode);
+                
+                osc.start(now);
+                osc.stop(now + 3);
+                
+                if (this.enabled) {
+                    const nextCreak = setTimeout(() => {
+                        this.playWoodCreak();
+                    }, 15000 + Math.random() * 20000);
+                    this.nodes.creaks.timers.push(nextCreak);
                 }
             }
             
@@ -2497,55 +2538,50 @@
                 
                 if (this.enabled) {
                     this.nodes.rain.source.start();
-                    this.nodes.drone.osc.start();
-                    this.nodes.drone.osc2.start();
-                    this.nodes.drone.lfo.start();
+                    // 全てのドローン発振器を開始
+                    this.nodes.drone.oscillators.forEach(osc => osc.start());
                     this.nodes.wind.source.start();
                     this.nodes.wind.lfo.start();
                     
                     // フェードイン
                     this.masterGain.gain.linearRampToValueAtTime(0.12, this.audioContext.currentTime + 2);
                     
-                    // 水滴音開始
-                    setTimeout(() => this.playWaterDrop(), 2000);
-                    // 鳥のさえずり開始
-                    setTimeout(() => this.playBirdChirp(), 5000);
-                    // ベル開始
-                    setTimeout(() => this.playBell(), 8000);
+                    // 不規則な環境音の開始（侘寂の美学に基づき、間隔を空ける）
+                    setTimeout(() => this.playWaterDrop(), 3000);
+                    setTimeout(() => this.playBirdChirp(), 8000);
+                    setTimeout(() => this.playBell(), 15000);
+                    setTimeout(() => this.playWoodCreak(), 5000);
                 } else {
                     // フェードアウト
-                    this.masterGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 1);
+                    this.masterGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 1.5);
                     
-                    // 水滴タイマーをクリア
-                    if (this.nodes.drops && this.nodes.drops.timers) {
-                        this.nodes.drops.timers.forEach(timer => clearTimeout(timer));
-                        this.nodes.drops.timers = [];
-                    }
-                    // 鳥のタイマーをクリア
-                    if (this.nodes.birds && this.nodes.birds.timers) {
-                        this.nodes.birds.timers.forEach(timer => clearTimeout(timer));
-                        this.nodes.birds.timers = [];
-                    }
-                    // ベルのタイマーをクリア
-                    if (this.nodes.bells && this.nodes.bells.timers) {
-                        this.nodes.bells.timers.forEach(timer => clearTimeout(timer));
-                        this.nodes.bells.timers = [];
-                    }
+                    // 全てのタイマーをクリア
+                    const timerNodes = ['drops', 'birds', 'bells', 'creaks'];
+                    timerNodes.forEach(nodeName => {
+                        if (this.nodes[nodeName] && this.nodes[nodeName].timers) {
+                            this.nodes[nodeName].timers.forEach(timer => clearTimeout(timer));
+                            this.nodes[nodeName].timers = [];
+                        }
+                    });
                     
                     setTimeout(() => {
                         try {
-                            this.nodes.rain.source.stop();
-                            this.nodes.drone.osc.stop();
-                            this.nodes.drone.osc2.stop();
-                            this.nodes.drone.lfo.stop();
-                            this.nodes.wind.source.stop();
-                            this.nodes.wind.lfo.stop();
+                            if (this.nodes.rain && this.nodes.rain.source) this.nodes.rain.source.stop();
+                            if (this.nodes.drone && this.nodes.drone.oscillators) {
+                                this.nodes.drone.oscillators.forEach(osc => {
+                                    try { osc.stop(); } catch(e) {}
+                                });
+                            }
+                            if (this.nodes.wind) {
+                                if (this.nodes.wind.source) this.nodes.wind.source.stop();
+                                if (this.nodes.wind.lfo) this.nodes.wind.lfo.stop();
+                            }
                         } catch (e) {}
                         
                         // 再作成のため初期化
                         this.audioContext = null;
                         this.nodes = {};
-                    }, 1100);
+                    }, 1600);
                 }
                 
                 return this.enabled;
