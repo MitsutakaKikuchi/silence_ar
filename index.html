@@ -2493,23 +2493,6 @@
                 if (!this.audioContext || !this.enabled) return;
                 
                 const now = this.audioContext.currentTime;
-                const osc = this.audioContext.createOscillator();
-                const gain = this.audioContext.createGain();
-                
-                // 低い周波数での揺らぎ（木のきしみ）
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(60 + Math.random() * 40, now);
-                osc.frequency.exponentialRampToValueAtTime(40 + Math.random() * 20, now + 2);
-                
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.03, now + 0.5);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
-                
-                // わずかにノイズを混ぜて質感を出す
-            playWoodCreak() {
-                if (!this.audioContext || !this.enabled) return;
-                
-                const now = this.audioContext.currentTime;
                 // 木のきしみ（より深みのある複数レイヤー）
                 const count = 2 + Math.floor(Math.random() * 2);
                 
