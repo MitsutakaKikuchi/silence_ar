@@ -1708,6 +1708,8 @@
             letter-spacing: 0.15em;
             margin-bottom: 10px;
             font-family: 'Yu Mincho', serif;
+            line-height: 1.6;
+            white-space: pre-line;
         }
         
         .preview-hint {
@@ -1908,7 +1910,6 @@
                             float mask = uReveal + (noiseVal * 0.1); 
                             
                             // 深度マップ自体もマスクの一部に使う（深いところから裂ける演出）
-                            float depthFactor = 1.0 - depthVal;
                             mask = smoothstep(0.4, 0.6, mask * 1.2 - depthFactor * 0.2 * uHasDepth);
 
                             // 3. テクスチャ取得 & 色収差 (Chromatic Aberration)
@@ -2127,52 +2128,52 @@
         // ==========================================
         const episodes = [
             {
-                title: 'Episode.01 矯正する支柱',
+                title: 'Episode.01\n矯正する支柱',
                 text: 'ぐらつく私に無理やり打ち込まれる、<br>錆びた鉄の<strong>支柱</strong>。<br>この痛みだけが、腐りかけた私を立たせて<br>いる。',
                 image: './images/layerB_0.jpg?v=800'
             },
             {
-                title: 'Episode.02 沈黙の蔦',
+                title: 'Episode.02\n沈黙の蔦',
                 text: 'その静けさは、首筋に巻きつく美しい<br>緑の<strong>蔦</strong>だ。<br>優しさという真綿で、ゆっくりと気道を<br>締め上げられている。',
                 image: './images/layerB_1.jpg?v=800'
             },
             {
-                title: 'Episode.03 拒絶の雨',
+                title: 'Episode.03\n拒絶の雨',
                 text: '彼の拒絶は、冷たく鋭い銀色の<strong>雨</strong>だ。<br>私に付着した甘えを、泥のように洗い流していく。',
                 image: './images/layerB_2.jpg?v=800'
             },
             {
-                title: 'Episode.04 言葉の化石',
+                title: 'Episode.04\n言葉の化石',
                 text: '飲み込まれた言葉は、二人の地層の奥で<br><strong>化石</strong>になる。<br>掘り起こして傷ついてでも、そのゴツゴツ<br>した形を知りたかった。',
                 image: './images/layerB_3.jpg?v=800'
             },
             {
-                title: 'Episode.05 過保護な檻',
+                title: 'Episode.05\n過保護な檻',
                 text: 'この窮屈さは、脆い私を守るための過保護な<br><strong>檻</strong>だ。<br>私はその錆びた鉄柵の内側でしか、呼吸を<br>許されていない。',
                 image: './images/layerB_4.jpg?v=800'
             },
             {
-                title: 'Episode.06 相互の呪縛',
+                title: 'Episode.06\n相互の呪縛',
                 text: '背中合わせの傷口から、互いの根が癒着してしまった。<br>もう別々の木には戻れない<strong>接ぎ木</strong>のように、呪い合っている。',
                 image: './images/layerB_5.jpg?v=800'
             },
             {
-                title: 'Episode.07 内なる要塞',
+                title: 'Episode.07\n内なる要塞',
                 text: 'あれは外敵を威嚇する、武装した<strong>要塞</strong>の<br>姿だ。<br>私はその鋭い棘の内側で、無知なまま守られている。',
                 image: './images/layerB_6.jpg?v=800'
             },
             {
-                title: 'Episode.08 庭師の剪定',
+                title: 'Episode.08\n庭師の剪定',
                 text: '庭師が冷徹なハサミで、無駄な枝を<strong>剪定</strong>したのだ。<br>美しさを保つため、切り落とされた本当の<br>感情が散らばっている。',
                 image: './images/layerB_7.jpg?v=800'
             },
             {
-                title: 'Episode.09 庭の全景',
+                title: 'Episode.09\n庭の全景',
                 text: '俯瞰してみれば、そこは出口のない巨大な<br><strong>迷路の庭園</strong>だった。<br>私たちはこの美しい檻の中で、永遠に迷い<br>続けることを選んでいる。',
                 image: './images/layerB_8.jpg?v=800'
             },
             {
-                title: 'Episode.10 真実の種',
+                title: 'Episode.10\n真実の種',
                 text: '言わなかった言葉は、冷たく硬い<strong>種</strong>となって埋まる。<br>その沈黙こそが、私たちの関係を支える<br>最も重要な<strong>種</strong>だった。',
                 image: './images/layerB_9.jpg?v=800'
             }
@@ -3731,7 +3732,8 @@
         <!-- ARプレビュープロンプト（タップで詳細表示） -->
         <div id="ar-preview-prompt">
             <div class="preview-content">
-                <div class="preview-title">Episode.01 矯正する支柱</div>
+                <div class="preview-title">Episode.01
+矯正する支柱</div>
                 <div class="preview-hint">タップして詳細を見る</div>
                 <div class="preview-icon">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
