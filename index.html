@@ -926,14 +926,14 @@
             background: rgba(0, 0, 0, 0.9);
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
             z-index: 2000;
             opacity: 0;
             pointer-events: none;
             transition: opacity 1.5s ease;
             background-image: var(--paper-texture);
-            padding: 20px;
+            padding: 60px 20px 20px 20px;
             box-sizing: border-box;
             overflow-y: auto;
             overflow-x: hidden; /* 横スクロール無効化 */
@@ -948,13 +948,12 @@
             color: rgba(255, 255, 255, 0.9);
             font-size: 1.05rem; /* フォントサイズを大きく */
             letter-spacing: 0.15em; /* 字間を少し狭めて読みやすく */
-            line-height: 2.6; /* 行間を広く */
+            line-height: 1.8; /* 行間を縮小してモバイル1ページに */
             text-align: center;
             width: 100%;
             max-width: 650px;
             font-weight: 300;
             animation: completionFadeIn 2s ease forwards;
-            margin: auto 0; /* 上下中央配置 */
             padding: 0 30px; /* 左右に余白 */
         }
         
@@ -963,15 +962,15 @@
             transform: translateY(20px);
             white-space: normal; /* 折り返しを許可 */
             display: block; /* ブロック要素として扱う */
-            margin-bottom: 0.3em; /* 段落間余白を縮小 */
+            margin-bottom: 0; /* 余白を削除 */
         }
         
         /* モバイル対応：画面幅が狭い場合 */
         @media screen and (max-width: 480px) {
             .completion-text {
-                font-size: 0.95rem; /* モバイルでも読みやすいサイズに */
+                font-size: 0.92rem; /* モバイルでも読みやすいサイズに */
                 letter-spacing: 0.1em;
-                line-height: 2.4;
+                line-height: 1.75; /* モバイルで1ページに収まるように */
                 padding: 0 20px;
             }
         }
@@ -982,8 +981,8 @@
         }
         
         .completion-actions {
-            margin-top: 40px; /* 余白縮小 */
-            margin-bottom: 40px; /* 下部余白確保 */
+            margin-top: 30px; /* 余白縮小 */
+            margin-bottom: 30px; /* 下部余白確保 */
             display: flex;
             flex-direction: column;
             gap: 16px;
