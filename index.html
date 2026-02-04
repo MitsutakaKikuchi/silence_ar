@@ -1997,11 +1997,11 @@
                     const gx = window.gyroData.gamma || 0; // 左右傾き
                     const gy = window.gyroData.beta || 0;  // 前後傾き
                     
-                    // 目標ベクトル
-                    const targetVec = new THREE.Vector3(gx * 2.0, gy * 1.5, 1.0);
+                    // 目標ベクトル（感度を下げて震えを抑制）
+                    const targetVec = new THREE.Vector3(gx * 1.2, gy * 0.9, 1.0);
                     
                     // スムージング補間（係数を極限まで小さくして震えを完全抑制）
-                    this.smoothedViewVec.lerp(targetVec, 0.005);
+                    this.smoothedViewVec.lerp(targetVec, 0.002);
                     
                     // スムージング後の値を適用
                     this.material.uniforms.uViewVec.value.copy(this.smoothedViewVec);
@@ -3797,7 +3797,7 @@
                 position="0 0 0" 
                 rotation="0 0 0" 
                 anatomical-reveal="
-                    layerA: ./images/target_source.jpg; 
+                    layerA: ./images/layerA_0.jpg; 
                     layerB: ./images/layerB_0.jpg; 
                     depthMap: ./images/layerB_0_depth.png; 
                     strength: 0.6;
@@ -3812,7 +3812,7 @@
                 position="0 0 0" 
                 rotation="0 0 0" 
                 anatomical-reveal="
-                    layerA: ./images/target_source.jpg; 
+                    layerA: ./images/layerA_1.jpg; 
                     layerB: ./images/layerB_1.jpg; 
                     depthMap: ./images/layerB_1_depth.png; 
                     strength: 0.6;
@@ -3827,7 +3827,7 @@
                 position="0 0 0" 
                 rotation="0 0 0" 
                 anatomical-reveal="
-                    layerA: ./images/target_source.jpg; 
+                    layerA: ./images/layerA_2.jpg; 
                     layerB: ./images/layerB_2.jpg; 
                     depthMap: ./images/layerB_2_depth.png; 
                     strength: 0.6;
@@ -3842,7 +3842,7 @@
                 position="0 0 0" 
                 rotation="0 0 0" 
                 anatomical-reveal="
-                    layerA: ./images/target_source.jpg; 
+                    layerA: ./images/layerA_3.jpg; 
                     layerB: ./images/layerB_3.jpg; 
                     depthMap: ./images/layerB_3_depth.png; 
                     strength: 0.6;
@@ -3857,7 +3857,7 @@
                 position="0 0 0" 
                 rotation="0 0 0" 
                 anatomical-reveal="
-                    layerA: ./images/target_source.jpg; 
+                    layerA: ./images/layerA_4.jpg; 
                     layerB: ./images/layerB_4.jpg; 
                     depthMap: ./images/layerB_4_depth.png; 
                     strength: 0.6;
@@ -3872,7 +3872,7 @@
                 position="0 0 0" 
                 rotation="0 0 0" 
                 anatomical-reveal="
-                    layerA: ./images/target_source.jpg; 
+                    layerA: ./images/layerA_5.jpg; 
                     layerB: ./images/layerB_5.jpg; 
                     depthMap: ./images/layerB_5_depth.png; 
                     strength: 0.6;
@@ -3887,7 +3887,7 @@
                 position="0 0 0" 
                 rotation="0 0 0" 
                 anatomical-reveal="
-                    layerA: ./images/target_source.jpg; 
+                    layerA: ./images/layerA_6.jpg; 
                     layerB: ./images/layerB_6.jpg; 
                     depthMap: ./images/layerB_6_depth.png; 
                     strength: 0.6;
@@ -3902,7 +3902,7 @@
                 position="0 0 0" 
                 rotation="0 0 0" 
                 anatomical-reveal="
-                    layerA: ./images/target_source.jpg; 
+                    layerA: ./images/layerA_7.jpg; 
                     layerB: ./images/layerB_7.jpg; 
                     depthMap: ./images/layerB_7_depth.png; 
                     strength: 0.6;
@@ -3917,7 +3917,7 @@
                 position="0 0 0" 
                 rotation="0 0 0" 
                 anatomical-reveal="
-                    layerA: ./images/target_source.jpg; 
+                    layerA: ./images/layerA_8.jpg; 
                     layerB: ./images/layerB_8.jpg; 
                     depthMap: ./images/layerB_8_depth.png; 
                     strength: 0.6;
@@ -3932,7 +3932,7 @@
                 position="0 0 0" 
                 rotation="0 0 0" 
                 anatomical-reveal="
-                    layerA: ./images/target_source.jpg; 
+                    layerA: ./images/layerA_9.jpg; 
                     layerB: ./images/layerB_9.jpg; 
                     depthMap: ./images/layerB_9_depth.png; 
                     strength: 0.6;
