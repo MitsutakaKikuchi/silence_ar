@@ -2000,8 +2000,8 @@
                     // 目標ベクトル
                     const targetVec = new THREE.Vector3(gx * 2.0, gy * 1.5, 1.0);
                     
-                    // スムージング補間（係数をさらに小さくして震えを抑制）
-                    this.smoothedViewVec.lerp(targetVec, 0.01);
+                    // スムージング補間（係数を極限まで小さくして震えを完全抑制）
+                    this.smoothedViewVec.lerp(targetVec, 0.005);
                     
                     // スムージング後の値を適用
                     this.material.uniforms.uViewVec.value.copy(this.smoothedViewVec);
@@ -3498,6 +3498,13 @@
                     const previewPrompt = document.getElementById('ar-preview-prompt');
                     if (previewPrompt) {
                         previewPrompt.classList.remove('visible');
+                    }
+                    
+                    // スキャンガイドを再表示（カードが表示されていない場合のみ）
+                    const card = document.querySelector('.card');
+                    if (card && !card.classList.contains('visible')) {
+                        scanningGuide.classList.remove('hidden');
+                        scanningGuide.classList.add('visible');
                     }
                 }
             };
