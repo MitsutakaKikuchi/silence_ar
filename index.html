@@ -1890,17 +1890,16 @@
                             float edgeFeather = 0.03;  // フェードの幅
                             float roundMask = roundedRectMask(vUv, cornerRadius, edgeFeather);
                             
-                            // 1. 視差マッピング (Parallax Mapping) - ジャイロデータ使用
-                            vec3 gyroDir = normalize(uViewVec);
-                            vec3 camDir = normalize(vViewPosition);
-                            // ジャイロとカメラ視線を合成（ジャイロを主に使用）
-                            vec3 viewDir = normalize(gyroDir * 0.8 + camDir * 0.2);
+                            // 1. 視差マッピング (Parallax Mapping) - ジャイロデータを直接使用
+                            // 正規化せず、傾きの大きさを保持
+                            vec2 gyroOffset = uViewVec.xy * 0.015; // ジャイロの直接オフセット
                             
                             float depthVal = uHasDepth > 0.5 ? texture2D(uDepth, vUv).r : 0.5;
                             
-                            // 視差を強化（深い部分を大きくずらす）
-                            float parallaxAmount = (1.0 - depthVal) * uParallax * 2.0;
-                            vec2 parallaxOffset = viewDir.xy * parallaxAmount; 
+                            // 深い部分（黒=0）ほど大きくずらす
+                            float depthFactor = (1.0 - depthVal);  // 0=手前、 1=奥
+                            vec2 parallaxOffset = gyroOffset * depthFactor * uParallax * 3.0;
+                            
                             vec2 uvB = vUv + parallaxOffset;
                             vec2 uvA = vUv;
 
@@ -2001,7 +2000,7 @@
                     const targetVec = new THREE.Vector3(gx * 2.0, gy * 1.5, 1.0);
                     
                     // スムージング補間（係数をさらに小さくして震えを抑制）
-                    this.smoothedViewVec.lerp(targetVec, 0.04);
+                    this.smoothedViewVec.lerp(targetVec, 0.015);
                     
                     // スムージング後の値を適用
                     this.material.uniforms.uViewVec.value.copy(this.smoothedViewVec);
