@@ -1894,19 +1894,20 @@
                             
                             // 1. 視差マッピング (Parallax Mapping) - ジャイロデータを直接使用
                             // 正規化せず、傾きの大きさを保持
-                            vec2 gyroOffset = uViewVec.xy * 0.015; // ジャイロの直接オフセット
+                            vec2 gyroOffset = uViewVec.xy * 0.012; // ジャイロの直接オフセット（控えめ）
                             
                             float depthVal = uHasDepth > 0.5 ? texture2D(uDepth, vUv).r : 0.5;
                             
                             // 深い部分（黒=0）ほど大きくずらす
                             float depthFactor = (1.0 - depthVal);  // 0=手前、 1=奥
-                            vec2 parallaxOffset = gyroOffset * depthFactor * uParallax * 3.0;
+                            vec2 parallaxOffset = gyroOffset * depthFactor * uParallax * 2.0;
                             
                             vec2 uvB = vUv + parallaxOffset;
                             vec2 uvA = vUv;
 
                             // 2. 有機的トランジション (Organic Noise Reveal)
-                            float noiseVal = snoise(vUv * 3.0 + vec2(0.0, uTime * 0.1));
+                            // ノイズの速度とスケールを調整して滑らかに
+                            float noiseVal = snoise(vUv * 2.5 + vec2(0.0, uTime * 0.05));
                             float mask = uReveal + (noiseVal * 0.1); 
                             
                             // 深度マップ自体もマスクの一部に使う（深いところから裂ける演出）
@@ -1915,8 +1916,8 @@
                             // 3. テクスチャ取得 & 色収差 (Chromatic Aberration)
                             vec4 colorA = texture2D(uTexA, uvA);
                             
-                            // 境界付近で色ズレを起こす
-                            float aber = 0.01 * uParallax;
+                            // 境界付近で色ズレを起こす（控えめにして振動軽減）
+                            float aber = 0.005 * uParallax;
                             float r = texture2D(uTexB, uvB + vec2(aber, 0.0)).r;
                             float g = texture2D(uTexB, uvB).g;
                             float b = texture2D(uTexB, uvB - vec2(aber, 0.0)).b;
@@ -2001,7 +2002,7 @@
                     const targetVec = new THREE.Vector3(gx * 2.0, gy * 1.5, 1.0);
                     
                     // スムージング補間（係数をさらに小さくして震えを抑制）
-                    this.smoothedViewVec.lerp(targetVec, 0.015);
+                    this.smoothedViewVec.lerp(targetVec, 0.01);
                     
                     // スムージング後の値を適用
                     this.material.uniforms.uViewVec.value.copy(this.smoothedViewVec);
