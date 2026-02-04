@@ -3505,6 +3505,10 @@
                     if (card && !card.classList.contains('visible')) {
                         scanningGuide.classList.remove('hidden');
                         scanningGuide.classList.add('visible');
+                        
+                        // 「没入」「製作者」ボタンも再表示
+                        if (theaterBtn) theaterBtn.style.display = '';
+                        if (persistentProfileBtn) persistentProfileBtn.classList.remove('hidden-manual');
                     }
                 }
             };
