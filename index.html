@@ -1303,20 +1303,31 @@
         /* モダンなカードUI（より滑らかなアニメーション） */
         .card {
             display: none; /* 初期非表示 */
-            background: rgba(10, 10, 10, 0.96);
+            background: rgba(10, 10, 10, 0.92);
             color: #eee;
             width: 100%;
             max-width: 450px;
-            border-radius: 26px 26px 0 0; /* 上部だけ丸く */
+            border-radius: 30px; /* 全体を丸く */
             padding: 0;
-            margin-bottom: 0;
+            margin-bottom: 20px;
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             box-shadow: 
                 0 -10px 50px rgba(0,0,0,0.7),
                 0 -2px 20px rgba(0, 255, 170, 0.08),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            border-top: 1px solid rgba(0, 255, 170, 0.15);
+                inset 0 0 80px rgba(0, 0, 0, 0.3), /* 内側シャドウ */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.05); /* 薄い内側枠 */
+            /* 枠をグラデーションフェードに */
+            border: 2px solid transparent;
+            background-image: 
+                linear-gradient(rgba(10, 10, 10, 0.92), rgba(10, 10, 10, 0.92)),
+                linear-gradient(180deg, 
+                    rgba(0, 255, 170, 0.3) 0%, 
+                    rgba(0, 255, 170, 0.15) 30%, 
+                    rgba(0, 255, 170, 0.05) 70%, 
+                    rgba(0, 255, 170, 0.0) 100%);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
             transform: translateY(100%);
             transition: 
                 transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
@@ -1329,7 +1340,6 @@
             max-height: 90dvh; /* モバイル対応 */
             opacity: 0;
             padding-bottom: env(safe-area-inset-bottom); /* カード自体にも下部余白 */
-            background-image: var(--paper-texture);
         }
         
         .card.visible {
@@ -1363,6 +1373,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            border-radius: 30px 30px 0 0; /* 上部を丸く */
         }
         
         /* 画像オーバーレイ（世界観強化） */
@@ -1699,9 +1710,10 @@
         }
         
         .preview-hint {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: rgba(0, 255, 170, 0.8);
-            letter-spacing: 0.2em;
+            letter-spacing: 0.15em;
+            white-space: nowrap;
             margin-bottom: 12px;
             animation: hintPulse 2s ease-in-out infinite;
         }
@@ -1832,8 +1844,9 @@
                             vec3 viewDir = normalize(vViewPosition);
                             float depthVal = uHasDepth > 0.5 ? texture2D(uDepth, vUv).r : 0.5;
                             
-                            // 簡易視差: 深い部分(黒)ほど視点移動の影響を受ける
-                            vec2 parallaxOffset = viewDir.xy * (depthVal * uParallax * -0.1 * uHasDepth); 
+                            // 視差を強化（深い部分を大きくずらす）
+                            float parallaxAmount = (1.0 - depthVal) * uParallax * 2.0;
+                            vec2 parallaxOffset = viewDir.xy * parallaxAmount; 
                             vec2 uvB = vUv + parallaxOffset;
                             vec2 uvA = vUv;
 
@@ -1919,12 +1932,12 @@
                 const current = this.material.uniforms.uReveal.value;
                 this.material.uniforms.uReveal.value += (targetReveal - current) * 0.03;
 
-                // ジャイロデータを使用したパララックス効果
+                // ジャイロデータを使用したパララックス効果（強化）
                 if (window.gyroData) {
                     const gx = window.gyroData.gamma || 0; // 左右傾き
                     const gy = window.gyroData.beta || 0;  // 前後傾き
-                    // ジャイロデータを視線ベクトルとして使用
-                    this.material.uniforms.uViewVec.value.set(gx * 0.5, gy * 0.3, 1.0);
+                    // ジャイロデータを視線ベクトルとして使用（係数を大きく）
+                    this.material.uniforms.uViewVec.value.set(gx * 2.0, gy * 1.5, 1.0);
                 }
             }
         });
@@ -3708,7 +3721,7 @@
                     layerA: ./images/target_source.jpg; 
                     layerB: ./images/layerB_0.jpg; 
                     depthMap: ./images/layerB_0_depth.png; 
-                    strength: 0.3;
+                    strength: 0.6;
                     edgeColor: #00ffaa
                 ">
             </a-entity>
@@ -3723,7 +3736,7 @@
                     layerA: ./images/target_source.jpg; 
                     layerB: ./images/layerB_1.jpg; 
                     depthMap: ./images/layerB_1_depth.png; 
-                    strength: 0.3;
+                    strength: 0.6;
                     edgeColor: #00ffaa
                 ">
             </a-entity>
@@ -3738,7 +3751,7 @@
                     layerA: ./images/target_source.jpg; 
                     layerB: ./images/layerB_2.jpg; 
                     depthMap: ./images/layerB_2_depth.png; 
-                    strength: 0.3;
+                    strength: 0.6;
                     edgeColor: #00ffaa
                 ">
             </a-entity>
@@ -3753,7 +3766,7 @@
                     layerA: ./images/target_source.jpg; 
                     layerB: ./images/layerB_3.jpg; 
                     depthMap: ./images/layerB_3_depth.png; 
-                    strength: 0.3;
+                    strength: 0.6;
                     edgeColor: #00ffaa
                 ">
             </a-entity>
@@ -3768,7 +3781,7 @@
                     layerA: ./images/target_source.jpg; 
                     layerB: ./images/layerB_4.jpg; 
                     depthMap: ./images/layerB_4_depth.png; 
-                    strength: 0.3;
+                    strength: 0.6;
                     edgeColor: #00ffaa
                 ">
             </a-entity>
@@ -3783,7 +3796,7 @@
                     layerA: ./images/target_source.jpg; 
                     layerB: ./images/layerB_5.jpg; 
                     depthMap: ./images/layerB_5_depth.png; 
-                    strength: 0.3;
+                    strength: 0.6;
                     edgeColor: #00ffaa
                 ">
             </a-entity>
@@ -3798,7 +3811,7 @@
                     layerA: ./images/target_source.jpg; 
                     layerB: ./images/layerB_6.jpg; 
                     depthMap: ./images/layerB_6_depth.png; 
-                    strength: 0.3;
+                    strength: 0.6;
                     edgeColor: #00ffaa
                 ">
             </a-entity>
@@ -3813,7 +3826,7 @@
                     layerA: ./images/target_source.jpg; 
                     layerB: ./images/layerB_7.jpg; 
                     depthMap: ./images/layerB_7_depth.png; 
-                    strength: 0.3;
+                    strength: 0.6;
                     edgeColor: #00ffaa
                 ">
             </a-entity>
@@ -3828,7 +3841,7 @@
                     layerA: ./images/target_source.jpg; 
                     layerB: ./images/layerB_8.jpg; 
                     depthMap: ./images/layerB_8_depth.png; 
-                    strength: 0.3;
+                    strength: 0.6;
                     edgeColor: #00ffaa
                 ">
             </a-entity>
@@ -3843,7 +3856,7 @@
                     layerA: ./images/target_source.jpg; 
                     layerB: ./images/layerB_9.jpg; 
                     depthMap: ./images/layerB_9_depth.png; 
-                    strength: 0.3;
+                    strength: 0.6;
                     edgeColor: #00ffaa
                 ">
             </a-entity>
