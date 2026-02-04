@@ -657,7 +657,7 @@
         #scanning-guide .corner {
             position: absolute;
             width: 45px; height: 45px;
-            border-color: var(--accent-moss);
+            border-color: #00ffaa; /* 明るいアクアグリーンで視認性向上 */
             border-style: solid;
             transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             animation: cornerPulse 3s infinite ease-in-out;
@@ -669,14 +669,14 @@
 
         @keyframes cornerPulse {
             0%, 100% { 
-                opacity: 0.5; 
+                opacity: 0.7; 
                 transform: scale(1); 
-                filter: drop-shadow(0 0 4px rgba(120, 140, 100, 0.3));
+                filter: drop-shadow(0 0 8px rgba(0, 255, 170, 0.5));
             }
             50% { 
                 opacity: 1; 
                 transform: scale(1.08); 
-                filter: drop-shadow(0 0 12px rgba(120, 140, 100, 0.7));
+                filter: drop-shadow(0 0 16px rgba(0, 255, 170, 0.9));
             }
         }
 
@@ -1892,15 +1892,13 @@
                             float edgeFeather = 0.03;  // フェードの幅
                             float roundMask = roundedRectMask(vUv, cornerRadius, edgeFeather);
                             
-                            // 1. 視差マッピング (Parallax Mapping) - ジャイロデータを直接使用
-                            // 正規化せず、傾きの大きさを保持
-                            vec2 gyroOffset = uViewVec.xy * 0.012; // ジャイロの直接オフセット（控えめ）
-                            
+                            // 1. 視差マッピング (Parallax Mapping) - カメラ視線ベース
+                            // 改善案採用：奥（黒）が大きく動く正しい計算
+                            vec3 viewDir = normalize(vViewPosition);
                             float depthVal = uHasDepth > 0.5 ? texture2D(uDepth, vUv).r : 0.5;
                             
-                            // 深い部分（黒=0）ほど大きくずらす
-                            float depthFactor = (1.0 - depthVal);  // 0=手前、 1=奥
-                            vec2 parallaxOffset = gyroOffset * depthFactor * uParallax * 2.0;
+                            // 奥の空間が広がるように：黒（奥）ほど大きく動く
+                            vec2 parallaxOffset = viewDir.xy * ((1.0 - depthVal) * uParallax * -0.2);
                             
                             vec2 uvB = vUv + parallaxOffset;
                             vec2 uvA = vUv;
@@ -1911,6 +1909,7 @@
                             float mask = uReveal + (noiseVal * 0.1); 
                             
                             // 深度マップ自体もマスクの一部に使う（深いところから裂ける演出）
+                            float depthFactor = 1.0 - depthVal;  // 黒（奥）が1.0
                             mask = smoothstep(0.4, 0.6, mask * 1.2 - depthFactor * 0.2 * uHasDepth);
 
                             // 3. テクスチャ取得 & 色収差 (Chromatic Aberration)
