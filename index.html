@@ -1684,9 +1684,9 @@
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(0, 255, 170, 0.3);
             border-radius: 20px;
-            padding: 20px 40px;
+            padding: 18px 24px;
             text-align: center;
-            min-width: 280px;
+            max-width: 240px;
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 255, 170, 0.1);
@@ -1803,6 +1803,9 @@
             init: function () {
                 const data = this.data;
                 const el = this.el;
+                
+                // ジャイロスムージング用の前フレーム値
+                this.smoothedViewVec = new THREE.Vector3(0, 0, 1);
 
                 // シェーダーマテリアルの定義
                 this.material = new THREE.ShaderMaterial({
@@ -1989,12 +1992,19 @@
                 const current = this.material.uniforms.uReveal.value;
                 this.material.uniforms.uReveal.value += (targetReveal - current) * 0.03;
 
-                // ジャイロデータを使用したパララックス効果（強化）
+                // ジャイロデータを使用したパララックス効果（スムージング適用）
                 if (window.gyroData) {
                     const gx = window.gyroData.gamma || 0; // 左右傾き
                     const gy = window.gyroData.beta || 0;  // 前後傾き
-                    // ジャイロデータを視線ベクトルとして使用（係数を大きく）
-                    this.material.uniforms.uViewVec.value.set(gx * 2.0, gy * 1.5, 1.0);
+                    
+                    // 目標ベクトル
+                    const targetVec = new THREE.Vector3(gx * 2.0, gy * 1.5, 1.0);
+                    
+                    // スムージング補間（係数を小さくして滑らかに）
+                    this.smoothedViewVec.lerp(targetVec, 0.08);
+                    
+                    // スムージング後の値を適用
+                    this.material.uniforms.uViewVec.value.copy(this.smoothedViewVec);
                 }
             }
         });
