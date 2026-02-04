@@ -1309,7 +1309,7 @@
             max-width: 450px;
             border-radius: 30px; /* 全体を丸く */
             padding: 0;
-            margin-bottom: 20px;
+            margin-bottom: 0;
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             box-shadow: 
@@ -1471,7 +1471,7 @@
 
         /* テキストエリア */
         .card-content {
-            padding: 8px 28px 45px 28px; /* 上下余白を縮小 */
+            padding: 8px 28px 20px 28px; /* 下部余白を最小限に */
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             flex: 1;
@@ -1684,8 +1684,9 @@
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(0, 255, 170, 0.3);
             border-radius: 20px;
-            padding: 20px 30px;
+            padding: 20px 40px;
             text-align: center;
+            min-width: 280px;
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 255, 170, 0.1);
@@ -1710,9 +1711,9 @@
         }
         
         .preview-hint {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: rgba(0, 255, 170, 0.8);
-            letter-spacing: 0.15em;
+            letter-spacing: 0.08em;
             white-space: nowrap;
             margin-bottom: 12px;
             animation: hintPulse 2s ease-in-out infinite;
