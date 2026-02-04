@@ -1755,6 +1755,37 @@
     </style>
     <script>
         // ==========================================
+        // グローバルテクスチャキャッシュ（読み込み最適化）
+        // ==========================================
+        window.textureCache = window.textureCache || {};
+        window.textureLoadPromises = window.textureLoadPromises || {};
+        
+        function loadTextureWithCache(url) {
+            // 既にキャッシュにあればそれを返す
+            if (window.textureCache[url]) {
+                return Promise.resolve(window.textureCache[url]);
+            }
+            // 読み込み中ならそのPromiseを返す（重複読み込み防止）
+            if (window.textureLoadPromises[url]) {
+                return window.textureLoadPromises[url];
+            }
+            // 新規読み込み
+            const loader = new THREE.TextureLoader();
+            const promise = new Promise((resolve, reject) => {
+                loader.load(url, (tex) => {
+                    window.textureCache[url] = tex;
+                    delete window.textureLoadPromises[url];
+                    resolve(tex);
+                }, undefined, (err) => {
+                    delete window.textureLoadPromises[url];
+                    reject(err);
+                });
+            });
+            window.textureLoadPromises[url] = promise;
+            return promise;
+        }
+
+        // ==========================================
         // Anatomical Reveal Shader（解剖学的露見シェーダー）
         // 概要: Depth Mapを用いて、日常(Layer A)と本音(Layer B)を有機的に合成し、
         // 視差効果とノイズによる「解剖」演出を行う高機能シェーダー。
@@ -1807,6 +1838,7 @@
                         uniform float uReveal; // 0.0 ~ 1.0
                         uniform vec3 uEdgeColor;
                         uniform float uHasDepth;
+                        uniform vec3 uViewVec; // ジャイロベースの視線方向
 
                         varying vec2 vUv;
                         varying vec3 vViewPosition;
@@ -1839,9 +1871,27 @@
                             return 130.0 * dot(m, g);
                         }
 
+                        // 角丸マスク関数 (Rounded Rectangle SDF)
+                        float roundedRectMask(vec2 uv, float radius, float feather) {
+                            vec2 centered = uv - 0.5;
+                            vec2 boxSize = vec2(0.5 - radius);
+                            vec2 d = abs(centered) - boxSize;
+                            float dist = length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - radius;
+                            return 1.0 - smoothstep(-feather, feather, dist);
+                        }
+
                         void main() {
-                            // 1. 視差マッピング (Parallax Mapping)
-                            vec3 viewDir = normalize(vViewPosition);
+                            // 0. 角丸マスクとフェードエッジ
+                            float cornerRadius = 0.08; // 角の丸み
+                            float edgeFeather = 0.03;  // フェードの幅
+                            float roundMask = roundedRectMask(vUv, cornerRadius, edgeFeather);
+                            
+                            // 1. 視差マッピング (Parallax Mapping) - ジャイロデータ使用
+                            vec3 gyroDir = normalize(uViewVec);
+                            vec3 camDir = normalize(vViewPosition);
+                            // ジャイロとカメラ視線を合成（ジャイロを主に使用）
+                            vec3 viewDir = normalize(gyroDir * 0.8 + camDir * 0.2);
+                            
                             float depthVal = uHasDepth > 0.5 ? texture2D(uDepth, vUv).r : 0.5;
                             
                             // 視差を強化（深い部分を大きくずらす）
@@ -1875,6 +1925,11 @@
                             // AとBを混ぜる
                             vec4 finalColor = mix(colorA, colorB, mask);
                             finalColor.rgb += edgeEmission;
+                            
+                            // 5. 角丸マスクとフェード境界を適用
+                            float borderGlow = (1.0 - roundMask) * smoothstep(0.0, 0.05, roundMask) * 0.5;
+                            finalColor.rgb += uEdgeColor * borderGlow;
+                            finalColor.a = roundMask;
 
                             gl_FragColor = finalColor;
                         }
@@ -1883,27 +1938,28 @@
                     side: THREE.DoubleSide
                 });
 
-                // テクスチャローダー
-                const loader = new THREE.TextureLoader();
-                const loadTex = (paramName, uniformName, isDepth = false) => {
+                // テクスチャローダー（キャッシュ使用で重複読み込み防止）
+                const loadTexCached = (paramName, uniformName, isDepth = false) => {
                     if (data[paramName]) {
-                        loader.load(data[paramName], (tex) => {
-                            this.material.uniforms[uniformName].value = tex;
-                            if (isDepth) {
-                                this.material.uniforms.uHasDepth.value = 1.0;
-                            }
-                        }, undefined, (err) => {
-                            console.log(`Texture load failed for ${paramName}:`, err);
-                            if (isDepth) {
-                                this.material.uniforms.uHasDepth.value = 0.0;
-                            }
-                        });
+                        loadTextureWithCache(data[paramName])
+                            .then((tex) => {
+                                this.material.uniforms[uniformName].value = tex;
+                                if (isDepth) {
+                                    this.material.uniforms.uHasDepth.value = 1.0;
+                                }
+                            })
+                            .catch((err) => {
+                                console.log(`Texture load failed for ${paramName}:`, err);
+                                if (isDepth) {
+                                    this.material.uniforms.uHasDepth.value = 0.0;
+                                }
+                            });
                     }
                 };
 
-                loadTex('layerA', 'uTexA');
-                loadTex('layerB', 'uTexB');
-                loadTex('depthMap', 'uDepth', true);
+                loadTexCached('layerA', 'uTexA');
+                loadTexCached('layerB', 'uTexB');
+                loadTexCached('depthMap', 'uDepth', true);
 
                 // メッシュへの適用
                 const mesh = el.getObject3D('mesh');
