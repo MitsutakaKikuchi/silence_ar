@@ -3024,7 +3024,18 @@
             let arReady = false;
             let introShown = false;
             let completionShown = false;
+            
+            // 閲覧履歴をlocalStorageから復元
             const viewedEpisodes = new Set();
+            try {
+                const saved = localStorage.getItem('silence_ar_viewed_episodes');
+                if (saved) {
+                    JSON.parse(saved).forEach(idx => viewedEpisodes.add(idx));
+                }
+            } catch (e) {
+                console.warn('Failed to load viewed episodes:', e);
+            }
+            
             const hasVisited = sessionStorage.getItem('silence_ar_visited') === 'true';
             
             // イントロ開始ボタン
@@ -3216,6 +3227,14 @@
                     if (justViewed) {
                         viewedEpisodes.add(index);
                         seeds[index].classList.add('viewed');
+                        
+                        // localStorageに保存
+                        try {
+                            localStorage.setItem('silence_ar_viewed_episodes', 
+                                JSON.stringify([...viewedEpisodes]));
+                        } catch (e) {
+                            console.warn('Failed to save viewed episodes:', e);
+                        }
                     }
                 }
             }
@@ -3223,22 +3242,78 @@
             // エピソードシードクリックイベント
             document.querySelectorAll('.episode-seed').forEach((seed, index) => {
                 seed.addEventListener('click', () => {
-                    if (viewedEpisodes.has(index)) {
-                        // 既に見たエピソードを再表示（直接カードUI）
+                    // エピソードを表示（閲覧済み/未閲覧に関わらず）
+                    const data = episodes[index];
+                    if (data) {
+                        const wasViewed = viewedEpisodes.has(index);
+                        const cardWasVisible = card.classList.contains('visible');
+                        
+                        // ARターゲット状態をリセット
+                        window.arTargetActive = false;
                         currentTargetIndex = index;
                         
-                        const data = episodes[index];
-                        if (data) {
-                            uiTitle.innerHTML = data.title;
-                            animateText(uiDesc, data.text);
-                            uiImage.src = data.image;
-                            
-                            card.classList.add('visible');
-                            updateEpisodeIndicator(index, false);
-                            
-                            if (theaterBtn) theaterBtn.style.display = 'none';
-                            if (persistentProfileBtn) persistentProfileBtn.classList.add('hidden-manual');
+                        // プレビュープロンプトを非表示
+                        const previewPrompt = document.getElementById('ar-preview-prompt');
+                        if (previewPrompt) {
+                            previewPrompt.classList.remove('visible');
                         }
+                        
+                        // スキャンガイドを非表示
+                        scanningGuide.classList.remove('visible');
+                        scanningGuide.classList.add('hidden');
+                        
+                        // カード内容を更新
+                        const cardContent = document.querySelector('.card-content');
+                        if (cardContent) cardContent.scrollTop = 0;
+                        
+                        uiTitle.innerHTML = data.title;
+                        animateText(uiDesc, data.text);
+                        
+                        const isPreloaded = preloadedImageCache[index];
+                        if (!isPreloaded) {
+                            imageLoading.classList.remove('hidden');
+                        }
+                        uiImage.classList.remove('loaded');
+                        
+                        uiImage.onload = () => {
+                            imageLoading.classList.add('hidden');
+                            setTimeout(() => {
+                                uiImage.classList.add('loaded');
+                            }, isPreloaded ? 50 : 150);
+                        };
+                        
+                        uiImage.src = data.image;
+                        
+                        // カードを表示
+                        if (!cardWasVisible) {
+                            card.classList.remove('pulse-effect');
+                            setTimeout(() => {
+                                card.classList.add('visible');
+                                card.classList.add('pulse-effect');
+                            }, 80);
+                        } else {
+                            // 既に開いている場合は即座に更新
+                            card.classList.add('visible');
+                        }
+                        
+                        // 初めて見る場合は閲覧済みに追加
+                        if (!wasViewed) {
+                            viewedEpisodes.add(index);
+                            updateEpisodeIndicator(index, true);
+                            
+                            // 全エピソード閲覧完了チェック
+                            if (viewedEpisodes.size === 10 && !completionShown) {
+                                setTimeout(() => {
+                                    showCompletion();
+                                }, 6000);
+                            }
+                        } else {
+                            updateEpisodeIndicator(index, false);
+                        }
+                        
+                        // ボタンを非表示
+                        if (theaterBtn) theaterBtn.style.display = 'none';
+                        if (persistentProfileBtn) persistentProfileBtn.classList.add('hidden-manual');
                     }
                 });
             });
@@ -3288,6 +3363,9 @@
             function onAllReady() {
                 if (arReady) return;
                 arReady = true;
+                
+                // 閲覧履歴を初期表示に反映
+                updateEpisodeIndicator(-1);
                 
                 // 少し待ってからフェードアウト
                 setTimeout(() => {
@@ -3387,8 +3465,9 @@
                 // 同じエピソードがプレビュー中の場合は無視
                 if (window.arTargetActive && currentTargetIndex === index) return;
                 
-                // 完了画面、またはプロフィールが表示されている間はスキャン結果を無視する
-                const isUIActive = completionOverlay.classList.contains('visible') || 
+                // カード表示中、完了画面、またはプロフィールが表示されている間はスキャン結果を無視する
+                const isUIActive = card.classList.contains('visible') ||
+                                  completionOverlay.classList.contains('visible') || 
                                   profileOverlay.classList.contains('visible');
                 
                 if (isUIActive) return;
