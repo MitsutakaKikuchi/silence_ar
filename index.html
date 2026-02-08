@@ -3151,53 +3151,41 @@
             window.arTargetActive = false; // ターゲット認識状態
             
             const gyroParallax = new GyroParallax((x, y) => {
-                // グローバル変数にジャイロデータを保存（シェーダー用）
                 window.gyroData.gamma = x;
                 window.gyroData.beta = y;
-                
-                if (mistLayer) {
-                    mistLayer.style.transform = `translate(${x * 20}px, ${y * 10}px)`;
-                }
+                if (mistLayer) mistLayer.style.transform = `translate(${x * 20}px, ${y * 10}px)`;
                 particleSystem.updateGyro(x, y);
             });
             
             document.addEventListener('touchstart', (e) => {
-                // ジャイロパーミッションリクエスト（iOS）
                 gyroParallax.requestPermission();
-                
-                // リップル生成（没入モード有効時のみ）
-                if (theaterMode.enabled && !card.classList.contains('visible')) {
-                    const touch = e.touches[0];
-                    rippleEffect.create(touch.clientX, touch.clientY);
-                }
+                if (!theaterMode.enabled || card.classList.contains('visible')) return;
+                const touch = e.touches[0];
+                rippleEffect.create(touch.clientX, touch.clientY);
             });
             
             document.addEventListener('click', (e) => {
-                // リップル生成（没入モード有効時のみ）
-                if (theaterMode.enabled && !card.classList.contains('visible')) {
-                    rippleEffect.create(e.clientX, e.clientY);
-                }
+                if (!theaterMode.enabled || card.classList.contains('visible')) return;
+                rippleEffect.create(e.clientX, e.clientY);
             });
             
             // 没入モードボタン（統合）
             const theaterBtn = document.getElementById('theater-mode-btn');
             if (theaterBtn) {
                 theaterBtn.addEventListener('click', () => {
-                    // シアターモードと環境音を同時に制御
                     const theaterEnabled = theaterMode.toggle();
-                    const soundEnabled = ambientSound.toggle();
+                    ambientSound.toggle();
                     theaterBtn.classList.toggle('active', theaterEnabled);
                 });
             }
             
             // サウンドコントロール（互換性のため残す）
             const soundControl = document.getElementById('sound-control');
-            if (soundControl) {
-                soundControl.addEventListener('click', () => {
-                    const enabled = ambientSound.toggle();
-                    soundControl.classList.toggle('active', enabled);
-                });
-            }
+            if (!soundControl) return;
+            soundControl.addEventListener('click', () => {
+                const enabled = ambientSound.toggle();
+                soundControl.classList.toggle('active', enabled);
+            });
             
             // エピソードインジケーター更新
             function updateEpisodeIndicator(index, justViewed = false) {
@@ -3229,80 +3217,63 @@
             // エピソードシードクリックイベント
             document.querySelectorAll('.episode-seed').forEach((seed, index) => {
                 seed.addEventListener('click', () => {
-                    // 未閲覧のエピソードはARスキャンで解放する必要がある
                     if (!viewedEpisodes.has(index)) return;
                     const data = episodes[index];
-                    if (data) {
-                        const wasViewed = viewedEpisodes.has(index);
-                        const cardWasVisible = card.classList.contains('visible');
-                        
-                        // ARターゲット状態をリセット
-                        window.arTargetActive = false;
-                        currentTargetIndex = index;
-                        
-                        // プレビュープロンプトを非表示
-                        const previewPrompt = document.getElementById('ar-preview-prompt');
-                        if (previewPrompt) {
-                            previewPrompt.classList.remove('visible');
-                        }
-                        
-                        // スキャンガイドを非表示
-                        scanningGuide.classList.remove('visible');
-                        scanningGuide.classList.add('hidden');
-                        
-                        // カード内容を更新
-                        const cardContent = document.querySelector('.card-content');
-                        if (cardContent) cardContent.scrollTop = 0;
-                        
-                        uiTitle.innerHTML = data.title;
-                        animateText(uiDesc, data.text);
-                        
-                        const isPreloaded = preloadedImageCache[index];
-                        if (!isPreloaded) {
-                            imageLoading.classList.remove('hidden');
-                        }
-                        uiImage.classList.remove('loaded');
-                        
-                        uiImage.onload = () => {
-                            imageLoading.classList.add('hidden');
-                            setTimeout(() => {
-                                uiImage.classList.add('loaded');
-                            }, isPreloaded ? 50 : 150);
-                        };
-                        
-                        uiImage.src = data.image;
-                        
-                        // カードを表示
-                        if (!cardWasVisible) {
-                            card.classList.remove('pulse-effect');
-                            setTimeout(() => {
-                                card.classList.add('visible');
-                                card.classList.add('pulse-effect');
-                            }, 80);
-                        } else {
-                            // 既に開いている場合は即座に更新
+                    if (!data) return;
+                    
+                    const wasViewed = viewedEpisodes.has(index);
+                    const cardWasVisible = card.classList.contains('visible');
+                    
+                    window.arTargetActive = false;
+                    currentTargetIndex = index;
+                    
+                    const previewPrompt = document.getElementById('ar-preview-prompt');
+                    if (previewPrompt) previewPrompt.classList.remove('visible');
+                    
+                    scanningGuide.classList.remove('visible');
+                    scanningGuide.classList.add('hidden');
+                    
+                    const cardContent = document.querySelector('.card-content');
+                    if (cardContent) cardContent.scrollTop = 0;
+                    
+                    uiTitle.innerHTML = data.title;
+                    animateText(uiDesc, data.text);
+                    
+                    const isPreloaded = preloadedImageCache[index];
+                    if (!isPreloaded) imageLoading.classList.remove('hidden');
+                    uiImage.classList.remove('loaded');
+                    
+                    uiImage.onload = () => {
+                        imageLoading.classList.add('hidden');
+                        setTimeout(() => {
+                            uiImage.classList.add('loaded');
+                        }, isPreloaded ? 50 : 150);
+                    };
+                    
+                    uiImage.src = data.image;
+                    
+                    if (!cardWasVisible) {
+                        card.classList.remove('pulse-effect');
+                        setTimeout(() => {
                             card.classList.add('visible');
-                        }
-                        
-                        // 初めて見る場合は閲覧済みに追加
-                        if (!wasViewed) {
-                            viewedEpisodes.add(index);
-                            updateEpisodeIndicator(index, true);
-                            
-                            // 全エピソード閲覧完了チェック
-                            if (viewedEpisodes.size === 10 && !completionShown) {
-                                setTimeout(() => {
-                                    showCompletion();
-                                }, 6000);
-                            }
-                        } else {
-                            updateEpisodeIndicator(index, false);
-                        }
-                        
-                        // ボタンを非表示
-                        if (theaterBtn) theaterBtn.style.display = 'none';
-                        if (persistentProfileBtn) persistentProfileBtn.classList.add('hidden-manual');
+                            card.classList.add('pulse-effect');
+                        }, 80);
+                    } else {
+                        card.classList.add('visible');
                     }
+                    
+                    if (!wasViewed) {
+                        viewedEpisodes.add(index);
+                        updateEpisodeIndicator(index, true);
+                        if (viewedEpisodes.size === 10 && !completionShown) {
+                            setTimeout(() => showCompletion(), 6000);
+                        }
+                    } else {
+                        updateEpisodeIndicator(index, false);
+                    }
+                    
+                    if (theaterBtn) theaterBtn.style.display = 'none';
+                    if (persistentProfileBtn) persistentProfileBtn.classList.add('hidden-manual');
                 });
             });
 
@@ -3441,78 +3412,62 @@
             });
 
             const onTargetFound = (index) => {
-                // 同じエピソードがプレビュー中の場合は無視
                 if (window.arTargetActive && currentTargetIndex === index) return;
-                
-                // カード表示中、完了画面、またはプロフィールが表示されている間はスキャン結果を無視する
-                const isUIActive = card.classList.contains('visible') ||
-                                  completionOverlay.classList.contains('visible') || 
-                                  profileOverlay.classList.contains('visible');
-                
-                if (isUIActive) return;
+                if (card.classList.contains('visible') ||
+                    completionOverlay.classList.contains('visible') || 
+                    profileOverlay.classList.contains('visible')) return;
 
                 console.log('Target Found:', index);
                 currentTargetIndex = index;
-                window.arTargetActive = true; // シェーダーにターゲット認識を通知
+                window.arTargetActive = true;
                 
-                // ARシェーダー用テクスチャを遅延ロード
                 const targetEntity = document.querySelector(`#target-${index}`);
                 if (targetEntity) {
                     const child = targetEntity.querySelector('[anatomical-reveal]');
-                    if (child) {
-                        const comp = child.components['anatomical-reveal'];
-                        if (comp && comp.loadTextures) comp.loadTextures();
+                    if (child?.components['anatomical-reveal']?.loadTextures) {
+                        child.components['anatomical-reveal'].loadTextures();
                     }
                 }
                 
-                // ガイドを隠す
                 scanningGuide.classList.remove('visible');
                 scanningGuide.classList.add('hidden');
 
                 const data = episodes[index];
-                if (data) {
-                    // カードUIのデータを事前準備（まだ表示しない）
-                    const cardContent = document.querySelector('.card-content');
-                    if (cardContent) cardContent.scrollTop = 0;
-                    
-                    uiTitle.innerHTML = data.title;
-                    animateText(uiDesc, data.text);
-                    
-                    const isPreloaded = preloadedImageCache[index];
-                    
-                    if (!isPreloaded) {
-                        imageLoading.classList.remove('hidden');
-                    }
-                    uiImage.classList.remove('loaded');
-                    
-                    uiImage.onload = () => {
-                        imageLoading.classList.add('hidden');
-                        setTimeout(() => {
-                            uiImage.classList.add('loaded');
-                        }, isPreloaded ? 50 : 150);
-                    };
-                    
-                    uiImage.onerror = () => {
-                        imageLoading.classList.add('hidden');
-                        console.error('Failed to load image:', data.image);
-                    };
-                    
-                    uiImage.src = data.image;
-                    
-                    // プレビュープロンプトを表示（カードUIではなく）
-                    const previewPrompt = document.getElementById('ar-preview-prompt');
-                    if (previewPrompt) {
-                        previewPrompt.querySelector('.preview-title').textContent = data.title;
-                        previewPrompt.classList.add('visible');
-                    }
-                    
-                    // エピソードインジケーター更新
-                    updateEpisodeIndicator(index, false);
-                    
-                    // ボタンを非表示
-                    if (theaterBtn) theaterBtn.style.display = 'none';
-                    if (persistentProfileBtn) persistentProfileBtn.classList.add('hidden-manual');
+                if (!data) return;
+                
+                const cardContent = document.querySelector('.card-content');
+                if (cardContent) cardContent.scrollTop = 0;
+                
+                uiTitle.innerHTML = data.title;
+                animateText(uiDesc, data.text);
+                
+                const isPreloaded = preloadedImageCache[index];
+                if (!isPreloaded) imageLoading.classList.remove('hidden');
+                uiImage.classList.remove('loaded');
+                
+                uiImage.onload = () => {
+                    imageLoading.classList.add('hidden');
+                    setTimeout(() => {
+                        uiImage.classList.add('loaded');
+                    }, isPreloaded ? 50 : 150);
+                };
+                
+                uiImage.onerror = () => {
+                    imageLoading.classList.add('hidden');
+                    console.error('Failed to load image:', data.image);
+                };
+                
+                uiImage.src = data.image;
+                
+                const previewPrompt = document.getElementById('ar-preview-prompt');
+                if (previewPrompt) {
+                    previewPrompt.querySelector('.preview-title').textContent = data.title;
+                    previewPrompt.classList.add('visible');
                 }
+                
+                updateEpisodeIndicator(index, false);
+                if (theaterBtn) theaterBtn.style.display = 'none';
+                if (persistentProfileBtn) persistentProfileBtn.classList.add('hidden-manual');
             };
             
             // プレビュープロンプトをタップでカードUI表示
@@ -3520,11 +3475,8 @@
                 if (currentTargetIndex < 0) return;
                 
                 const previewPrompt = document.getElementById('ar-preview-prompt');
-                if (previewPrompt) {
-                    previewPrompt.classList.remove('visible');
-                }
+                if (previewPrompt) previewPrompt.classList.remove('visible');
                 
-                // カードUIを表示
                 card.classList.remove('visible');
                 card.classList.remove('pulse-effect');
                 
@@ -3532,21 +3484,15 @@
                     card.classList.add('visible');
                     card.classList.add('pulse-effect');
                     updateEpisodeIndicator(currentTargetIndex, true);
-                    
-                    // 全エピソード閲覧完了チェック
                     if (viewedEpisodes.size === 10 && !completionShown) {
-                        setTimeout(() => {
-                            showCompletion();
-                        }, 6000);
+                        setTimeout(() => showCompletion(), 6000);
                     }
                 }, 80);
             };
             
             // プレビュープロンプトのクリックイベント
             const previewPrompt = document.getElementById('ar-preview-prompt');
-            if (previewPrompt) {
-                previewPrompt.addEventListener('click', showCardUI);
-            }
+            if (previewPrompt) previewPrompt.addEventListener('click', showCardUI);
             
             // a-scene全体のタップでもカードUI表示（プレビュー状態の時のみ）
             scene.addEventListener('click', () => {
