@@ -705,13 +705,16 @@
             transform: translateX(-50%);
             color: rgba(255, 255, 255, 0.85); 
             font-size: 0.88rem; 
-            letter-spacing: 0.25em;
+            letter-spacing: 0.15em;
             text-shadow: 0 0 12px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,0.6);
             font-family: 'Yu Mincho', serif;
             white-space: nowrap;
             text-align: center;
             opacity: 0;
             animation: fadeInText 1.2s ease-out 0.3s forwards, breathe 3s infinite ease-in-out 1.5s;
+            width: max-content;
+            padding: 0;
+            margin: 0;
         }
 
         @keyframes fadeInText {
@@ -3567,7 +3570,7 @@
         <!-- 初回訪問時イントロ -->
         <div id="intro-overlay" class="intro-overlay">
             <div class="intro-title">沈黙の解剖図譜</div>
-            <div class="intro-subtitle">語られぬものたちのための空間的標本</div>
+            <div class="intro-subtitle">不可視の愛に関する空間的考察</div>
             <div class="intro-poem">
                 空気に溶けなかった感情。<br>
                 宛先を失った本音、喉元で殺した声。<br>
