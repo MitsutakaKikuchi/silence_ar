@@ -710,24 +710,19 @@
                     font-family: 'Yu Mincho', serif;
                     white-space: nowrap;
                     opacity: 0;
-                    /* 修正: breathe を textBreathe に変更 */
-                    animation: fadeInText 1.2s ease-out 0.3s forwards, textBreathe 3s infinite ease-in-out 1.5s;
+                    animation: fadeInText 1.2s ease-out 0.3s forwards, textPulse 3s infinite ease-in-out 1.5s;
                     width: max-content;
                     margin: 0;
                 }
 
-        /* 追加: テキスト専用の呼吸アニメーション（Transformをいじらず透明度のみ操作） */
-        @keyframes textBreathe {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 1.0; }
-        }
+
 
         @keyframes fadeInText {
             0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
             100% { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
-        @keyframes breathe {
+        @keyframes textPulse {
             0%, 100% { opacity: 0.4; }
             50% { opacity: 1.0; }
         }
