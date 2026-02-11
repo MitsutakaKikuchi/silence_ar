@@ -698,21 +698,28 @@
         }
 
         /* ガイドテキスト（ローディング完了後に表示） */
-        .scanning-guide-text {
-            position: absolute; 
-            bottom: -60px; 
-            left: 50%; 
-            transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.85); 
-            font-size: 0.88rem; 
-            letter-spacing: 0;
-            text-shadow: 0 0 12px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,0.6);
-            font-family: 'Yu Mincho', serif;
-            white-space: nowrap;
-            opacity: 0;
-            animation: fadeInText 1.2s ease-out 0.3s forwards, breathe 3s infinite ease-in-out 1.5s;
-            width: max-content;
-            margin: 0;
+                .scanning-guide-text {
+                    position: absolute; 
+                    bottom: -60px; 
+                    left: 50%; 
+                    transform: translateX(-50%);
+                    color: rgba(255, 255, 255, 0.85); 
+                    font-size: 0.88rem; 
+                    letter-spacing: 0;
+                    text-shadow: 0 0 12px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,0.6);
+                    font-family: 'Yu Mincho', serif;
+                    white-space: nowrap;
+                    opacity: 0;
+                    /* 修正: breathe を textBreathe に変更 */
+                    animation: fadeInText 1.2s ease-out 0.3s forwards, textBreathe 3s infinite ease-in-out 1.5s;
+                    width: max-content;
+                    margin: 0;
+                }
+
+        /* 追加: テキスト専用の呼吸アニメーション（Transformをいじらず透明度のみ操作） */
+        @keyframes textBreathe {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1.0; }
         }
 
         @keyframes fadeInText {
