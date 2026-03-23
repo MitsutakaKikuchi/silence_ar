@@ -944,6 +944,7 @@
             padding: 60px 20px 20px 20px;
             box-sizing: border-box;
             overflow-y: auto;
+            touch-action: pan-y; /* bodyのtouch-action: noneを上書き */
             overflow-x: hidden; /* 横スクロール無効化 */
         }
         
@@ -1343,8 +1344,8 @@
             pointer-events: auto;
             overflow: hidden;
             display: flex; flex-direction: column;
-            height: 90vh; /* 基本高さ調整 */
-            max-height: 90dvh; /* モバイル対応 */
+            height: auto; /* コンテンツに合わせて高さを自動調整 */
+            max-height: 85dvh; /* 全画面を覆わないように制限 */
             opacity: 0;
             padding-bottom: env(safe-area-inset-bottom); /* カード自体にも下部余白 */
         }
@@ -1481,6 +1482,7 @@
             padding: 8px 28px 20px 28px; /* 下部余白を最小限に */
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+            touch-action: pan-y; /* bodyのtouch-action: noneを上書きしてスクロール可能に */
             flex: 1;
             min-height: 0;
             position: relative;
@@ -3191,6 +3193,14 @@
                 if (!theaterMode.enabled || card.classList.contains('visible')) return;
                 const touch = e.touches[0];
                 rippleEffect.create(touch.clientX, touch.clientY);
+            });
+            
+            // iPad（デスクトップモード時のSafari）などタップがclickとして判定される環境向け
+            document.addEventListener('click', (e) => {
+                gyroParallax.requestPermission();
+                if (!theaterMode.enabled || card.classList.contains('visible')) return;
+                // clickイベントの場合はclientX/Yを直接使用
+                rippleEffect.create(e.clientX, e.clientY);
             });
             
             document.addEventListener('click', (e) => {
