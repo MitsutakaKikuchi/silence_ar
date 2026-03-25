@@ -24,14 +24,7 @@
     <script src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js'></script>
     <style>
         :root {
-            --accent-green: rgba(0, 255, 170, 1);
-            --accent-green-dim: rgba(0, 255, 170, 0.3);
             --accent-moss: rgba(120, 140, 100, 0.85);
-            --accent-copper: rgba(140, 115, 95, 0.7);
-            --text-primary: rgba(255, 255, 255, 0.92);
-            --text-secondary: rgba(255, 255, 255, 0.6);
-            --bg-dark: #0a0a0a;
-            
             /* わびさび: テクスチャノイズ用 */
             --paper-texture: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" /></filter><rect width="200" height="200" filter="url(%23noise)" opacity="0.05"/></svg>');
         }
@@ -280,14 +273,6 @@
             opacity: 0.4;
         }
         
-        /* ========================================
-           サウンドコントロール
-           ======================================== */
-        #sound-control {
-            display: none; /* 統合のため非表示 */
-        }
-        
-
         /* 永続的なプロフィールボタン（常に表示） */
         #persistent-profile-btn {
             position: fixed;
@@ -747,14 +732,6 @@
                 transform: scale(0.95) rotate(-1deg); 
                 opacity: 0.15; 
             }
-        }
-
-        /* 世界観フィルター（ヴィネット + ノイズ） */
-        .world-filter {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            background: radial-gradient(circle, transparent 60%, rgba(0,0,0,0.4) 120%);
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.5);
         }
 
         /* カスタムローディング画面 */
@@ -1551,18 +1528,6 @@
             transform: translateY(0);
         }
         
-        /* タイポグラフィアニメーション用 */
-        .description-box .text-char {
-            display: inline;
-            opacity: 0;
-            animation: charReveal 0.05s ease forwards;
-        }
-        
-        @keyframes charReveal {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
-        }
-        
         .description-box strong {
             color: #fff;
             border-bottom: 1px solid rgba(0, 255, 170, 0.5);
@@ -1630,44 +1595,6 @@
         
         .close-btn:active {
             transform: scale(0.95);
-        }
-        
-        /* ジャイロスコープ対応の視差レイヤー */
-        .parallax-layer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 350;
-            will-change: transform;
-            transition: transform 0.1s ease-out;
-        }
-        
-        /* インストラクションツールチップ */
-        #instruction-tooltip {
-            position: fixed;
-            bottom: 130px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            color: rgba(255, 255, 255, 0.8);
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-size: 0.75rem;
-            letter-spacing: 0.15em;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            z-index: 1400;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            pointer-events: none;
-        }
-        
-        #instruction-tooltip.visible {
-            opacity: 1;
         }
         
         /* ARプレビュープロンプト */
@@ -2234,29 +2161,21 @@
                 const themes = {
                     morning: {
                         // 朝：曖昧な境界線。まだ冷たい空気と、かすかな希望（あるいは諦め）の淡い光。
-                        accent: 'rgba(220, 220, 200, 0.9)', // 象牙色（アイボリー）
-                        accentDim: 'rgba(220, 220, 200, 0.2)',
                         gradient: 'linear-gradient(135deg, #15181a 0%, #202426 50%, #181a1c 100%)', // 青みがかった灰色
                         welcomeText: '朝靄に、言えなかった言葉が滲む...'
                     },
                     day: {
                         // 昼：理性の時間。すべてが明るみに出る残酷さと、ドライな観察眼。
-                        accent: 'rgba(100, 160, 150, 0.9)', // 錆びた青磁色（セラドン）
-                        accentDim: 'rgba(100, 160, 150, 0.2)',
                         gradient: 'linear-gradient(135deg, #0f1210 0%, #1a1f1c 50%, #121413 100%)', // 深い緑味の黒
                         welcomeText: '白昼の静寂は、何よりも雄弁だ...'
                     },
                     evening: {
                         // 夕：感情の揺らぎ。愛と拒絶の区別がつかなくなる「誰そ彼（たそがれ）」の時。
-                        accent: 'rgba(180, 100, 80, 0.9)', // 乾いた煉瓦色
-                        accentDim: 'rgba(180, 100, 80, 0.2)',
                         gradient: 'linear-gradient(135deg, #1a0f0a 0%, #261510 50%, #1f120c 100%)', // 赤茶けた闇
                         welcomeText: '夕闇が、拒絶と包容を混ぜ合わせる...'
                     },
                     night: {
                         // 夜：深層心理。もっとも深く沈黙が根を張る時間。内省的な青。
-                        accent: 'rgba(80, 100, 180, 0.9)', // 深い鉄紺（インディゴ）
-                        accentDim: 'rgba(80, 100, 180, 0.2)',
                         gradient: 'linear-gradient(135deg, #050508 0%, #0a0a14 50%, #06060a 100%)', // ほぼ漆黒に近い青
                         welcomeText: '夜の底で、沈黙は呼吸を始める...'
                     }
@@ -2265,10 +2184,6 @@
 
                 
                 const theme = themes[this.currentPeriod];
-                
-                // CSS変数を更新（任意の場所で使用可能）
-                root.style.setProperty('--time-accent', theme.accent);
-                root.style.setProperty('--time-accent-dim', theme.accentDim);
                 
                 // ローディング背景
                 if (loadingBg) {
@@ -3218,14 +3133,6 @@
                 });
             }
             
-            // サウンドコントロール（互換性のため残す）
-            const soundControl = document.getElementById('sound-control');
-            if (!soundControl) return;
-            soundControl.addEventListener('click', () => {
-                const enabled = ambientSound.toggle();
-                soundControl.classList.toggle('active', enabled);
-            });
-            
             // エピソードインジケーター更新
             function updateEpisodeIndicator(index, justViewed = false) {
                 const seeds = document.querySelectorAll('.episode-seed');
@@ -3276,7 +3183,7 @@
                     if (cardContent) cardContent.scrollTop = 0;
                     
                     uiTitle.innerHTML = data.title;
-                    animateText(uiDesc, data.text);
+                    uiDesc.innerHTML = data.text;
                     
                     const isPreloaded = preloadedImageCache[index];
                     if (!isPreloaded) imageLoading.classList.remove('hidden');
@@ -3338,11 +3245,6 @@
                 if (imagesDone && cameraDone) {
                     onAllReady();
                 }
-            }
-            
-            // タイポグラフィアニメーション
-            function animateText(element, html) {
-                element.innerHTML = html;
             }
             
             // 全ての準備完了時の処理
@@ -3478,7 +3380,7 @@
                 if (cardContent) cardContent.scrollTop = 0;
                 
                 uiTitle.innerHTML = data.title;
-                animateText(uiDesc, data.text);
+                uiDesc.innerHTML = data.text;
                 
                 const isPreloaded = preloadedImageCache[index];
                 if (!isPreloaded) imageLoading.classList.remove('hidden');
@@ -3582,12 +3484,12 @@
             <div class="intro-title">沈黙の解剖図譜</div>
             <div class="intro-subtitle">不可視の愛に関する空間的考察</div>
             <div class="intro-poem">
-                空気に溶けなかった感情。<br>
-                行先を失った本音、喉元で殺した声。<br>
-                それらは消え去ったのではない。<br>
+                空気に溶けきれなかった感情。<br>
+                行き場を失った本音、喉の奥で消えた声。<br>
+                それらは、消えたのではない。<br>
                 <br>
-                この庭の土深く、<br>
-                静かに、でも確かに、堆積している。
+                この庭の土の深いところで、<br>
+                静かに、でも確かに、層を重ねている。
             </div>
             <button class="intro-start" id="intro-start-btn">標本室の扉を開く</button>
         </div>
@@ -3596,16 +3498,16 @@
         <div id="completion-overlay" class="completion-overlay">
             <div class="completion-text">
                 <div class="line">私たちが選んだ沈黙は、</div>
-                <div class="line">拒絶の壁ではなく、</div>
-                <div class="line">崩壊を防ぐための、</div>
-                <div class="line">もっとも静かな「抱擁」だった。</div>
+                <div class="line">拒絶の壁ではなかった。</div>
+                <div class="line">壊れやすいものを守るための、</div>
+                <div class="line">もっとも静かな抱擁だった。</div>
                 <div class="line"><br></div>
-                <div class="line">名付ければ壊れてしまう硝子を、</div>
-                <div class="line">暗闇の中で守り抜くために、</div>
-                <div class="line">私たちは口を閉ざしたのだ。</div>
+                <div class="line">名前をつければ割れてしまうものを、</div>
+                <div class="line">暗がりの中で両手で包むように、</div>
+                <div class="line">私たちは口を閉ざした。</div>
                 <div class="line"><br></div>
                 <div class="line">語られなかった愛は、</div>
-                <div class="line">永遠にこの庭で眠り続ける。</div>
+                <div class="line">今もこの庭で、静かに息をしている。</div>
             </div>
             
             <div class="completion-actions">
@@ -3671,34 +3573,34 @@
     
     <!-- エピソード進行インジケーター -->
     <div id="episode-indicator">
-        <div class="episode-seed" data-index="0">
+        <div class="episode-seed">
             <span class="episode-seed-label">01 支柱</span>
         </div>
-        <div class="episode-seed" data-index="1">
+        <div class="episode-seed">
             <span class="episode-seed-label">02 蔦</span>
         </div>
-        <div class="episode-seed" data-index="2">
+        <div class="episode-seed">
             <span class="episode-seed-label">03 雨</span>
         </div>
-        <div class="episode-seed" data-index="3">
+        <div class="episode-seed">
             <span class="episode-seed-label">04 化石</span>
         </div>
-        <div class="episode-seed" data-index="4">
+        <div class="episode-seed">
             <span class="episode-seed-label">05 檻</span>
         </div>
-        <div class="episode-seed" data-index="5">
+        <div class="episode-seed">
             <span class="episode-seed-label">06 接ぎ木</span>
         </div>
-        <div class="episode-seed" data-index="6">
+        <div class="episode-seed">
             <span class="episode-seed-label">07 要塞</span>
         </div>
-        <div class="episode-seed" data-index="7">
+        <div class="episode-seed">
             <span class="episode-seed-label">08 剪定</span>
         </div>
-        <div class="episode-seed" data-index="8">
+        <div class="episode-seed">
             <span class="episode-seed-label">09 迷路</span>
         </div>
-        <div class="episode-seed" data-index="9">
+        <div class="episode-seed">
             <span class="episode-seed-label">10 種</span>
         </div>
     </div>
@@ -3720,17 +3622,6 @@
     </div>
 
     
-    <!-- サウンドコントロール -->
-    <div id="sound-control">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-        </svg>
-        <span>環境音</span>
-    </div>
-    
-    <!-- インストラクションツールチップ -->
-    <div id="instruction-tooltip"></div>
-    
     <!-- カスタムローディング画面（進捗表示付き） -->
     <div id='custom-loading'>
         <div class='loading-garden'>
@@ -3740,7 +3631,8 @@
             <div class='circle'></div>
             <div class='circle'></div>
         </div>
-        <div class='loading-text' id='loading-main-text'>記憶の庭へ接続しています...</div>
+
+        <div class='loading-text' id='loading-main-text'>記憶の庭へ、降りていきます...</div>
         
         <!-- 進捗バー -->
         <div class='loading-progress-container'>
@@ -3752,10 +3644,10 @@
         
         <!-- 段階表示 -->
         <div class='loading-stages'>
-            <div class='loading-stage' id='stage-library' data-stage='library'>ライブラリ初期化</div>
-            <div class='loading-stage' id='stage-targets' data-stage='targets'>認識データ読込</div>
-            <div class='loading-stage' id='stage-images' data-stage='images'>断片の収集</div>
-            <div class='loading-stage' id='stage-camera' data-stage='camera'>視界の確保</div>
+            <div class='loading-stage' id='stage-library'>場の準備</div>
+            <div class='loading-stage' id='stage-targets'>記憶の照合</div>
+            <div class='loading-stage' id='stage-images'>断片の採集</div>
+            <div class='loading-stage' id='stage-camera'>視界を開く</div>
         </div>
     </div>
     
@@ -3781,7 +3673,7 @@
             </div>
 
             <!-- ガイドテキスト -->
-            <div class='scanning-guide-text'>語られぬ言葉に、焦点を...</div>
+            <div class='scanning-guide-text'>語られなかった言葉に、焦点を合わせて...</div>
 
             <!-- 枠外に散らばる象徴的な光 -->
             <div class="symbol-particle p1"></div>
