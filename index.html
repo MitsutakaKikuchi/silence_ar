@@ -1294,7 +1294,7 @@
             max-width: 450px;
             border-radius: 30px; /* 全体を丸く */
             padding: 0;
-            margin-bottom: 0;
+            margin-bottom: 4dvh; /* 下部からの浮遊感を高めるためマージンを追加 */
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             box-shadow: 
@@ -1313,7 +1313,7 @@
                     rgba(0, 255, 170, 0.0) 100%);
             background-origin: border-box;
             background-clip: padding-box, border-box;
-            transform: translateY(100%);
+            transform: translateY(120%);
             transition: 
                 transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
                 opacity 0.6s ease,
@@ -1322,7 +1322,7 @@
             overflow: hidden;
             display: flex; flex-direction: column;
             height: auto; /* コンテンツに合わせて高さを自動調整 */
-            max-height: 85dvh; /* 全画面を覆わないように制限 */
+            max-height: 92dvh; /* 文章表示の範囲を広げるため拡張 */
             opacity: 0;
             padding-bottom: env(safe-area-inset-bottom); /* カード自体にも下部余白 */
         }
