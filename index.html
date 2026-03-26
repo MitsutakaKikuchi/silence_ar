@@ -1932,7 +1932,7 @@
                 
                 // 現在値から目標値へ滑らかに補間 (Lerp)
                 const current = this.material.uniforms.uReveal.value;
-                this.material.uniforms.uReveal.value += (targetReveal - current) * 0.03;
+                this.material.uniforms.uReveal.value += (targetReveal - current) * 0.02;
 
                 // ジャイロデータを使用したパララックス効果（スムージング適用）
                 if (window.gyroData) {
