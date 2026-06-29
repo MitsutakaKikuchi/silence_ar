@@ -1445,8 +1445,8 @@
             mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
             -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
             opacity: 0;
-            transform: scale(1.02);
-            transition: opacity 0.8s ease, transform 1.2s ease;
+            transform: scale(1.04);
+            transition: opacity 0.9s ease, transform 1.6s cubic-bezier(0.16, 1, 0.3, 1);
             filter: saturate(0.7) sepia(0.15) contrast(0.95);
         }
         #ui-image.loaded {
@@ -1518,15 +1518,30 @@
             margin-bottom: 15px;
             text-align: left;
             letter-spacing: 0.08em;
-            opacity: 0;
+            opacity: 1;
             transform: translateY(15px);
-            transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
+            transition: transform 0.6s ease 0.2s;
         }
-        
+
         .card.visible .description-box {
+            transform: translateY(0);
+        }
+
+        /* 本文の行ごとリビール（詩を一行ずつ静かに立ち上げる） */
+        .description-box .reveal-line {
+            display: block;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.85s ease, transform 0.85s ease;
+        }
+        .card.visible .description-box .reveal-line {
             opacity: 1;
             transform: translateY(0);
         }
+        .card.visible .description-box .reveal-line:nth-child(1) { transition-delay: 0.30s; }
+        .card.visible .description-box .reveal-line:nth-child(2) { transition-delay: 0.54s; }
+        .card.visible .description-box .reveal-line:nth-child(3) { transition-delay: 0.78s; }
+        .card.visible .description-box .reveal-line:nth-child(4) { transition-delay: 1.02s; }
         
         .description-box strong {
             color: #fff;
@@ -1552,6 +1567,15 @@
         
         .description-box strong:hover::before {
             transform: scaleY(1);
+        }
+
+        /* カード表示時、強調語の下地を自動で立ち上げる（タッチ端末でも意図が伝わるように） */
+        .card.visible .description-box strong::before {
+            animation: strongReveal 1.4s ease 1.05s forwards;
+        }
+        @keyframes strongReveal {
+            from { transform: scaleY(0); }
+            55%, 100% { transform: scaleY(1); }
         }
         
         .footer-note {
@@ -1690,6 +1714,19 @@
             pointer-events: none;
             z-index: 390;
             background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+        }
+
+        /* アクセシビリティ: モーション低減設定時は装飾アニメを抑え、最終状態へ即時遷移 */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+                transition-delay: 0ms !important;
+                scroll-behavior: auto !important;
+            }
         }
     </style>
     <script>
@@ -2072,56 +2109,72 @@
         const episodes = [
             {
                 title: 'Episode.01\n矯正する支柱',
-                text: 'ぐらつく私の足元に、いつの間にか打ち込まれていた錆びた鉄の<strong>支柱</strong>。<br>それが誰の手によるものか、私は確かめなかった。',
+                text: 'ぐらつく足元を、錆びた鉄の<strong>支柱</strong>が静かに支えていた。<br>いつ、誰が打ち込んだのか——私は、訊かなかった。',
                 image: './images/layerB_0.jpg'
             },
             {
                 title: 'Episode.02\n沈黙の蔦',
-                text: 'その静けさは、首筋に巻きつく美しい緑の<strong>蔦</strong>。<br>気づかないうちに、呼吸の回数だけが減っていく。',
+                text: 'やさしさは、首筋にそっと巻きつく一本の<strong>蔦</strong>。<br>美しいと感じているうちに、呼吸だけが、細くなる。',
                 image: './images/layerB_1.jpg'
             },
             {
                 title: 'Episode.03\n拒絶の雨',
-                text: '冷たく鋭い銀色の<strong>雨</strong>が降り続く。<br>私に付着していた何かだけが、音もなく洗い流される。',
+                text: '銀色の<strong>雨</strong>が、冷たく降りやまない。<br>私にこびりついていた何かだけが、音もなく流されていく。',
                 image: './images/layerB_2.jpg'
             },
             {
                 title: 'Episode.04\n言葉の化石',
-                text: '飲み込まれた言葉は、<br>二人の地層の奥で<strong>化石</strong>になる。<br>その形に、いつか触れてみたかった。',
+                text: '飲み込んだ言葉は、<br>二人の地層の底で、ゆっくりと<strong>化石</strong>になる。<br>その形に、いつか触れてみたかった。',
                 image: './images/layerB_3.jpg'
             },
             {
                 title: 'Episode.05\n過保護な檻',
-                text: 'この窮屈さは、脆い私を守るための<strong>檻</strong>。<br>その内側に留まることを、<br>私自身が選んでいる。',
+                text: 'この窮屈さは、壊れやすい私を守る<strong>檻</strong>なのだと思う。<br>その内側にとどまることを、<br>ほかでもない私が選んでいる。',
                 image: './images/layerB_4.jpg'
             },
 {
                 title: 'Episode.06\n相互の呪縛',
-                text: '背中合わせの傷口から、幹が癒着している。<br>別々の木には戻れない<strong>接ぎ木</strong>のように、<br>同じ養分を分け合っている。',
+                text: '背中合わせの傷口で、二本の幹が癒着していく。<br>もう別々の木には戻れない——<strong>接ぎ木</strong>のように、<br>同じ養分を、分け合いながら。',
                 image: './images/layerB_5.jpg'
             },
             {
                 title: 'Episode.07\n内なる要塞',
-                text: '外敵を威嚇する、武装した<strong>要塞</strong>。<br>私はその内側で、<br>知らないふりを許されている。',
+                text: '外に向かって牙をむく、武装した<strong>要塞</strong>。<br>私はその内側で、<br>何も知らないふりを、そっと許されている。',
                 image: './images/layerB_6.jpg'
             },
             {
                 title: 'Episode.08\n庭師の剪定',
-                text: '庭師は、ためらいなく枝を<strong>剪定</strong>する。<br>何を切ったのかを、説明する必要はない。<br>その手は、庭を壊したかったのではない。',
+                text: '庭師は、ためらわずに枝を<strong>剪定</strong>する。<br>何を切ったのか、語る必要はない。<br>その手は、庭を壊すためのものではなかった。',
                 image: './images/layerB_7.jpg'
             },
             {
                 title: 'Episode.09\n庭の全景',
-                text: '俯瞰すれば、そこは巨大な<strong>迷路の庭園</strong>。<br>私たちは迷い続けることを、<br>互いに、そっと許し合っている。',
+                text: '高みから見おろせば、そこは出口のない<strong>迷路の庭</strong>。<br>迷い続けることを、私たちは互いに、<br>そっと許し合っている。',
                 image: './images/layerB_8.jpg'
             },
             {
                 title: 'Episode.10\n真実の種',
-                text: '言われなかった言葉は、<br>冷たく硬い<strong>種</strong>となって土に眠る。<br>芽吹かないことも、約束のひとつだ。',
+                text: '言われなかった言葉は、<br>硬い<strong>種</strong>になって、土の中で眠る。<br>芽吹かせないことも、ひとつの約束だった。',
                 image: './images/layerB_9.jpg'
             }
         ];
-        
+
+        /**
+         * エピソードのタイトルと本文をカードへ流し込む。
+         * 本文は <br> 区切りの行ごとに <span class="reveal-line"> でラップし、
+         * カード表示時に一行ずつ立ち上がる「行リビール」を可能にする。
+         * @param {HTMLElement} titleEl タイトル要素
+         * @param {HTMLElement} descEl 本文要素
+         * @param {{title: string, text: string}} data エピソードデータ
+         */
+        function setEpisodeText(titleEl, descEl, data) {
+            titleEl.innerHTML = data.title;
+            const lines = data.text.split(/<br\s*\/?>/i);
+            descEl.innerHTML = lines
+                .map((line) => `<span class="reveal-line">${line}</span>`)
+                .join('');
+        }
+
             // 詩のフラグメント（シアターモード用）
             const poemFragments = [
                 '言えなかった言葉だけが永遠に残る',      // 15文字：冒頭／逆説的な真理で引き込む
@@ -3181,9 +3234,8 @@
                     const cardContent = document.querySelector('.card-content');
                     if (cardContent) cardContent.scrollTop = 0;
                     
-                    uiTitle.innerHTML = data.title;
-                    uiDesc.innerHTML = data.text;
-                    
+                    setEpisodeText(uiTitle, uiDesc, data);
+
                     const isPreloaded = preloadedImageCache[index];
                     if (!isPreloaded) imageLoading.classList.remove('hidden');
                     uiImage.classList.remove('loaded');
@@ -3378,9 +3430,8 @@
                 const cardContent = document.querySelector('.card-content');
                 if (cardContent) cardContent.scrollTop = 0;
                 
-                uiTitle.innerHTML = data.title;
-                uiDesc.innerHTML = data.text;
-                
+                setEpisodeText(uiTitle, uiDesc, data);
+
                 const isPreloaded = preloadedImageCache[index];
                 if (!isPreloaded) imageLoading.classList.remove('hidden');
                 uiImage.classList.remove('loaded');
@@ -3672,7 +3723,7 @@
             </div>
 
             <!-- ガイドテキスト -->
-            <div class='scanning-guide-text'>語られなかった言葉に、焦点を合わせて...</div>
+            <div class='scanning-guide-text'>語られなかった言葉の奥に、焦点を合わせて…</div>
 
             <!-- 枠外に散らばる象徴的な光 -->
             <div class="symbol-particle p1"></div>
@@ -3688,7 +3739,7 @@
             <div class="preview-content">
                 <div class="preview-title">Episode.01
 矯正する支柱</div>
-                <div class="preview-hint">タップして詳細を見る</div>
+                <div class="preview-hint">タップして、深層をひらく</div>
                 <div class="preview-icon">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
@@ -3709,7 +3760,7 @@
                         <div class='circle'></div>
                         <div class='circle'></div>
                     </div>
-                    <div class='card-loading-text'>真実を解剖中...</div>
+                    <div class='card-loading-text'>沈黙を、解剖しています…</div>
                 </div>
                 <img id='ui-image' src='' alt='Episode Image'>
                 <div class='close-btn'>×</div>
