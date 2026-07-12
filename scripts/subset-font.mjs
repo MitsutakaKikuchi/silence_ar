@@ -85,10 +85,10 @@ async function main() {
 
     if (verifyOnly) {
         // 既存のサブセットに欠落がないか検査
-        const { default: fontkit } = await import('fontkit');
+        const { create } = await import('fontkit');
         let failed = false;
         for (const { out } of FONTS) {
-            const font = fontkit.create(await readFile(path.join(root, out)));
+            const font = create(await readFile(path.join(root, out)));
             const missing = [...new Set(text)].filter(
                 (ch) => !font.hasGlyphForCodePoint(ch.codePointAt(0)) && ch.codePointAt(0) > 0x7f
             );
