@@ -39,3 +39,5 @@ node_modules/
 # Backup files
 *.bak
 *.backup
+node_modules/
+dist/

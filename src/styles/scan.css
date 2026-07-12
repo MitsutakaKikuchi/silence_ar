@@ -1,0 +1,296 @@
+/* ========================================
+   全画面オーバーレイ（スキャンガイドとUIコンテナ）
+   ======================================== */
+#ui-overlay {
+    position: absolute; top: 0; left: 0; 
+    width: 100%; 
+    height: 100vh; /* フォールバック */
+    height: 100dvh; /* モバイルブラウザのアドレスバー対策 */
+    pointer-events: none; z-index: 1000;
+    display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+}
+
+/* スキャン用ガイド（パーティクルと蔦アニメーションを含むコンテナ） */
+#scanning-guide-container {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 70%; max-width: 400px; aspect-ratio: 1;
+    pointer-events: none;
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; transition: opacity 0.8s ease;
+}
+#scanning-guide-container.visible { opacity: 1; }
+
+/* ガイド本体 */
+#scanning-guide {
+    position: relative;
+    width: 100%; height: 100%;
+    display: flex; justify-content: center; align-items: center;
+}
+
+/* スキャンガイド内の蔦アニメーション */
+.scan-loading-garden {
+    position: absolute;
+    width: 140px; height: 140px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+}
+.scan-loading-garden .circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid rgba(120, 140, 100, 0.25);
+    animation: breathe 4s ease-in-out infinite;
+}
+.scan-loading-garden .circle:nth-child(1) {
+    width: 30px; height: 30px;
+    animation-delay: 0s;
+    border-color: rgba(120, 140, 100, 0.4);
+}
+.scan-loading-garden .circle:nth-child(2) {
+    width: 60px; height: 60px;
+    animation-delay: 0.6s;
+    border-color: rgba(120, 140, 100, 0.35);
+}
+.scan-loading-garden .circle:nth-child(3) {
+    width: 90px; height: 90px;
+    animation-delay: 1.2s;
+    border-color: rgba(120, 140, 100, 0.3);
+}
+.scan-loading-garden .circle:nth-child(4) {
+    width: 120px; height: 120px;
+    animation-delay: 1.8s;
+    border-color: rgba(120, 140, 100, 0.25);
+}
+.scan-loading-garden .circle:nth-child(5) {
+    width: 140px; height: 140px;
+    animation-delay: 2.4s;
+    border-color: rgba(120, 140, 100, 0.2);
+}
+
+/* 枠外に漂う象徴的な光の粒子（有機的・詩的） */
+.symbol-particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(3px) drop-shadow(0 0 8px currentColor);
+    will-change: transform, opacity;
+}
+
+/* 各粒子の個性：色・サイズ・配置・動きを緻密に設計 */
+.p1 { 
+    width: 12px; height: 12px; 
+    background: radial-gradient(circle, rgba(180, 255, 220, 1) 0%, rgba(100, 255, 200, 0.4) 60%, transparent 100%);
+    color: rgba(180, 255, 220, 0.8);
+    top: -35%; left: 8%; 
+    animation: floatOrganic1 7s infinite ease-in-out; 
+}
+.p2 { 
+    width: 7px; height: 7px; 
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(200, 240, 255, 0.3) 60%, transparent 100%);
+    color: rgba(255, 255, 255, 0.6);
+    top: -20%; right: -28%; 
+    animation: floatOrganic2 8.5s infinite ease-in-out 1s; 
+}
+.p3 { 
+    width: 15px; height: 15px; 
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(220, 255, 240, 0.35) 60%, transparent 100%);
+    color: rgba(255, 255, 255, 0.7);
+    bottom: -45%; left: -18%; 
+    animation: floatOrganic3 9s infinite ease-in-out 0.5s; 
+}
+.p4 { 
+    width: 5px; height: 5px; 
+    background: radial-gradient(circle, rgba(200, 255, 200, 1) 0%, rgba(150, 255, 180, 0.4) 60%, transparent 100%);
+    color: rgba(200, 255, 200, 0.8);
+    bottom: 18%; right: -42%; 
+    animation: floatOrganic4 6.5s infinite ease-in-out 2.2s; 
+}
+.p5 { 
+    width: 9px; height: 9px; 
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.88) 0%, rgba(240, 255, 255, 0.3) 60%, transparent 100%);
+    color: rgba(255, 255, 255, 0.65);
+    top: 115%; left: 48%; 
+    animation: floatOrganic2 7.8s infinite ease-in-out 2.8s; 
+}
+.p6 { 
+    width: 6px; height: 6px; 
+    background: radial-gradient(circle, rgba(220, 255, 255, 0.92) 0%, rgba(180, 240, 255, 0.35) 60%, transparent 100%);
+    color: rgba(220, 255, 255, 0.7);
+    top: 42%; left: -55%; 
+    animation: floatOrganic1 6.2s infinite ease-in-out 3.5s; 
+}
+
+/* 有機的な浮遊アニメーション（呼吸と漂い） */
+@keyframes floatOrganic1 {
+    0%, 100% { 
+        transform: translate(0, 0) scale(0.85); 
+        opacity: 0.3; 
+    }
+    25% { 
+        transform: translate(12px, -18px) scale(1.15); 
+        opacity: 0.85; 
+    }
+    50% { 
+        transform: translate(18px, -8px) scale(0.95); 
+        opacity: 0.5; 
+    }
+    75% { 
+        transform: translate(8px, 12px) scale(1.25); 
+        opacity: 0.95; 
+    }
+}
+@keyframes floatOrganic2 {
+    0%, 100% { 
+        transform: translate(0, 0) scale(1) rotate(0deg); 
+        opacity: 0.4; 
+    }
+    30% { 
+        transform: translate(-15px, 22px) scale(0.8) rotate(8deg); 
+        opacity: 0.9; 
+    }
+    60% { 
+        transform: translate(-8px, 5px) scale(1.2) rotate(-5deg); 
+        opacity: 0.55; 
+    }
+    85% { 
+        transform: translate(5px, 18px) scale(0.95) rotate(3deg); 
+        opacity: 0.75; 
+    }
+}
+@keyframes floatOrganic3 {
+    0%, 100% { 
+        transform: translate(0, 0) scale(0.9); 
+        opacity: 0.25; 
+    }
+    20% { 
+        transform: translate(22px, 8px) scale(1.3); 
+        opacity: 0.75; 
+    }
+    45% { 
+        transform: translate(15px, -12px) scale(1.05); 
+        opacity: 0.9; 
+    }
+    70% { 
+        transform: translate(5px, 15px) scale(1.2); 
+        opacity: 0.45; 
+    }
+}
+@keyframes floatOrganic4 {
+    0%, 100% { 
+        transform: translate(0, 0) scale(1) rotate(0deg); 
+        opacity: 0.5; 
+    }
+    35% { 
+        transform: translate(-12px, -20px) scale(1.35) rotate(-10deg); 
+        opacity: 0.2; 
+    }
+    65% { 
+        transform: translate(-18px, -8px) scale(0.85) rotate(5deg); 
+        opacity: 0.85; 
+    }
+}
+
+/* 有機的な呼吸するフレーム（より滑らかに） */
+#scanning-guide::before {
+    content: '';
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, transparent 55%, rgba(255, 255, 255, 0.03) 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.08);
+    animation: breatheSoft 5s infinite ease-in-out;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 四隅の装飾（より有機的に脈動） */
+#scanning-guide .corner {
+    position: absolute;
+    width: 45px; height: 45px;
+    border-color: #00ffaa; /* 明るいアクアグリーンで視認性向上 */
+    border-style: solid;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: cornerPulse 3s infinite ease-in-out;
+}
+#scanning-guide .corner-tl { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 12px 0 0 0; animation-delay: 0s; }
+#scanning-guide .corner-tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 12px 0 0; animation-delay: 0.75s; }
+#scanning-guide .corner-bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0 0 0 12px; animation-delay: 1.5s; }
+#scanning-guide .corner-br { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 12px 0; animation-delay: 2.25s; }
+
+@keyframes cornerPulse {
+    0%, 100% { 
+        opacity: 0.7; 
+        transform: scale(1); 
+        filter: drop-shadow(0 0 8px rgba(0, 255, 170, 0.5));
+    }
+    50% { 
+        opacity: 1; 
+        transform: scale(1.08); 
+        filter: drop-shadow(0 0 16px rgba(0, 255, 170, 0.9));
+    }
+}
+
+@keyframes breatheSoft {
+    0%, 100% { 
+        transform: scale(0.97); 
+        opacity: 0.4; 
+        box-shadow: 0 0 20px rgba(120, 140, 100, 0.08); 
+    }
+    50% { 
+        transform: scale(1.03); 
+        opacity: 0.7; 
+        box-shadow: 0 0 45px rgba(120, 140, 100, 0.25); 
+    }
+}
+
+/* ガイドテキスト（ローディング完了後に表示） */
+        .scanning-guide-text {
+            position: absolute; 
+            bottom: -60px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.85); 
+            font-size: 0.88rem; 
+            letter-spacing: 0;
+            text-shadow: 0 0 12px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,0.6);
+            font-family: 'Yu Mincho', serif;
+            white-space: nowrap;
+            opacity: 0;
+            animation: fadeInText 1.2s ease-out 0.3s forwards, textPulse 3s infinite ease-in-out 1.5s;
+            width: max-content;
+            margin: 0;
+        }
+
+
+
+@keyframes fadeInText {
+    0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes textPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1.0; }
+}
+
+/* ミストエフェクト（より詩的に） */
+.scan-mist {
+    width: 100%; height: 100%;
+    background: radial-gradient(circle, rgba(0,255,170,0.08) 0%, transparent 65%);
+    opacity: 0.4;
+    animation: mistBreath 4.5s infinite ease-in-out;
+}
+@keyframes mistBreath {
+    0%, 100% { 
+        transform: scale(0.85) rotate(0deg); 
+        opacity: 0.25; 
+    }
+    33% { 
+        transform: scale(1.15) rotate(2deg); 
+        opacity: 0.5; 
+    }
+    66% { 
+        transform: scale(0.95) rotate(-1deg); 
+        opacity: 0.15; 
+    }
+}
+

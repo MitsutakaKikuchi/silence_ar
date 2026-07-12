@@ -1,0 +1,154 @@
+/* ========================================
+   環境パーティクルシステム（花びら・光の粒子）
+   ======================================== */
+#particle-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 500;
+}
+
+/* ========================================
+   タッチリップルエフェクト
+   ======================================== */
+#ripple-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 550;
+    overflow: hidden;
+}
+
+.touch-ripple {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1.5px solid rgba(0, 255, 170, 0.6);
+    transform: translate(-50%, -50%) scale(0);
+    animation: rippleExpand 1.5s ease-out forwards;
+    pointer-events: none;
+}
+
+.touch-ripple::before,
+.touch-ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    animation: rippleInner 1.5s ease-out forwards;
+}
+
+.touch-ripple::after {
+    animation-delay: 0.1s;
+    border-color: rgba(0, 255, 170, 0.25);
+}
+
+@keyframes rippleExpand {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(8);
+        opacity: 0;
+    }
+}
+
+@keyframes rippleInner {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(5);
+        opacity: 0;
+    }
+}
+
+/* ========================================
+   環境エフェクト（霧・光線）
+   ======================================== */
+#environment-effects {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 400;
+    overflow: hidden;
+}
+
+/* 漂う霧レイヤー */
+.mist-layer {
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: 
+        radial-gradient(ellipse 80% 50% at 20% 80%, rgba(0, 255, 170, 0.04) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 30%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+        radial-gradient(ellipse 100% 60% at 50% 100%, rgba(0, 200, 150, 0.05) 0%, transparent 40%);
+    animation: mistDrift 20s ease-in-out infinite;
+    will-change: transform;
+}
+
+@keyframes mistDrift {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+        transform: translate(3%, -2%) rotate(0.5deg);
+    }
+    50% {
+        transform: translate(-2%, 3%) rotate(-0.5deg);
+    }
+    75% {
+        transform: translate(2%, 1%) rotate(0.3deg);
+    }
+}
+
+/* 上部から差し込む光線 */
+.light-rays {
+    position: absolute;
+    top: -20%;
+    left: 0;
+    width: 100%;
+    height: 70%;
+    background: 
+        linear-gradient(175deg, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
+        linear-gradient(165deg, rgba(0, 255, 170, 0.015) 0%, transparent 50%);
+    opacity: 0.6;
+    animation: raysPulse 8s ease-in-out infinite;
+}
+
+@keyframes raysPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.7; }
+}
+
+/* ヴィネット強化 */
+#vignette-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 390;
+    background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+}

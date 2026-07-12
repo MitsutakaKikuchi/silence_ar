@@ -1,0 +1,423 @@
+/* MindARのデフォルトUIを強制非表示 */
+.mindar-ui-overlay, .mindar-ui-loading, .mindar-ui-scanning {
+    display: none !important;
+}
+
+/* モダンなカードUI（より滑らかなアニメーション） */
+.card {
+    background: rgba(10, 10, 10, 0.92);
+    color: #eee;
+    width: 100%;
+    max-width: 450px;
+    border-radius: 30px 30px 0 0; /* 上部のみ丸く、下部は直角に */
+    padding: 0;
+    margin-bottom: 0;
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    box-shadow: 
+        0 -10px 50px rgba(0,0,0,0.7),
+        0 -2px 20px rgba(0, 255, 170, 0.08),
+        inset 0 0 80px rgba(0, 0, 0, 0.3), /* 内側シャドウ */
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05); /* 薄い内側枠 */
+    /* 枠をグラデーションフェードに */
+    border: 2px solid transparent;
+    background-image: 
+        linear-gradient(rgba(10, 10, 10, 0.92), rgba(10, 10, 10, 0.92)),
+        linear-gradient(180deg, 
+            rgba(0, 255, 170, 0.3) 0%, 
+            rgba(0, 255, 170, 0.15) 30%, 
+            rgba(0, 255, 170, 0.05) 70%, 
+            rgba(0, 255, 170, 0.0) 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    transform: translateY(100%);
+    transition: 
+        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+        opacity 0.6s ease,
+        box-shadow 0.6s ease;
+    pointer-events: auto;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    height: auto; /* コンテンツに合わせて高さを自動調整 */
+    max-height: 92dvh; /* 文章表示の範囲を広げるため拡張 */
+    opacity: 0;
+    padding-bottom: env(safe-area-inset-bottom); /* カード自体にも下部余白 */
+}
+
+.card.visible {
+    transform: translateY(0);
+    display: flex; /* visible時にflexに戻す */
+    opacity: 1;
+    box-shadow: 
+        0 -15px 60px rgba(0,0,0,0.8),
+        0 -5px 30px rgba(0, 255, 170, 0.12);
+}
+
+/* カードオープン時のパルスエフェクト */
+.card.pulse-effect {
+    animation: cardPulse 0.6s ease-out;
+}
+
+@keyframes cardPulse {
+    0% { box-shadow: 0 -15px 60px rgba(0,0,0,0.8), 0 0 0 rgba(0, 255, 170, 0); }
+    50% { box-shadow: 0 -15px 60px rgba(0,0,0,0.8), 0 0 80px rgba(0, 255, 170, 0.3); }
+    100% { box-shadow: 0 -15px 60px rgba(0,0,0,0.8), 0 -5px 30px rgba(0, 255, 170, 0.12); }
+}
+
+/* 画像エリア */
+.card-image-container {
+    width: 100%;
+    position: relative;
+    background: linear-gradient(180deg, #080808 0%, #0a0a0a 100%);
+    line-height: 0;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 30px 30px 0 0; /* 上部を丸く */
+}
+
+/* 画像オーバーレイ（世界観強化） */
+.card-image-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        linear-gradient(180deg, transparent 70%, rgba(10, 10, 10, 0.96) 100%),
+        radial-gradient(circle at 50% 0%, rgba(0, 255, 170, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* 画像ローディング表示（蔦アニメーション） */
+.image-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    opacity: 1;
+    transition: opacity 0.6s ease;
+    z-index: 10;
+}
+.image-loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* カード内の蔦ローディング */
+.card-loading-garden {
+    width: 120px; height: 120px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.card-loading-garden .circle {
+    border-width: 1.2px;
+}
+.card-loading-garden .circle:nth-child(1) {
+    width: 25px; height: 25px;
+    animation-delay: 0s;
+}
+.card-loading-garden .circle:nth-child(2) {
+    width: 50px; height: 50px;
+    animation-delay: 0.5s;
+}
+.card-loading-garden .circle:nth-child(3) {
+    width: 75px; height: 75px;
+    animation-delay: 1.0s;
+}
+.card-loading-garden .circle:nth-child(4) {
+    width: 100px; height: 100px;
+    animation-delay: 1.5s;
+}
+.card-loading-garden .circle:nth-child(5) {
+    width: 120px; height: 120px;
+    animation-delay: 2.0s;
+}
+
+.card-loading-text {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    letter-spacing: 0.25em;
+    font-family: 'Yu Mincho', serif;
+    animation: textBreath 3s ease-in-out infinite;
+    text-shadow: 0 0 10px rgba(0, 255, 170, 0.15);
+}
+
+#ui-image {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1; /* 1:1アスペクト比を維持 */
+    object-fit: cover; /* 1:1で横幅いっぱいに表示 */
+    display: block;
+    mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+    opacity: 0;
+    transform: scale(1.04);
+    transition: opacity 0.9s ease, transform 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+    filter: saturate(0.7) sepia(0.15) contrast(0.95);
+}
+#ui-image.loaded {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* テキストエリア */
+.card-content {
+    padding: 8px 28px 20px 28px; /* 下部余白を最小限に */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y; /* bodyのtouch-action: noneを上書きしてスクロール可能に */
+    flex: 1;
+    min-height: 0;
+    position: relative;
+}
+
+/* テキストエリアの上部グラデーション */
+.card-content::before {
+    content: '';
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 15px; /* 厚みを少し抑える */
+    background: linear-gradient(180deg, rgba(10, 10, 10, 1) 0%, transparent 100%);
+    margin: -10px -28px 5px -28px; /* ネガティブマージンを調整 */
+    pointer-events: none;
+    z-index: 5;
+}
+
+h2 { 
+    margin: 0 0 14px 0; 
+    font-size: 1.28rem; 
+    font-weight: 500; 
+    letter-spacing: 0.12em;
+    color: #fff;
+    position: relative;
+    padding-bottom: 12px; /* パディングも少し詰める */
+    opacity: 0;
+    transform: translateY(15px);
+    transition: opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;
+}
+
+.card.visible h2 {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+h2::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0;
+    width: 0;
+    height: 1.5px;
+    background: linear-gradient(to right, var(--accent-moss), transparent);
+    opacity: 0.8;
+    transition: width 0.8s ease 0.3s;
+}
+
+.card.visible h2::after {
+    width: 50px;
+}
+
+.description-box {
+    font-size: 0.96rem;
+    line-height: 2.2; /* 行間を広げて読みやすく */
+    color: rgba(210, 210, 210, 0.95);
+    margin-bottom: 15px;
+    text-align: left;
+    letter-spacing: 0.08em;
+    opacity: 1;
+    transform: translateY(15px);
+    transition: transform 0.6s ease 0.2s;
+}
+
+.card.visible .description-box {
+    transform: translateY(0);
+}
+
+/* 本文の行ごとリビール（詩を一行ずつ静かに立ち上げる） */
+.description-box .reveal-line {
+    display: block;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.85s ease, transform 0.85s ease;
+}
+.card.visible .description-box .reveal-line {
+    opacity: 1;
+    transform: translateY(0);
+}
+.card.visible .description-box .reveal-line:nth-child(1) { transition-delay: 0.30s; }
+.card.visible .description-box .reveal-line:nth-child(2) { transition-delay: 0.54s; }
+.card.visible .description-box .reveal-line:nth-child(3) { transition-delay: 0.78s; }
+.card.visible .description-box .reveal-line:nth-child(4) { transition-delay: 1.02s; }
+
+.description-box strong {
+    color: #fff;
+    border-bottom: 1px solid rgba(0, 255, 170, 0.5);
+    padding-bottom: 2px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.description-box strong::before {
+    content: '';
+    position: absolute;
+    left: -2px;
+    right: -2px;
+    bottom: -1px;
+    height: 100%;
+    background: rgba(0, 255, 170, 0.08);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 0.3s ease;
+    z-index: -1;
+}
+
+.description-box strong:hover::before {
+    transform: scaleY(1);
+}
+
+/* カード表示時、強調語の下地を自動で立ち上げる（タッチ端末でも意図が伝わるように） */
+.card.visible .description-box strong::before {
+    animation: strongReveal 1.4s ease 1.05s forwards;
+}
+@keyframes strongReveal {
+    from { transform: scaleY(0); }
+    55%, 100% { transform: scaleY(1); }
+}
+
+.footer-note {
+    font-size: 0.7rem;
+    color: rgba(120, 120, 120, 0.8);
+    text-align: center;
+    margin-top: 30px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.6s ease 0.5s;
+}
+
+.card.visible .footer-note {
+    opacity: 1;
+}
+
+/* 閉じるボタン（より洗練されたデザイン） */
+.close-btn {
+    position: absolute; top: 12px; right: 12px;
+    width: 38px; height: 38px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    color: rgba(255,255,255,0.9); 
+    font-size: 1.4rem; 
+    cursor: pointer;
+    z-index: 10;
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.4);
+}
+.close-btn:hover {
+    background: rgba(0,0,0,0.8);
+    border-color: rgba(0, 255, 170, 0.5);
+    transform: scale(1.08);
+    box-shadow: 0 0 20px rgba(0, 255, 170, 0.35);
+}
+
+.close-btn:active {
+    transform: scale(0.95);
+}
+
+/* ARプレビュープロンプト */
+#ar-preview-prompt {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1200;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#ar-preview-prompt.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.preview-content {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 255, 170, 0.3);
+    border-radius: 20px;
+    padding: 18px 30px;
+    text-align: center;
+    max-width: 270px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 255, 170, 0.1);
+}
+
+.preview-content:hover {
+    border-color: rgba(0, 255, 170, 0.6);
+    transform: scale(1.02);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 255, 170, 0.2);
+}
+
+.preview-content:active {
+    transform: scale(0.98);
+}
+
+.preview-title {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.95);
+    letter-spacing: 0.15em;
+    margin-bottom: 10px;
+    font-family: 'Yu Mincho', serif;
+    line-height: 1.6;
+    white-space: pre-line;
+}
+
+.preview-hint {
+    font-size: 0.65rem;
+    color: rgba(0, 255, 170, 0.8);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    margin-bottom: 12px;
+    animation: hintPulse 2s ease-in-out infinite;
+}
+
+@keyframes hintPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+.preview-icon {
+    width: 30px;
+    height: 30px;
+    margin: 0 auto;
+    animation: iconBounce 1.5s ease-in-out infinite;
+}
+
+.preview-icon svg {
+    width: 100%;
+    height: 100%;
+    fill: rgba(0, 255, 170, 0.7);
+}
+
+@keyframes iconBounce {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(5px); }
+}
+

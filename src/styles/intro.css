@@ -1,0 +1,81 @@
+/* 初回訪問時のイントロ */
+.intro-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 999998;
+    opacity: 0; /* 初期は非表示(ローディング後に表示) */
+    pointer-events: none;
+    transition: opacity 1.5s ease;
+    padding: 40px;
+    box-sizing: border-box;
+    background-image: var(--paper-texture);
+}
+
+.intro-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.intro-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.intro-title {
+    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.5em;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.intro-subtitle {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.3em;
+    margin-bottom: 50px;
+    text-align: center;
+}
+
+.intro-poem {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.75);
+    letter-spacing: 0.12em;
+    line-height: 2.4;
+    text-align: center;
+    max-width: 320px;
+    margin-bottom: 60px;
+    font-feature-settings: "palt";
+}
+
+.intro-start {
+    padding: 18px 45px;
+    background: transparent;
+    border: 1px solid rgba(0, 255, 170, 0.5);
+    color: rgba(0, 255, 170, 0.9);
+    font-size: 0.85rem;
+    letter-spacing: 0.25em;
+    cursor: pointer;
+    border-radius: 35px;
+    transition: all 0.4s ease;
+    font-family: 'Yu Mincho', serif;
+}
+
+.intro-start:hover {
+    background: rgba(0, 255, 170, 0.1);
+    border-color: rgba(0, 255, 170, 0.8);
+    transform: scale(1.05);
+}
+
+.intro-start:active {
+    transform: scale(0.98);
+}
+

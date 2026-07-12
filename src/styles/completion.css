@@ -1,0 +1,123 @@
+/* 完了エンディング演出 */
+.completion-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.5s ease;
+    background-image: var(--paper-texture);
+    padding: 60px 20px 20px 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    touch-action: pan-y; /* bodyのtouch-action: noneを上書き */
+    overflow-x: hidden; /* 横スクロール無効化 */
+}
+
+.completion-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.completion-text {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.05rem; /* フォントサイズを大きく */
+    letter-spacing: 0.15em; /* 字間を少し狭めて読みやすく */
+    line-height: 1.8; /* 行間を縮小してモバイル1ページに */
+    text-align: center;
+    width: 100%;
+    max-width: 650px;
+    font-weight: 300;
+    animation: completionFadeIn 2s ease forwards;
+    padding: 0 30px; /* 左右に余白 */
+}
+
+.completion-text .line {
+    opacity: 0;
+    transform: translateY(20px);
+    white-space: normal; /* 折り返しを許可 */
+    display: block; /* ブロック要素として扱う */
+    margin-bottom: 0; /* 余白を削除 */
+}
+
+/* モバイル対応：画面幅が狭い場合 */
+@media screen and (max-width: 480px) {
+    .completion-text {
+        font-size: 0.92rem; /* モバイルでも読みやすいサイズに */
+        letter-spacing: 0.1em;
+        line-height: 1.75; /* モバイルで1ページに収まるように */
+        padding: 0 20px;
+    }
+}
+
+@keyframes completionFadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+.completion-actions {
+    margin-top: 30px; /* 余白縮小 */
+    margin-bottom: 30px; /* 下部余白確保 */
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+    opacity: 0;
+    animation: completionBtnFadeIn 1s ease forwards 3.5s;
+    flex-shrink: 0; /* 縮小しない */
+}
+
+.completion-btn {
+    padding: 12px 35px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    border-radius: 40px;
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    text-decoration: none;
+    display: inline-block;
+    font-family: 'Yu Mincho', serif;
+    position: relative;
+    overflow: hidden;
+}
+
+/* リスタートボタン（プライマリ） */
+.restart-btn {
+    border: 1px solid rgba(0, 255, 170, 0.4);
+    color: rgba(0, 255, 170, 0.9);
+}
+
+.restart-btn:hover {
+    background: rgba(0, 255, 170, 0.1);
+    border-color: rgba(0, 255, 170, 0.8);
+    letter-spacing: 0.3em;
+    box-shadow: 0 0 20px rgba(0, 255, 170, 0.2);
+}
+
+/* プロフィールボタン（セカンダリ） */
+.profile-btn {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 0.7rem;
+}
+
+.profile-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.25em;
+}
+
+@keyframes completionBtnFadeIn {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+

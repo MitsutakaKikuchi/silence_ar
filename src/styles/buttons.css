@@ -1,0 +1,165 @@
+/* 永続的なプロフィールボタン（常に表示） */
+#persistent-profile-btn {
+    position: fixed;
+    left: 15px;
+    bottom: 25px; /* 没入ボタンの下に配置 */
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    pointer-events: auto; /* 常にクリック可能 */
+    opacity: 1; /* 常に表示 */
+    transition: all 0.4s ease;
+    background-image: var(--paper-texture);
+}
+
+#persistent-profile-btn.hidden-manual {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+}
+
+#persistent-profile-btn:hover {
+    background: rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+#persistent-profile-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: rgba(255, 255, 255, 0.7);
+}
+
+#persistent-profile-btn span {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.1em;
+}
+
+/* 没入モードボタン（統合） */
+#theater-mode-btn {
+    position: fixed;
+    left: 15px;
+    bottom: 80px; /* プロフィールボタンの上に配置 */
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    background: rgba(0, 0, 0, 0.6); /* 無効時は濃い背景 */
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15); /* 無効時は白いボーダー */
+    cursor: pointer;
+    pointer-events: auto;
+    transition: all 0.4s ease;
+}
+
+#theater-mode-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+#theater-mode-btn.active:hover {
+    background: rgba(120, 140, 100, 0.25);
+    border-color: var(--accent-moss);
+}
+
+#theater-mode-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: rgba(255, 255, 255, 0.5); /* 無効時は薄い白 */
+    transition: fill 0.3s ease;
+}
+
+/* 没入モード有効時のスタイル強化 */
+#theater-mode-btn.active {
+    background: rgba(120, 140, 100, 0.2);
+    border-color: rgba(120, 140, 100, 0.8);
+    border-width: 2px;
+    box-shadow: 0 0 20px rgba(120, 140, 100, 0.4);
+    animation: theaterPulse 2s ease-in-out infinite;
+}
+
+@keyframes theaterPulse {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(120, 140, 100, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(120, 140, 100, 0.6);
+    }
+}
+
+#theater-mode-btn.active svg {
+    fill: var(--accent-moss);
+    filter: drop-shadow(0 0 4px rgba(120, 140, 100, 0.8));
+}
+
+#theater-mode-btn.active span {
+    color: var(--accent-moss);
+}
+
+#theater-mode-btn span {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.1em;
+    transition: color 0.3s ease;
+}
+
+/* 有効時のラベル色 */
+#theater-mode-btn.active span {
+    color: var(--accent-moss);
+    font-weight: 500;
+}
+
+/* シアターモード時のオーバーレイ詩 */
+#theater-poem {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 450;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+#theater-poem.visible {
+    opacity: 1;
+}
+
+.poem-text {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.18em;
+    line-height: 2.5;
+    text-align: center;
+    text-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+    max-width: 95%;
+    font-weight: 300;
+    white-space: nowrap;
+}
+
+.poem-text .char {
+    display: inline-block;
+    opacity: 0;
+    animation: charFadeIn 0.8s ease forwards;
+}
+
+@keyframes charFadeIn {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
