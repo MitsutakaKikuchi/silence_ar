@@ -1,0 +1,3940 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>
+    
+    <title>沈黙の解剖図譜 AR</title>
+    <meta name="description" content="不可視の愛に関する空間的考察 —— 分かっていた。しかし、語らなかった。その沈黙が、庭になる。">
+    
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="沈黙の解剖図譜 AR">
+    <meta property="og:description" content="不可視の愛に関する空間的考察。分かっていた。しかし、語らなかった。その沈黙が、庭になる。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="../images/LayerB.jpg">
+    
+    <!-- Favicon: White Minimal Seed/Moon Symbol -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cfilter id='glow'%3E%3CfeGaussianBlur stdDeviation='4' result='coloredBlur'/%3E%3CfeMerge%3E%3CfeMergeNode in='coloredBlur'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' stroke='white' stroke-width='2' fill='none' opacity='0.5' filter='url(%23glow)'/%3E%3Ccircle cx='50' cy='50' r='5' fill='white' filter='url(%23glow)'/%3E%3Cpath d='M50 5 Q40 50 50 95 Q60 50 50 5' stroke='white' stroke-width='1' fill='none' opacity='0.3'/%3E%3C/svg%3E">
+
+    <!-- A-Frame と MindAR (プリロード最適化) -->
+    <link rel="preconnect" href="https://aframe.io" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preload" href="../targets.mind" as="fetch" crossorigin>
+    <script src='https://aframe.io/releases/1.5.0/aframe.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js'></script>
+    <style>
+        :root {
+            --accent-moss: rgba(120, 140, 100, 0.85);
+            /* わびさび: テクスチャノイズ用 */
+            --paper-texture: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" /></filter><rect width="200" height="200" filter="url(%23noise)" opacity="0.05"/></svg>');
+        }
+        
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: 'Yu Mincho', 'Hiragino Mincho ProN', 'serif';
+            touch-action: none; /* タッチの干渉を防ぐ */
+            /* わびさび: 和紙のようなテクスチャを全体に追加 */
+            background-image: var(--paper-texture);
+            background-blend-mode: multiply;
+        }
+        
+        /* ========================================
+           環境パーティクルシステム（花びら・光の粒子）
+           ======================================== */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 500;
+        }
+        
+        /* ========================================
+           タッチリップルエフェクト
+           ======================================== */
+        #ripple-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 550;
+            overflow: hidden;
+        }
+        
+        .touch-ripple {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: transparent;
+            border: 1.5px solid rgba(0, 255, 170, 0.6);
+            transform: translate(-50%, -50%) scale(0);
+            animation: rippleExpand 1.5s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        .touch-ripple::before,
+        .touch-ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            animation: rippleInner 1.5s ease-out forwards;
+        }
+        
+        .touch-ripple::after {
+            animation-delay: 0.1s;
+            border-color: rgba(0, 255, 170, 0.25);
+        }
+        
+        @keyframes rippleExpand {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(8);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes rippleInner {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(5);
+                opacity: 0;
+            }
+        }
+        
+        /* ========================================
+           環境エフェクト（霧・光線）
+           ======================================== */
+        #environment-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 400;
+            overflow: hidden;
+        }
+        
+        /* 漂う霧レイヤー */
+        .mist-layer {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: 
+                radial-gradient(ellipse 80% 50% at 20% 80%, rgba(0, 255, 170, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 30%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse 100% 60% at 50% 100%, rgba(0, 200, 150, 0.05) 0%, transparent 40%);
+            animation: mistDrift 20s ease-in-out infinite;
+            will-change: transform;
+        }
+        
+        @keyframes mistDrift {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(3%, -2%) rotate(0.5deg);
+            }
+            50% {
+                transform: translate(-2%, 3%) rotate(-0.5deg);
+            }
+            75% {
+                transform: translate(2%, 1%) rotate(0.3deg);
+            }
+        }
+        
+        /* 上部から差し込む光線 */
+        .light-rays {
+            position: absolute;
+            top: -20%;
+            left: 0;
+            width: 100%;
+            height: 70%;
+            background: 
+                linear-gradient(175deg, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
+                linear-gradient(165deg, rgba(0, 255, 170, 0.015) 0%, transparent 50%);
+            opacity: 0.6;
+            animation: raysPulse 8s ease-in-out infinite;
+        }
+        
+        @keyframes raysPulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* ========================================
+           エピソード進行インジケーター
+           ======================================== */
+        #episode-indicator {
+            position: fixed;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1500;
+            padding: 15px 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            pointer-events: auto;
+        }
+        
+        .episode-seed {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .episode-seed::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 4px;
+            background: var(--accent-moss);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.4s ease;
+        }
+        
+        .episode-seed.viewed {
+            background: radial-gradient(circle, var(--accent-moss) 0%, rgba(120, 140, 100, 0.3) 100%);
+            border-color: var(--accent-moss);
+            box-shadow: 0 0 12px rgba(120, 140, 100, 0.4);
+        }
+        
+        .episode-seed.viewed::before {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .episode-seed.current {
+            transform: scale(1.3);
+            background: radial-gradient(circle, var(--accent-moss) 0%, rgba(120, 140, 100, 0.6) 100%);
+            border-color: rgba(120, 140, 100, 0.9);
+            box-shadow: 0 0 20px rgba(120, 140, 100, 0.7);
+            animation: seedPulse 2s infinite ease-in-out;
+        }
+        
+        @keyframes seedPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(120, 140, 100, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(120, 140, 100, 0.9); }
+        }
+        
+        .episode-seed-label {
+            position: absolute;
+            right: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+        
+        .episode-seed:hover .episode-seed-label {
+            opacity: 1;
+        }
+        
+        .episode-seed:not(.viewed) {
+            cursor: default;
+            opacity: 0.4;
+        }
+        
+        /* 永続的なプロフィールボタン（常に表示） */
+        #persistent-profile-btn {
+            position: fixed;
+            left: 15px;
+            bottom: 25px; /* 没入ボタンの下に配置 */
+            z-index: 1500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 18px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            pointer-events: auto; /* 常にクリック可能 */
+            opacity: 1; /* 常に表示 */
+            transition: all 0.4s ease;
+            background-image: var(--paper-texture);
+        }
+        
+        #persistent-profile-btn.hidden-manual {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(10px);
+        }
+        
+        #persistent-profile-btn:hover {
+            background: rgba(0, 0, 0, 0.6);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        #persistent-profile-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: rgba(255, 255, 255, 0.7);
+        }
+        
+        #persistent-profile-btn span {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 0.1em;
+        }
+
+        /* 没入モードボタン（統合） */
+        #theater-mode-btn {
+            position: fixed;
+            left: 15px;
+            bottom: 80px; /* プロフィールボタンの上に配置 */
+            z-index: 1500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 18px;
+            background: rgba(0, 0, 0, 0.6); /* 無効時は濃い背景 */
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15); /* 無効時は白いボーダー */
+            cursor: pointer;
+            pointer-events: auto;
+            transition: all 0.4s ease;
+        }
+        
+        #theater-mode-btn:hover {
+            background: rgba(0, 0, 0, 0.7);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        #theater-mode-btn.active:hover {
+            background: rgba(120, 140, 100, 0.25);
+            border-color: var(--accent-moss);
+        }
+        
+        #theater-mode-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: rgba(255, 255, 255, 0.5); /* 無効時は薄い白 */
+            transition: fill 0.3s ease;
+        }
+        
+        /* 没入モード有効時のスタイル強化 */
+        #theater-mode-btn.active {
+            background: rgba(120, 140, 100, 0.2);
+            border-color: rgba(120, 140, 100, 0.8);
+            border-width: 2px;
+            box-shadow: 0 0 20px rgba(120, 140, 100, 0.4);
+            animation: theaterPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes theaterPulse {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(120, 140, 100, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(120, 140, 100, 0.6);
+            }
+        }
+        
+        #theater-mode-btn.active svg {
+            fill: var(--accent-moss);
+            filter: drop-shadow(0 0 4px rgba(120, 140, 100, 0.8));
+        }
+        
+        #theater-mode-btn.active span {
+            color: var(--accent-moss);
+        }
+        
+        #theater-mode-btn span {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 0.1em;
+            transition: color 0.3s ease;
+        }
+        
+        /* 有効時のラベル色 */
+        #theater-mode-btn.active span {
+            color: var(--accent-moss);
+            font-weight: 500;
+        }
+        
+        /* シアターモード時のオーバーレイ詩 */
+        #theater-poem {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 450;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        
+        #theater-poem.visible {
+            opacity: 1;
+        }
+        
+        .poem-text {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.18em;
+            line-height: 2.5;
+            text-align: center;
+            text-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+            max-width: 95%;
+            font-weight: 300;
+            white-space: nowrap;
+        }
+        
+        .poem-text .char {
+            display: inline-block;
+            opacity: 0;
+            animation: charFadeIn 0.8s ease forwards;
+        }
+
+        @keyframes charFadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ========================================
+           全画面オーバーレイ（スキャンガイドとUIコンテナ）
+           ======================================== */
+        #ui-overlay {
+            position: absolute; top: 0; left: 0; 
+            width: 100%; 
+            height: 100vh; /* フォールバック */
+            height: 100dvh; /* モバイルブラウザのアドレスバー対策 */
+            pointer-events: none; z-index: 1000;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+        }
+
+        /* スキャン用ガイド（パーティクルと蔦アニメーションを含むコンテナ） */
+        #scanning-guide-container {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 70%; max-width: 400px; aspect-ratio: 1;
+            pointer-events: none;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.8s ease;
+        }
+        #scanning-guide-container.visible { opacity: 1; }
+
+        /* ガイド本体 */
+        #scanning-guide {
+            position: relative;
+            width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+        }
+        
+        /* スキャンガイド内の蔦アニメーション */
+        .scan-loading-garden {
+            position: absolute;
+            width: 140px; height: 140px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+        .scan-loading-garden .circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 1.5px solid rgba(120, 140, 100, 0.25);
+            animation: breathe 4s ease-in-out infinite;
+        }
+        .scan-loading-garden .circle:nth-child(1) {
+            width: 30px; height: 30px;
+            animation-delay: 0s;
+            border-color: rgba(120, 140, 100, 0.4);
+        }
+        .scan-loading-garden .circle:nth-child(2) {
+            width: 60px; height: 60px;
+            animation-delay: 0.6s;
+            border-color: rgba(120, 140, 100, 0.35);
+        }
+        .scan-loading-garden .circle:nth-child(3) {
+            width: 90px; height: 90px;
+            animation-delay: 1.2s;
+            border-color: rgba(120, 140, 100, 0.3);
+        }
+        .scan-loading-garden .circle:nth-child(4) {
+            width: 120px; height: 120px;
+            animation-delay: 1.8s;
+            border-color: rgba(120, 140, 100, 0.25);
+        }
+        .scan-loading-garden .circle:nth-child(5) {
+            width: 140px; height: 140px;
+            animation-delay: 2.4s;
+            border-color: rgba(120, 140, 100, 0.2);
+        }
+
+        /* 枠外に漂う象徴的な光の粒子（有機的・詩的） */
+        .symbol-particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(3px) drop-shadow(0 0 8px currentColor);
+            will-change: transform, opacity;
+        }
+
+        /* 各粒子の個性：色・サイズ・配置・動きを緻密に設計 */
+        .p1 { 
+            width: 12px; height: 12px; 
+            background: radial-gradient(circle, rgba(180, 255, 220, 1) 0%, rgba(100, 255, 200, 0.4) 60%, transparent 100%);
+            color: rgba(180, 255, 220, 0.8);
+            top: -35%; left: 8%; 
+            animation: floatOrganic1 7s infinite ease-in-out; 
+        }
+        .p2 { 
+            width: 7px; height: 7px; 
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(200, 240, 255, 0.3) 60%, transparent 100%);
+            color: rgba(255, 255, 255, 0.6);
+            top: -20%; right: -28%; 
+            animation: floatOrganic2 8.5s infinite ease-in-out 1s; 
+        }
+        .p3 { 
+            width: 15px; height: 15px; 
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(220, 255, 240, 0.35) 60%, transparent 100%);
+            color: rgba(255, 255, 255, 0.7);
+            bottom: -45%; left: -18%; 
+            animation: floatOrganic3 9s infinite ease-in-out 0.5s; 
+        }
+        .p4 { 
+            width: 5px; height: 5px; 
+            background: radial-gradient(circle, rgba(200, 255, 200, 1) 0%, rgba(150, 255, 180, 0.4) 60%, transparent 100%);
+            color: rgba(200, 255, 200, 0.8);
+            bottom: 18%; right: -42%; 
+            animation: floatOrganic4 6.5s infinite ease-in-out 2.2s; 
+        }
+        .p5 { 
+            width: 9px; height: 9px; 
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.88) 0%, rgba(240, 255, 255, 0.3) 60%, transparent 100%);
+            color: rgba(255, 255, 255, 0.65);
+            top: 115%; left: 48%; 
+            animation: floatOrganic2 7.8s infinite ease-in-out 2.8s; 
+        }
+        .p6 { 
+            width: 6px; height: 6px; 
+            background: radial-gradient(circle, rgba(220, 255, 255, 0.92) 0%, rgba(180, 240, 255, 0.35) 60%, transparent 100%);
+            color: rgba(220, 255, 255, 0.7);
+            top: 42%; left: -55%; 
+            animation: floatOrganic1 6.2s infinite ease-in-out 3.5s; 
+        }
+
+        /* 有機的な浮遊アニメーション（呼吸と漂い） */
+        @keyframes floatOrganic1 {
+            0%, 100% { 
+                transform: translate(0, 0) scale(0.85); 
+                opacity: 0.3; 
+            }
+            25% { 
+                transform: translate(12px, -18px) scale(1.15); 
+                opacity: 0.85; 
+            }
+            50% { 
+                transform: translate(18px, -8px) scale(0.95); 
+                opacity: 0.5; 
+            }
+            75% { 
+                transform: translate(8px, 12px) scale(1.25); 
+                opacity: 0.95; 
+            }
+        }
+        @keyframes floatOrganic2 {
+            0%, 100% { 
+                transform: translate(0, 0) scale(1) rotate(0deg); 
+                opacity: 0.4; 
+            }
+            30% { 
+                transform: translate(-15px, 22px) scale(0.8) rotate(8deg); 
+                opacity: 0.9; 
+            }
+            60% { 
+                transform: translate(-8px, 5px) scale(1.2) rotate(-5deg); 
+                opacity: 0.55; 
+            }
+            85% { 
+                transform: translate(5px, 18px) scale(0.95) rotate(3deg); 
+                opacity: 0.75; 
+            }
+        }
+        @keyframes floatOrganic3 {
+            0%, 100% { 
+                transform: translate(0, 0) scale(0.9); 
+                opacity: 0.25; 
+            }
+            20% { 
+                transform: translate(22px, 8px) scale(1.3); 
+                opacity: 0.75; 
+            }
+            45% { 
+                transform: translate(15px, -12px) scale(1.05); 
+                opacity: 0.9; 
+            }
+            70% { 
+                transform: translate(5px, 15px) scale(1.2); 
+                opacity: 0.45; 
+            }
+        }
+        @keyframes floatOrganic4 {
+            0%, 100% { 
+                transform: translate(0, 0) scale(1) rotate(0deg); 
+                opacity: 0.5; 
+            }
+            35% { 
+                transform: translate(-12px, -20px) scale(1.35) rotate(-10deg); 
+                opacity: 0.2; 
+            }
+            65% { 
+                transform: translate(-18px, -8px) scale(0.85) rotate(5deg); 
+                opacity: 0.85; 
+            }
+        }
+
+        /* 有機的な呼吸するフレーム（より滑らかに） */
+        #scanning-guide::before {
+            content: '';
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 55%, rgba(255, 255, 255, 0.03) 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.08);
+            animation: breatheSoft 5s infinite ease-in-out;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* 四隅の装飾（より有機的に脈動） */
+        #scanning-guide .corner {
+            position: absolute;
+            width: 45px; height: 45px;
+            border-color: #00ffaa; /* 明るいアクアグリーンで視認性向上 */
+            border-style: solid;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: cornerPulse 3s infinite ease-in-out;
+        }
+        #scanning-guide .corner-tl { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 12px 0 0 0; animation-delay: 0s; }
+        #scanning-guide .corner-tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 12px 0 0; animation-delay: 0.75s; }
+        #scanning-guide .corner-bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0 0 0 12px; animation-delay: 1.5s; }
+        #scanning-guide .corner-br { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 12px 0; animation-delay: 2.25s; }
+
+        @keyframes cornerPulse {
+            0%, 100% { 
+                opacity: 0.7; 
+                transform: scale(1); 
+                filter: drop-shadow(0 0 8px rgba(0, 255, 170, 0.5));
+            }
+            50% { 
+                opacity: 1; 
+                transform: scale(1.08); 
+                filter: drop-shadow(0 0 16px rgba(0, 255, 170, 0.9));
+            }
+        }
+
+        @keyframes breatheSoft {
+            0%, 100% { 
+                transform: scale(0.97); 
+                opacity: 0.4; 
+                box-shadow: 0 0 20px rgba(120, 140, 100, 0.08); 
+            }
+            50% { 
+                transform: scale(1.03); 
+                opacity: 0.7; 
+                box-shadow: 0 0 45px rgba(120, 140, 100, 0.25); 
+            }
+        }
+
+        /* ガイドテキスト（ローディング完了後に表示） */
+                .scanning-guide-text {
+                    position: absolute; 
+                    bottom: -60px; 
+                    left: 50%; 
+                    transform: translateX(-50%);
+                    color: rgba(255, 255, 255, 0.85); 
+                    font-size: 0.88rem; 
+                    letter-spacing: 0;
+                    text-shadow: 0 0 12px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,0.6);
+                    font-family: 'Yu Mincho', serif;
+                    white-space: nowrap;
+                    opacity: 0;
+                    animation: fadeInText 1.2s ease-out 0.3s forwards, textPulse 3s infinite ease-in-out 1.5s;
+                    width: max-content;
+                    margin: 0;
+                }
+
+
+
+        @keyframes fadeInText {
+            0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        @keyframes textPulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1.0; }
+        }
+
+        /* ミストエフェクト（より詩的に） */
+        .scan-mist {
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(0,255,170,0.08) 0%, transparent 65%);
+            opacity: 0.4;
+            animation: mistBreath 4.5s infinite ease-in-out;
+        }
+        @keyframes mistBreath {
+            0%, 100% { 
+                transform: scale(0.85) rotate(0deg); 
+                opacity: 0.25; 
+            }
+            33% { 
+                transform: scale(1.15) rotate(2deg); 
+                opacity: 0.5; 
+            }
+            66% { 
+                transform: scale(0.95) rotate(-1deg); 
+                opacity: 0.15; 
+            }
+        }
+
+        /* カスタムローディング画面 */
+        #custom-loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+            z-index: 999999; /* 最前面に */
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 1; transition: opacity 0.8s ease;
+            background-image: var(--paper-texture);
+        }
+        #custom-loading.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* 呼吸する同心円 - 洗練されたローディングアニメーション */
+        .loading-garden {
+            width: 200px; height: 200px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 1.5px solid rgba(120, 140, 100, 0.3);
+            animation: breathe 4s ease-in-out infinite;
+        }
+        .circle:nth-child(1) {
+            width: 40px; height: 40px;
+            animation-delay: 0s;
+            border-color: rgba(120, 140, 100, 0.5);
+        }
+        .circle:nth-child(2) {
+            width: 80px; height: 80px;
+            animation-delay: 0.6s;
+            border-color: rgba(120, 140, 100, 0.4);
+        }
+        .circle:nth-child(3) {
+            width: 120px; height: 120px;
+            animation-delay: 1.2s;
+            border-color: rgba(120, 140, 100, 0.3);
+        }
+        .circle:nth-child(4) {
+            width: 160px; height: 160px;
+            animation-delay: 1.8s;
+            border-color: rgba(120, 140, 100, 0.2);
+        }
+        .circle:nth-child(5) {
+            width: 200px; height: 200px;
+            animation-delay: 2.4s;
+            border-color: rgba(120, 140, 100, 0.15);
+        }
+        
+        @keyframes breathe {
+            0%, 100% {
+                transform: scale(0.95);
+                opacity: 0.2;
+                border-width: 1px;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+                border-width: 2px;
+            }
+        }
+        
+        .loading-text {
+            margin-top: 50px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.92rem;
+            letter-spacing: 0.35em;
+            font-family: 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+            animation: textBreath 3s ease-in-out infinite;
+            text-shadow: 0 0 15px rgba(0, 255, 170, 0.2);
+        }
+        
+        @keyframes textBreath {
+            0%, 100% { opacity: 0.35; transform: translateY(0); }
+            50% { opacity: 0.85; transform: translateY(-3px); }
+        }
+        
+        /* ローディング進捗バー */
+        .loading-progress-container {
+            margin-top: 40px;
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .loading-progress-bar {
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 1px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .loading-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, rgba(120, 140, 100, 0.3), rgba(120, 140, 100, 0.8));
+            border-radius: 1px;
+            transition: width 0.3s ease-out;
+            box-shadow: 0 0 10px rgba(120, 140, 100, 0.5);
+        }
+        
+        .loading-progress-text {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.15em;
+        }
+        
+        /* ローディング段階表示 */
+        .loading-stages {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .loading-stage {
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 0.2em;
+            transition: all 0.5s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .loading-stage.active {
+            color: rgba(120, 140, 100, 0.8);
+        }
+        
+        .loading-stage.complete {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .loading-stage::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.5s ease;
+        }
+        
+        .loading-stage.active::before {
+            background: rgba(120, 140, 100, 0.8);
+            box-shadow: 0 0 8px rgba(120, 140, 100, 0.6);
+            animation: stagePulse 1s infinite;
+        }
+        
+        .loading-stage.complete::before {
+            background: rgba(120, 140, 100, 0.5);
+        }
+        
+        @keyframes stagePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+        
+        /* 完了エンディング演出 */
+        .completion-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease;
+            background-image: var(--paper-texture);
+            padding: 60px 20px 20px 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            touch-action: pan-y; /* bodyのtouch-action: noneを上書き */
+            overflow-x: hidden; /* 横スクロール無効化 */
+        }
+        
+        .completion-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .completion-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.05rem; /* フォントサイズを大きく */
+            letter-spacing: 0.15em; /* 字間を少し狭めて読みやすく */
+            line-height: 1.8; /* 行間を縮小してモバイル1ページに */
+            text-align: center;
+            width: 100%;
+            max-width: 650px;
+            font-weight: 300;
+            animation: completionFadeIn 2s ease forwards;
+            padding: 0 30px; /* 左右に余白 */
+        }
+        
+        .completion-text .line {
+            opacity: 0;
+            transform: translateY(20px);
+            white-space: normal; /* 折り返しを許可 */
+            display: block; /* ブロック要素として扱う */
+            margin-bottom: 0; /* 余白を削除 */
+        }
+        
+        /* モバイル対応：画面幅が狭い場合 */
+        @media screen and (max-width: 480px) {
+            .completion-text {
+                font-size: 0.92rem; /* モバイルでも読みやすいサイズに */
+                letter-spacing: 0.1em;
+                line-height: 1.75; /* モバイルで1ページに収まるように */
+                padding: 0 20px;
+            }
+        }
+        
+        @keyframes completionFadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        .completion-actions {
+            margin-top: 30px; /* 余白縮小 */
+            margin-bottom: 30px; /* 下部余白確保 */
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+            opacity: 0;
+            animation: completionBtnFadeIn 1s ease forwards 3.5s;
+            flex-shrink: 0; /* 縮小しない */
+        }
+        
+        .completion-btn {
+            padding: 12px 35px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            border-radius: 40px;
+            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            text-decoration: none;
+            display: inline-block;
+            font-family: 'Yu Mincho', serif;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* リスタートボタン（プライマリ） */
+        .restart-btn {
+            border: 1px solid rgba(0, 255, 170, 0.4);
+            color: rgba(0, 255, 170, 0.9);
+        }
+        
+        .restart-btn:hover {
+            background: rgba(0, 255, 170, 0.1);
+            border-color: rgba(0, 255, 170, 0.8);
+            letter-spacing: 0.3em;
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.2);
+        }
+
+        /* プロフィールボタン（セカンダリ） */
+        .profile-btn {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.7rem;
+        }
+        
+        .profile-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 0.25em;
+        }
+        
+        @keyframes completionBtnFadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========================================
+           独創的なプロフィールオーバーレイ
+           ======================================== */
+        #profile-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 5, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 3000;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.6s ease;
+        }
+        
+        #profile-overlay.visible {
+            opacity: 1; pointer-events: auto;
+        }
+        
+        /* 浮遊するガラスカード */
+        .profile-card {
+            width: 85%; max-width: 400px;
+            min-height: 500px;
+            position: relative;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        
+        .profile-content {
+            background: linear-gradient(135deg, rgba(25, 25, 25, 0.6) 0%, rgba(10, 10, 10, 0.8) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px; /* あえて角張らせて「標本」感を出す */
+            padding: 40px 30px;
+            position: relative;
+            transform: translateY(30px) rotateX(10deg);
+            opacity: 0;
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+        
+        #profile-overlay.visible .profile-content {
+            transform: translateY(0) rotateX(0);
+            opacity: 1;
+        }
+        
+        /* 装飾的な四隅（標本タグ風） */
+        .profile-corner {
+            position: absolute; width: 20px; height: 20px;
+            border-color: rgba(0, 255, 170, 0.4); border-style: solid;
+            pointer-events: none;
+        }
+        .pc-tl { top: 10px; left: 10px; border-width: 1px 0 0 1px; }
+        .pc-tr { top: 10px; right: 10px; border-width: 1px 1px 0 0; }
+        .pc-bl { bottom: 10px; left: 10px; border-width: 0 0 1px 1px; }
+        .pc-br { bottom: 10px; right: 10px; border-width: 0 1px 1px 0; }
+        
+        /* プロフィール写真（円形 + グロー） */
+        .profile-image-box {
+            width: 120px; height: 120px;
+            margin: 0 auto 35px auto;
+            position: relative;
+        }
+        
+        .profile-img {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center 15%;
+            filter: grayscale(100%) contrast(1.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: filter 0.5s ease;
+        }
+        
+        .profile-img:hover {
+            filter: grayscale(0%) contrast(1);
+        }
+        
+        /* オービット（軌道）アニメーション */
+        .profile-orbit {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1px solid rgba(0, 255, 170, 0.15);
+            animation: orbitSpin 10s linear infinite;
+        }
+        .orbit-1 { width: 140px; height: 140px; border-left-color: transparent; border-right-color: transparent; }
+        .orbit-2 { width: 160px; height: 160px; border-top-color: transparent; border-bottom-color: transparent; animation-duration: 15s; animation-direction: reverse; }
+        
+        @keyframes orbitSpin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        /* テキスト情報 */
+        .profile-role {
+            font-size: 0.65rem; color: rgba(0, 255, 170, 0.7);
+            text-align: center; letter-spacing: 0.3em;
+            text-transform: uppercase; margin-bottom: 12px;
+            font-family: 'Helvetica Neue', sans-serif;
+        }
+        
+        .profile-name {
+            font-size: 1.4rem; color: #fff;
+            text-align: center; margin-bottom: 8px;
+            font-family: 'Yu Mincho', serif;
+            letter-spacing: 0.2em;
+        }
+        
+        .profile-name-en {
+            font-size: 0.7rem; color: rgba(255, 255, 255, 0.4);
+            text-align: center; margin-bottom: 30px;
+            letter-spacing: 0.1em;
+            font-family: 'Helvetica Neue', sans-serif;
+        }
+        
+        .profile-desc {
+            font-size: 0.8rem; color: rgba(220, 220, 220, 0.8);
+            line-height: 2; text-align: center; margin-bottom: 40px;
+            font-family: 'Yu Mincho', serif;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 0;
+        }
+        
+        /* インスタグラムリンク（糸のようなデザイン） */
+        .profile-link {
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px;
+            color: #fff; text-decoration: none;
+            font-size: 0.8rem; letter-spacing: 0.15em;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 10px;
+        }
+        
+        .profile-link::before {
+            content: '';
+            position: absolute; bottom: 0; left: 50%;
+            width: 0; height: 1px;
+            background: #fff;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .profile-link:hover::before {
+            width: 100%;
+        }
+        
+        .profile-link svg {
+            width: 18px; height: 18px; fill: currentColor;
+        }
+        
+        .profile-close {
+            position: absolute; top: 20px; right: 20px;
+            width: 30px; height: 30px;
+            cursor: pointer; opacity: 0.6; transition: opacity 0.3s;
+            display: flex; justify-content: center; align-items: center;
+        }
+        
+        .profile-close:hover { opacity: 1; }
+        .profile-close::before, .profile-close::after {
+            content: ''; position: absolute;
+            width: 100%; height: 1px; background: #fff;
+        }
+        .profile-close::before { transform: rotate(45deg); }
+        .profile-close::after { transform: rotate(-45deg); }
+        
+        /* 背景の方眼紙エフェクト */
+        .grid-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none; z-index: -1;
+        }
+        
+        /* 初回訪問時のイントロ */
+        .intro-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999998;
+            opacity: 0; /* 初期は非表示(ローディング後に表示) */
+            pointer-events: none;
+            transition: opacity 1.5s ease;
+            padding: 40px;
+            box-sizing: border-box;
+            background-image: var(--paper-texture);
+        }
+
+        .intro-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .intro-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .intro-title {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.5em;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .intro-subtitle {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.3em;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+        
+        .intro-poem {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.75);
+            letter-spacing: 0.12em;
+            line-height: 2.4;
+            text-align: center;
+            max-width: 320px;
+            margin-bottom: 60px;
+            font-feature-settings: "palt";
+        }
+        
+        .intro-start {
+            padding: 18px 45px;
+            background: transparent;
+            border: 1px solid rgba(0, 255, 170, 0.5);
+            color: rgba(0, 255, 170, 0.9);
+            font-size: 0.85rem;
+            letter-spacing: 0.25em;
+            cursor: pointer;
+            border-radius: 35px;
+            transition: all 0.4s ease;
+            font-family: 'Yu Mincho', serif;
+        }
+        
+        .intro-start:hover {
+            background: rgba(0, 255, 170, 0.1);
+            border-color: rgba(0, 255, 170, 0.8);
+            transform: scale(1.05);
+        }
+        
+        .intro-start:active {
+            transform: scale(0.98);
+        }
+
+        /* MindARのデフォルトUIを強制非表示 */
+        .mindar-ui-overlay, .mindar-ui-loading, .mindar-ui-scanning {
+            display: none !important;
+        }
+
+        /* モダンなカードUI（より滑らかなアニメーション） */
+        .card {
+            background: rgba(10, 10, 10, 0.92);
+            color: #eee;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 30px 30px 0 0; /* 上部のみ丸く、下部は直角に */
+            padding: 0;
+            margin-bottom: 0;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            box-shadow: 
+                0 -10px 50px rgba(0,0,0,0.7),
+                0 -2px 20px rgba(0, 255, 170, 0.08),
+                inset 0 0 80px rgba(0, 0, 0, 0.3), /* 内側シャドウ */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.05); /* 薄い内側枠 */
+            /* 枠をグラデーションフェードに */
+            border: 2px solid transparent;
+            background-image: 
+                linear-gradient(rgba(10, 10, 10, 0.92), rgba(10, 10, 10, 0.92)),
+                linear-gradient(180deg, 
+                    rgba(0, 255, 170, 0.3) 0%, 
+                    rgba(0, 255, 170, 0.15) 30%, 
+                    rgba(0, 255, 170, 0.05) 70%, 
+                    rgba(0, 255, 170, 0.0) 100%);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            transform: translateY(100%);
+            transition: 
+                transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                opacity 0.6s ease,
+                box-shadow 0.6s ease;
+            pointer-events: auto;
+            overflow: hidden;
+            display: flex; flex-direction: column;
+            height: auto; /* コンテンツに合わせて高さを自動調整 */
+            max-height: 92dvh; /* 文章表示の範囲を広げるため拡張 */
+            opacity: 0;
+            padding-bottom: env(safe-area-inset-bottom); /* カード自体にも下部余白 */
+        }
+        
+        .card.visible {
+            transform: translateY(0);
+            display: flex; /* visible時にflexに戻す */
+            opacity: 1;
+            box-shadow: 
+                0 -15px 60px rgba(0,0,0,0.8),
+                0 -5px 30px rgba(0, 255, 170, 0.12);
+        }
+        
+        /* カードオープン時のパルスエフェクト */
+        .card.pulse-effect {
+            animation: cardPulse 0.6s ease-out;
+        }
+        
+        @keyframes cardPulse {
+            0% { box-shadow: 0 -15px 60px rgba(0,0,0,0.8), 0 0 0 rgba(0, 255, 170, 0); }
+            50% { box-shadow: 0 -15px 60px rgba(0,0,0,0.8), 0 0 80px rgba(0, 255, 170, 0.3); }
+            100% { box-shadow: 0 -15px 60px rgba(0,0,0,0.8), 0 -5px 30px rgba(0, 255, 170, 0.12); }
+        }
+
+        /* 画像エリア */
+        .card-image-container {
+            width: 100%;
+            position: relative;
+            background: linear-gradient(180deg, #080808 0%, #0a0a0a 100%);
+            line-height: 0;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 30px 30px 0 0; /* 上部を丸く */
+        }
+        
+        /* 画像オーバーレイ（世界観強化） */
+        .card-image-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(180deg, transparent 70%, rgba(10, 10, 10, 0.96) 100%),
+                radial-gradient(circle at 50% 0%, rgba(0, 255, 170, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 2;
+        }
+        
+        /* 画像ローディング表示（蔦アニメーション） */
+        .image-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            opacity: 1;
+            transition: opacity 0.6s ease;
+            z-index: 10;
+        }
+        .image-loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* カード内の蔦ローディング */
+        .card-loading-garden {
+            width: 120px; height: 120px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .card-loading-garden .circle {
+            border-width: 1.2px;
+        }
+        .card-loading-garden .circle:nth-child(1) {
+            width: 25px; height: 25px;
+            animation-delay: 0s;
+        }
+        .card-loading-garden .circle:nth-child(2) {
+            width: 50px; height: 50px;
+            animation-delay: 0.5s;
+        }
+        .card-loading-garden .circle:nth-child(3) {
+            width: 75px; height: 75px;
+            animation-delay: 1.0s;
+        }
+        .card-loading-garden .circle:nth-child(4) {
+            width: 100px; height: 100px;
+            animation-delay: 1.5s;
+        }
+        .card-loading-garden .circle:nth-child(5) {
+            width: 120px; height: 120px;
+            animation-delay: 2.0s;
+        }
+        
+        .card-loading-text {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            letter-spacing: 0.25em;
+            font-family: 'Yu Mincho', serif;
+            animation: textBreath 3s ease-in-out infinite;
+            text-shadow: 0 0 10px rgba(0, 255, 170, 0.15);
+        }
+        
+        #ui-image {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1; /* 1:1アスペクト比を維持 */
+            object-fit: cover; /* 1:1で横幅いっぱいに表示 */
+            display: block;
+            mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+            opacity: 0;
+            transform: scale(1.04);
+            transition: opacity 0.9s ease, transform 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+            filter: saturate(0.7) sepia(0.15) contrast(0.95);
+        }
+        #ui-image.loaded {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* テキストエリア */
+        .card-content {
+            padding: 8px 28px 20px 28px; /* 下部余白を最小限に */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y; /* bodyのtouch-action: noneを上書きしてスクロール可能に */
+            flex: 1;
+            min-height: 0;
+            position: relative;
+        }
+        
+        /* テキストエリアの上部グラデーション */
+        .card-content::before {
+            content: '';
+            position: sticky;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 15px; /* 厚みを少し抑える */
+            background: linear-gradient(180deg, rgba(10, 10, 10, 1) 0%, transparent 100%);
+            margin: -10px -28px 5px -28px; /* ネガティブマージンを調整 */
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        h2 { 
+            margin: 0 0 14px 0; 
+            font-size: 1.28rem; 
+            font-weight: 500; 
+            letter-spacing: 0.12em;
+            color: #fff;
+            position: relative;
+            padding-bottom: 12px; /* パディングも少し詰める */
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;
+        }
+        
+        .card.visible h2 {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute; bottom: 0; left: 0;
+            width: 0;
+            height: 1.5px;
+            background: linear-gradient(to right, var(--accent-moss), transparent);
+            opacity: 0.8;
+            transition: width 0.8s ease 0.3s;
+        }
+        
+        .card.visible h2::after {
+            width: 50px;
+        }
+        
+        .description-box {
+            font-size: 0.96rem;
+            line-height: 2.2; /* 行間を広げて読みやすく */
+            color: rgba(210, 210, 210, 0.95);
+            margin-bottom: 15px;
+            text-align: left;
+            letter-spacing: 0.08em;
+            opacity: 1;
+            transform: translateY(15px);
+            transition: transform 0.6s ease 0.2s;
+        }
+
+        .card.visible .description-box {
+            transform: translateY(0);
+        }
+
+        /* 本文の行ごとリビール（詩を一行ずつ静かに立ち上げる） */
+        .description-box .reveal-line {
+            display: block;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.85s ease, transform 0.85s ease;
+        }
+        .card.visible .description-box .reveal-line {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .card.visible .description-box .reveal-line:nth-child(1) { transition-delay: 0.30s; }
+        .card.visible .description-box .reveal-line:nth-child(2) { transition-delay: 0.54s; }
+        .card.visible .description-box .reveal-line:nth-child(3) { transition-delay: 0.78s; }
+        .card.visible .description-box .reveal-line:nth-child(4) { transition-delay: 1.02s; }
+        
+        .description-box strong {
+            color: #fff;
+            border-bottom: 1px solid rgba(0, 255, 170, 0.5);
+            padding-bottom: 2px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .description-box strong::before {
+            content: '';
+            position: absolute;
+            left: -2px;
+            right: -2px;
+            bottom: -1px;
+            height: 100%;
+            background: rgba(0, 255, 170, 0.08);
+            transform: scaleY(0);
+            transform-origin: bottom;
+            transition: transform 0.3s ease;
+            z-index: -1;
+        }
+        
+        .description-box strong:hover::before {
+            transform: scaleY(1);
+        }
+
+        /* カード表示時、強調語の下地を自動で立ち上げる（タッチ端末でも意図が伝わるように） */
+        .card.visible .description-box strong::before {
+            animation: strongReveal 1.4s ease 1.05s forwards;
+        }
+        @keyframes strongReveal {
+            from { transform: scaleY(0); }
+            55%, 100% { transform: scaleY(1); }
+        }
+        
+        .footer-note {
+            font-size: 0.7rem;
+            color: rgba(120, 120, 120, 0.8);
+            text-align: center;
+            margin-top: 30px;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            opacity: 0;
+            transition: opacity 0.6s ease 0.5s;
+        }
+        
+        .card.visible .footer-note {
+            opacity: 1;
+        }
+
+        /* 閉じるボタン（より洗練されたデザイン） */
+        .close-btn {
+            position: absolute; top: 12px; right: 12px;
+            width: 38px; height: 38px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            color: rgba(255,255,255,0.9); 
+            font-size: 1.4rem; 
+            cursor: pointer;
+            z-index: 10;
+            border: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.4);
+        }
+        .close-btn:hover {
+            background: rgba(0,0,0,0.8);
+            border-color: rgba(0, 255, 170, 0.5);
+            transform: scale(1.08);
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.35);
+        }
+        
+        .close-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* ARプレビュープロンプト */
+        #ar-preview-prompt {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1200;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        #ar-preview-prompt.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .preview-content {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 170, 0.3);
+            border-radius: 20px;
+            padding: 18px 30px;
+            text-align: center;
+            max-width: 270px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 255, 170, 0.1);
+        }
+        
+        .preview-content:hover {
+            border-color: rgba(0, 255, 170, 0.6);
+            transform: scale(1.02);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 255, 170, 0.2);
+        }
+        
+        .preview-content:active {
+            transform: scale(0.98);
+        }
+        
+        .preview-title {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.95);
+            letter-spacing: 0.15em;
+            margin-bottom: 10px;
+            font-family: 'Yu Mincho', serif;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+        
+        .preview-hint {
+            font-size: 0.65rem;
+            color: rgba(0, 255, 170, 0.8);
+            letter-spacing: 0.08em;
+            white-space: nowrap;
+            margin-bottom: 12px;
+            animation: hintPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes hintPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        .preview-icon {
+            width: 30px;
+            height: 30px;
+            margin: 0 auto;
+            animation: iconBounce 1.5s ease-in-out infinite;
+        }
+        
+        .preview-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: rgba(0, 255, 170, 0.7);
+        }
+        
+        @keyframes iconBounce {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
+        }
+        
+        /* ヴィネット強化 */
+        #vignette-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 390;
+            background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+        }
+
+        /* アクセシビリティ: モーション低減設定時は装飾アニメを抑え、最終状態へ即時遷移 */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+                transition-delay: 0ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
+    <script>
+        // ==========================================
+        // グローバルテクスチャキャッシュ（読み込み最適化）
+        // ==========================================
+        window.textureCache = window.textureCache || {};
+        window.textureLoadPromises = window.textureLoadPromises || {};
+        
+        function loadTextureWithCache(url) {
+            // 既にキャッシュにあればそれを返す
+            if (window.textureCache[url]) {
+                return Promise.resolve(window.textureCache[url]);
+            }
+            // 読み込み中ならそのPromiseを返す（重複読み込み防止）
+            if (window.textureLoadPromises[url]) {
+                return window.textureLoadPromises[url];
+            }
+            // 新規読み込み
+            const loader = new THREE.TextureLoader();
+            const promise = new Promise((resolve, reject) => {
+                loader.load(url, (tex) => {
+                    window.textureCache[url] = tex;
+                    delete window.textureLoadPromises[url];
+                    resolve(tex);
+                }, undefined, (err) => {
+                    delete window.textureLoadPromises[url];
+                    reject(err);
+                });
+            });
+            window.textureLoadPromises[url] = promise;
+            return promise;
+        }
+
+        // ==========================================
+        // Anatomical Reveal Shader（解剖学的露見シェーダー）
+        // 概要: Depth Mapを用いて、日常(Layer A)と本音(Layer B)を有機的に合成し、
+        // 視差効果とノイズによる「解剖」演出を行う高機能シェーダー。
+        // ==========================================
+        AFRAME.registerComponent('anatomical-reveal', {
+            schema: {
+                layerA: { type: 'map' },      // 日常（表層）画像
+                layerB: { type: 'map' },      // 本音（深層）画像
+                depthMap: { type: 'map' },    // 深度マップ（白=手前, 黒=奥）
+                strength: { type: 'number', default: 0.15 }, // 視差の強さ
+                edgeColor: { type: 'color', default: '#00ffaa' } // 境界線の発光色
+            },
+
+            init: function () {
+                const data = this.data;
+                const el = this.el;
+                
+                // ジャイロスムージング用の前フレーム値
+                this.smoothedViewVec = new THREE.Vector3(0, 0, 1);
+
+                // シェーダーマテリアルの定義
+                this.material = new THREE.ShaderMaterial({
+                    uniforms: {
+                        uTexA: { value: null },      // Layer A
+                        uTexB: { value: null },      // Layer B
+                        uDepth: { value: null },     // Depth Map
+                        uTime: { value: 0 },         // 時間経過
+                        uParallax: { value: data.strength },
+                        uViewVec: { value: new THREE.Vector3(0, 0, 1) }, // 視線ベクトル
+                        uReveal: { value: 0.0 },     // 露見度 (0.0=日常, 1.0=本音)
+                        uEdgeColor: { value: new THREE.Color(data.edgeColor) },
+                        uHasDepth: { value: 0.0 }    // Depth Mapが利用可能か
+                    },
+                    vertexShader: `
+                        varying vec2 vUv;
+                        varying vec3 vViewPosition;
+                        varying vec3 vNormal;
+
+                        void main() {
+                            vUv = uv;
+                            vNormal = normalize(normalMatrix * normal);
+                            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                            vViewPosition = -mvPosition.xyz;
+                            gl_Position = projectionMatrix * mvPosition;
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform sampler2D uTexA;
+                        uniform sampler2D uTexB;
+                        uniform sampler2D uDepth;
+                        uniform float uTime;
+                        uniform float uParallax;
+                        uniform float uReveal; // 0.0 ~ 1.0
+                        uniform vec3 uEdgeColor;
+                        uniform float uHasDepth;
+                        uniform vec3 uViewVec; // ジャイロベースの視線方向
+
+                        varying vec2 vUv;
+                        varying vec3 vViewPosition;
+
+                        // --- Noise Functions (Simplex Noise) ---
+                        vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+                        float snoise(vec2 v){
+                            const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                                    -0.577350269189626, 0.024390243902439);
+                            vec2 i  = floor(v + dot(v, C.yy) );
+                            vec2 x0 = v -   i + dot(i, C.xx);
+                            vec2 i1;
+                            i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+                            vec4 x12 = x0.xyxy + C.xxzz;
+                            x12.xy -= i1;
+                            i = mod(i, 289.0);
+                            vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+                            + i.x + vec3(0.0, i1.x, 1.0 ));
+                            vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+                            m = m*m ;
+                            m = m*m ;
+                            vec3 x = 2.0 * fract(p * C.www) - 1.0;
+                            vec3 h = abs(x) - 0.5;
+                            vec3 ox = floor(x + 0.5);
+                            vec3 a0 = x - ox;
+                            m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+                            vec3 g;
+                            g.x  = a0.x  * x0.x  + h.x  * x0.y;
+                            g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+                            return 130.0 * dot(m, g);
+                        }
+
+                        // 角丸マスク関数 (Rounded Rectangle SDF)
+                        float roundedRectMask(vec2 uv, float radius, float feather) {
+                            vec2 centered = uv - 0.5;
+                            vec2 boxSize = vec2(0.5 - radius);
+                            vec2 d = abs(centered) - boxSize;
+                            float dist = length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - radius;
+                            return 1.0 - smoothstep(-feather, feather, dist);
+                        }
+
+                        void main() {
+                            // 0. 角丸マスクとフェードエッジ
+                            float cornerRadius = 0.08; // 角の丸み
+                            float edgeFeather = 0.03;  // フェードの幅
+                            float roundMask = roundedRectMask(vUv, cornerRadius, edgeFeather);
+                            
+                            // 1. 視差マッピング (Parallax Mapping) - カメラ視線ベース
+                            // 改善案採用：奥（黒）が大きく動く正しい計算
+                            vec3 viewDir = normalize(vViewPosition);
+                            float depthVal = uHasDepth > 0.5 ? texture2D(uDepth, vUv).r : 0.5;
+                            
+                            // 奥の空間が広がるように：黒（奥）ほど大きく動く
+                            vec2 parallaxOffset = viewDir.xy * ((1.0 - depthVal) * uParallax * -0.2);
+                            
+                            vec2 uvB = vUv + parallaxOffset;
+                            vec2 uvA = vUv;
+
+                            // 2. 有機的トランジション (Organic Noise Reveal)
+                            // ノイズの速度とスケールを調整して滑らかに
+                            float noiseVal = snoise(vUv * 2.5 + vec2(0.0, uTime * 0.05));
+                            float mask = uReveal + (noiseVal * 0.1); 
+                            
+                            // 深度マップ自体もマスクの一部に使う（深いところから裂ける演出）
+                            float depthFactor = 1.0 - depthVal;  // 黒（奥）が1.0
+                            mask = smoothstep(0.4, 0.6, mask * 1.2 - depthFactor * 0.2 * uHasDepth);
+
+                            // 3. テクスチャ取得 & 色収差 (Chromatic Aberration)
+                            vec4 colorA = texture2D(uTexA, uvA);
+                            
+                            // 境界付近で色ズレを起こす（控えめにして振動軽減）
+                            float aber = 0.005 * uParallax;
+                            float r = texture2D(uTexB, uvB + vec2(aber, 0.0)).r;
+                            float g = texture2D(uTexB, uvB).g;
+                            float b = texture2D(uTexB, uvB - vec2(aber, 0.0)).b;
+                            vec4 colorB = vec4(r, g, b, 1.0);
+
+                            // 4. 合成とエッジ発光
+                            float edge = smoothstep(0.0, 0.1, mask) * (1.0 - smoothstep(0.9, 1.0, mask));
+                            vec3 edgeEmission = uEdgeColor * edge * 2.0;
+
+                            // AとBを混ぜる
+                            vec4 finalColor = mix(colorA, colorB, mask);
+                            finalColor.rgb += edgeEmission;
+                            
+                            // 5. 角丸マスクとフェード境界を適用
+                            float borderGlow = (1.0 - roundMask) * smoothstep(0.0, 0.05, roundMask) * 0.5;
+                            finalColor.rgb += uEdgeColor * borderGlow;
+                            finalColor.a = roundMask;
+
+                            gl_FragColor = finalColor;
+                        }
+                    `,
+                    transparent: true,
+                    side: THREE.DoubleSide
+                });
+
+                // テクスチャは遅延ロード（targetFound時にloadTextures()で実行）
+                this.texturesLoaded = false;
+
+                // メッシュへの適用
+                const mesh = el.getObject3D('mesh');
+                if (mesh) {
+                    mesh.material = this.material;
+                } else {
+                    const geo = new THREE.PlaneGeometry(1, 1, 32, 32);
+                    const newMesh = new THREE.Mesh(geo, this.material);
+                    el.setObject3D('mesh', newMesh);
+                }
+            },
+
+            // テクスチャの遅延ロード（ターゲット検出時に呼び出し）
+            loadTextures: function () {
+                if (this.texturesLoaded) return;
+                this.texturesLoaded = true;
+                const data = this.data;
+                const material = this.material;
+                
+                const load = (param, uniform, isDepth) => {
+                    if (data[param]) {
+                        loadTextureWithCache(data[param])
+                            .then((tex) => {
+                                material.uniforms[uniform].value = tex;
+                                if (isDepth) material.uniforms.uHasDepth.value = 1.0;
+                            })
+                            .catch((err) => {
+                                console.log(`Texture load failed: ${param}`, err);
+                                if (isDepth) material.uniforms.uHasDepth.value = 0.0;
+                            });
+                    }
+                };
+                
+                load('layerA', 'uTexA', false);
+                load('layerB', 'uTexB', false);
+                load('depthMap', 'uDepth', true);
+            },
+
+            tick: function (time, timeDelta) {
+                if (!this.material) return;
+
+                // 時間更新
+                this.material.uniforms.uTime.value = time / 1000;
+
+                // ターゲットが認識されているかチェック（グローバル変数）
+                const isTargetActive = window.arTargetActive === true;
+                
+                // 目標値（ターゲット認識でLayer B、非認識でLayer A）
+                const targetReveal = isTargetActive ? 1.0 : 0.0;
+                
+                // 現在値から目標値へ滑らかに補間 (Lerp)
+                const current = this.material.uniforms.uReveal.value;
+                this.material.uniforms.uReveal.value += (targetReveal - current) * 0.02;
+
+                // ジャイロデータを使用したパララックス効果（スムージング適用）
+                if (window.gyroData) {
+                    const gx = window.gyroData.gamma || 0; // 左右傾き
+                    const gy = window.gyroData.beta || 0;  // 前後傾き
+                    
+                    // 目標ベクトル（感度を下げて震えを抑制）
+                    const targetVec = new THREE.Vector3(gx * 1.2, gy * 0.9, 1.0);
+                    
+                    // スムージング補間（係数を極限まで小さくして震えを完全抑制）
+                    this.smoothedViewVec.lerp(targetVec, 0.002);
+                    
+                    // スムージング後の値を適用
+                    this.material.uniforms.uViewVec.value.copy(this.smoothedViewVec);
+                }
+            }
+        });
+
+        // ==========================================
+        // ローディングマネージャー（進捗管理）
+        // ==========================================
+        class LoadingManager {
+            constructor() {
+                this.stages = {
+                    library: { weight: 20, complete: false },
+                    targets: { weight: 30, complete: false },
+                    images: { weight: 40, complete: false },
+                    camera: { weight: 10, complete: false }
+                };
+                this.imageProgress = 0;
+                this.totalImages = 10;
+                this.loadedImages = 0;
+                
+                this.progressFill = document.getElementById('loading-progress-fill');
+                this.progressText = document.getElementById('loading-progress-text');
+                this.mainText = document.getElementById('loading-main-text');
+            }
+            
+            setStageActive(stageName) {
+                const stageEl = document.getElementById(`stage-${stageName}`);
+                if (stageEl) {
+                    stageEl.classList.remove('complete');
+                    stageEl.classList.add('active');
+                }
+                this.updateMainText(stageName);
+            }
+            
+            setStageComplete(stageName) {
+                const stageEl = document.getElementById(`stage-${stageName}`);
+                if (stageEl) {
+                    stageEl.classList.remove('active');
+                    stageEl.classList.add('complete');
+                }
+                this.stages[stageName].complete = true;
+                this.updateProgress();
+            }
+            
+            updateImageProgress(loaded) {
+                this.loadedImages = loaded;
+                this.imageProgress = (loaded / this.totalImages) * this.stages.images.weight;
+                this.updateProgress();
+            }
+            
+            updateProgress() {
+                let total = 0;
+                for (const [key, stage] of Object.entries(this.stages)) {
+                    if (stage.complete) {
+                        total += stage.weight;
+                    } else if (key === 'images') {
+                        total += this.imageProgress;
+                    }
+                }
+                
+                const percent = Math.min(Math.round(total), 100);
+                if (this.progressFill) {
+                    this.progressFill.style.width = percent + '%';
+                }
+                if (this.progressText) {
+                    this.progressText.textContent = percent + '%';
+                }
+            }
+            
+            updateMainText(stage) {
+                if (!this.mainText) return;
+                const texts = {
+                    // library: ライブラリ読み込み
+                    // 世界観への入り口。「奥へ」「深層へ」という潜るイメージ。
+                    library: '沈黙の深層へ潜行しています…',
+
+                    // targets: ターゲット認識/顔認識など
+                    // 何を探しているのか。「痕跡」をより具体的に「宛先のない言葉」の捜索へ。
+                    targets: '行き場のない言葉を探測しています…',
+
+                    // images: 画像生成/ロード
+                    // 見えないものを可視化するプロセス。「現像」という言葉が持つ、徐々に像を結ぶニュアンス。
+                    images: '不可視の輪郭を現像しています…',
+
+                    // camera: カメラ起動
+                    // 単なる準備ではなく、ユーザー自身の目（カメラ）が、この世界の「目撃者」になる瞬間。
+                    camera: '観察者の「眼」を接続しています…'
+                };
+                this.mainText.textContent = texts[stage] || '静寂を調整しています...';
+            }
+        }
+        
+        // グローバルローディングマネージャー
+        let loadingManager = null;
+        
+        // 画像プリロードキャッシュ
+        const preloadedImageCache = {};
+        
+        // シーンロード後に段階的にプリロード（帯域を圧迫しない）
+        function startStaggeredPreload() {
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const img = new Image();
+                    img.onload = () => {
+                        preloadedImageCache[i] = true;
+                        if (loadingManager) {
+                            loadingManager.updateImageProgress(Object.keys(preloadedImageCache).length);
+                        }
+                    };
+                    img.onerror = () => {
+                        preloadedImageCache[i] = false;
+                        if (loadingManager) {
+                            loadingManager.updateImageProgress(Object.keys(preloadedImageCache).length);
+                        }
+                    };
+                    img.src = `../images/layerB_${i}.jpg`;
+                }, i * 150);
+            }
+        }
+
+        // ==========================================
+        // エピソードデータ (01-10)
+        // ==========================================
+        const episodes = [
+            {
+                title: 'Episode.01\n矯正する支柱',
+                text: 'ぐらつく足元を、錆びた鉄の<strong>支柱</strong>が静かに支えていた。<br>いつ、誰が打ち込んだのか——私は、訊かなかった。',
+                image: '../images/layerB_0.jpg'
+            },
+            {
+                title: 'Episode.02\n沈黙の蔦',
+                text: 'やさしさは、首筋にそっと巻きつく一本の<strong>蔦</strong>。<br>美しいと感じているうちに、呼吸だけが、細くなる。',
+                image: '../images/layerB_1.jpg'
+            },
+            {
+                title: 'Episode.03\n拒絶の雨',
+                text: '銀色の<strong>雨</strong>が、冷たく降りやまない。<br>私にこびりついていた何かだけが、音もなく流されていく。',
+                image: '../images/layerB_2.jpg'
+            },
+            {
+                title: 'Episode.04\n言葉の化石',
+                text: '飲み込んだ言葉は、<br>二人の地層の底で、ゆっくりと<strong>化石</strong>になる。<br>その形に、いつか触れてみたかった。',
+                image: '../images/layerB_3.jpg'
+            },
+            {
+                title: 'Episode.05\n過保護な檻',
+                text: 'この窮屈さは、壊れやすい私を守る<strong>檻</strong>なのだと思う。<br>その内側にとどまることを、<br>ほかでもない私が選んでいる。',
+                image: '../images/layerB_4.jpg'
+            },
+{
+                title: 'Episode.06\n相互の呪縛',
+                text: '背中合わせの傷口で、二本の幹が癒着していく。<br>もう別々の木には戻れない——<strong>接ぎ木</strong>のように、<br>同じ養分を、分け合いながら。',
+                image: '../images/layerB_5.jpg'
+            },
+            {
+                title: 'Episode.07\n内なる要塞',
+                text: '外に向かって牙をむく、武装した<strong>要塞</strong>。<br>私はその内側で、<br>何も知らないふりを、そっと許されている。',
+                image: '../images/layerB_6.jpg'
+            },
+            {
+                title: 'Episode.08\n庭師の剪定',
+                text: '庭師は、ためらわずに枝を<strong>剪定</strong>する。<br>何を切ったのか、語る必要はない。<br>その手は、庭を壊すためのものではなかった。',
+                image: '../images/layerB_7.jpg'
+            },
+            {
+                title: 'Episode.09\n庭の全景',
+                text: '高みから見おろせば、そこは出口のない<strong>迷路の庭</strong>。<br>迷い続けることを、私たちは互いに、<br>そっと許し合っている。',
+                image: '../images/layerB_8.jpg'
+            },
+            {
+                title: 'Episode.10\n真実の種',
+                text: '言われなかった言葉は、<br>硬い<strong>種</strong>になって、土の中で眠る。<br>芽吹かせないことも、ひとつの約束だった。',
+                image: '../images/layerB_9.jpg'
+            }
+        ];
+
+        /**
+         * エピソードのタイトルと本文をカードへ流し込む。
+         * 本文は <br> 区切りの行ごとに <span class="reveal-line"> でラップし、
+         * カード表示時に一行ずつ立ち上がる「行リビール」を可能にする。
+         * @param {HTMLElement} titleEl タイトル要素
+         * @param {HTMLElement} descEl 本文要素
+         * @param {{title: string, text: string}} data エピソードデータ
+         */
+        function setEpisodeText(titleEl, descEl, data) {
+            titleEl.innerHTML = data.title;
+            const lines = data.text.split(/<br\s*\/?>/i);
+            descEl.innerHTML = lines
+                .map((line) => `<span class="reveal-line">${line}</span>`)
+                .join('');
+        }
+
+            // 詩のフラグメント（シアターモード用）
+            const poemFragments = [
+                '言えなかった言葉だけが永遠に残る',      // 15文字：冒頭／逆説的な真理で引き込む
+                '沈黙は、渡せなかった手紙に似ている',    // 15文字：沈黙の正体を提示
+                'ここは聖域か、それとも墓場か',          // 13文字：問いの投げかけ／緊張の導入
+                '触れれば崩れる。だから、触れなかった',  // 16文字：選択の理由①（均衡）
+                '言えば終わる。言わなければ続いていく',  // 16文字：選択の理由②（持続）
+                '優しさで塞いだ口、諦めで閉じた瞳',      // 16文字：沈黙の二面性
+                '拒絶ではない。これは、もう一つの愛',    // 16文字：誤読への反論／転換点
+                '言葉にしない優しさが、空気を守る',      // 15文字：保護としての沈黙
+                '言葉より静かに、想いは深く届いている',  // 16文字：沈黙の肯定
+                '黙っていたのは、傷つけたくなかったから',          
+            ];
+        
+        // ==========================================
+        // 時間帯による環境変化（インスタレーション要素）
+        // ==========================================
+        class TimeBasedEnvironment {
+            constructor() {
+                this.currentPeriod = this.getTimePeriod();
+                this.applyEnvironment();
+            }
+            
+            getTimePeriod() {
+                const hour = new Date().getHours();
+                if (hour >= 5 && hour < 10) return 'morning';
+                if (hour >= 10 && hour < 17) return 'day';
+                if (hour >= 17 && hour < 20) return 'evening';
+                return 'night';
+            }
+                        
+            applyEnvironment() {
+                const root = document.documentElement;
+                const loadingBg = document.getElementById('custom-loading');
+                
+                const themes = {
+                    morning: {
+                        // 朝：曖昧な境界線。まだ冷たい空気と、かすかな希望（あるいは諦め）の淡い光。
+                        gradient: 'linear-gradient(135deg, #15181a 0%, #202426 50%, #181a1c 100%)', // 青みがかった灰色
+                        welcomeText: '朝靄に、言えなかった言葉が滲む...'
+                    },
+                    day: {
+                        // 昼：理性の時間。すべてが明るみに出る残酷さと、ドライな観察眼。
+                        gradient: 'linear-gradient(135deg, #0f1210 0%, #1a1f1c 50%, #121413 100%)', // 深い緑味の黒
+                        welcomeText: '白昼の静寂は、何よりも雄弁だ...'
+                    },
+                    evening: {
+                        // 夕：感情の揺らぎ。愛と拒絶の区別がつかなくなる「誰そ彼（たそがれ）」の時。
+                        gradient: 'linear-gradient(135deg, #1a0f0a 0%, #261510 50%, #1f120c 100%)', // 赤茶けた闇
+                        welcomeText: '夕闇が、拒絶と包容を混ぜ合わせる...'
+                    },
+                    night: {
+                        // 夜：深層心理。もっとも深く沈黙が根を張る時間。内省的な青。
+                        gradient: 'linear-gradient(135deg, #050508 0%, #0a0a14 50%, #06060a 100%)', // ほぼ漆黒に近い青
+                        welcomeText: '夜の底で、沈黙は呼吸を始める...'
+                    }
+                };
+    
+
+                
+                const theme = themes[this.currentPeriod];
+                
+                // ローディング背景
+                if (loadingBg) {
+                    loadingBg.style.background = theme.gradient;
+                }
+                
+                // ローディングテキスト更新
+                const loadingText = document.getElementById('loading-main-text');
+                if (loadingText) {
+                    loadingText.textContent = theme.welcomeText;
+                }
+                
+                console.log(`Environment set to: ${this.currentPeriod}`);
+            }
+        }
+        
+        // 初期化（DOMContentLoaded前に実行可能）
+        let timeEnvironment = null;
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                timeEnvironment = new TimeBasedEnvironment();
+            });
+        } else {
+            timeEnvironment = new TimeBasedEnvironment();
+        }
+
+        // ==========================================
+        // パーティクルシステム（花びら・光の粒子）
+        // ==========================================
+        class ParticleSystem {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.particles = [];
+                this.maxParticles = 35;
+                this.gyroOffset = { x: 0, y: 0 };
+                this.resize();
+                this.init();
+                window.addEventListener('resize', () => this.resize());
+            }
+            
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+            
+            init() {
+                for (let i = 0; i < this.maxParticles; i++) {
+                    this.particles.push(this.createParticle());
+                }
+            }
+            
+            createParticle() {
+                const types = ['petal', 'light', 'dust'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                
+                return {
+                    x: Math.random() * this.canvas.width,
+                    y: Math.random() * this.canvas.height,
+                    size: type === 'petal' ? 3 + Math.random() * 5 : 1.5 + Math.random() * 3,
+                    speedX: (Math.random() - 0.5) * 0.3,
+                    speedY: -0.2 - Math.random() * 0.4, // 上昇
+                    opacity: 0.1 + Math.random() * 0.4,
+                    type: type,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: (Math.random() - 0.5) * 0.02,
+                    pulse: Math.random() * Math.PI * 2,
+                    color: type === 'petal' 
+                        ? `rgba(${120 + Math.random() * 20}, ${140 + Math.random() * 15}, ${100 + Math.random() * 20}, ` // わびさび: 苔色
+                        : type === 'light'
+                        ? `rgba(${140 + Math.random() * 20}, ${115 + Math.random() * 15}, ${95 + Math.random() * 20}, ` // わびさび: 銅色
+                        : `rgba(255, 255, 255, `
+                };
+            }
+            
+            updateGyro(x, y) {
+                this.gyroOffset.x = x * 15;
+                this.gyroOffset.y = y * 15;
+            }
+            
+            update() {
+                this.particles.forEach((p, index) => {
+                    // 移動
+                    p.x += p.speedX + this.gyroOffset.x * 0.01;
+                    p.y += p.speedY + this.gyroOffset.y * 0.005;
+                    p.rotation += p.rotationSpeed;
+                    p.pulse += 0.02;
+                    
+                    // 画面外に出たらリセット
+                    if (p.y < -20 || p.x < -20 || p.x > this.canvas.width + 20) {
+                        this.particles[index] = this.createParticle();
+                        this.particles[index].y = this.canvas.height + 10;
+                        this.particles[index].x = Math.random() * this.canvas.width;
+                    }
+                });
+            }
+            
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.particles.forEach(p => {
+                    this.ctx.save();
+                    this.ctx.translate(p.x, p.y);
+                    this.ctx.rotate(p.rotation);
+                    
+                    const pulseOpacity = p.opacity * (0.7 + Math.sin(p.pulse) * 0.3);
+                    
+                    if (p.type === 'petal') {
+                        // 花びら形状
+                        this.ctx.beginPath();
+                        this.ctx.ellipse(0, 0, p.size * 0.6, p.size, 0, 0, Math.PI * 2);
+                        this.ctx.fillStyle = p.color + pulseOpacity + ')';
+                        this.ctx.fill();
+                        
+                        // 光彩
+                        this.ctx.shadowBlur = 8;
+                        this.ctx.shadowColor = p.color + '0.3)';
+                    } else {
+                        // 光の粒子
+                        const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, p.size);
+                        gradient.addColorStop(0, p.color + pulseOpacity + ')');
+                        gradient.addColorStop(1, p.color + '0)');
+                        
+                        this.ctx.beginPath();
+                        this.ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+                        this.ctx.fillStyle = gradient;
+                        this.ctx.fill();
+                    }
+                    
+                    this.ctx.restore();
+                });
+            }
+            
+            animate() {
+                this.update();
+                this.draw();
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+        
+        // ==========================================
+        // タッチリップルエフェクト
+        // ==========================================
+        class RippleEffect {
+            constructor(container) {
+                this.container = container;
+            }
+            
+            create(x, y) {
+                const ripple = document.createElement('div');
+                ripple.className = 'touch-ripple';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                this.container.appendChild(ripple);
+                
+                // アニメーション終了後に削除
+                setTimeout(() => {
+                    ripple.remove();
+                }, 1500);
+            }
+        }
+        
+        // ==========================================
+        // ジャイロスコープ視差効果
+        // ==========================================
+        class GyroParallax {
+            constructor(callback) {
+                this.callback = callback;
+                this.enabled = false;
+                this.beta = 0;
+                this.gamma = 0;
+                this.init();
+            }
+            
+            init() {
+                if (window.DeviceOrientationEvent) {
+                    // iOS 13+ では許可が必要
+                    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                        // ユーザーインタラクション後に有効化される
+                        this.needsPermission = true;
+                    } else {
+                        this.startListening();
+                    }
+                }
+            }
+            
+            async requestPermission() {
+                if (this.needsPermission) {
+                    try {
+                        const permission = await DeviceOrientationEvent.requestPermission();
+                        if (permission === 'granted') {
+                            this.startListening();
+                            return true;
+                        }
+                    } catch (e) {
+                        console.log('Gyro permission error:', e);
+                    }
+                    return false;
+                }
+                return true;
+            }
+            
+            startListening() {
+                window.addEventListener('deviceorientation', (e) => {
+                    this.enabled = true;
+                    // beta: 前後の傾き (-180 to 180)
+                    // gamma: 左右の傾き (-90 to 90)
+                    this.beta = (e.beta || 0) / 180;
+                    this.gamma = (e.gamma || 0) / 90;
+                    
+                    if (this.callback) {
+                        this.callback(this.gamma, this.beta);
+                    }
+                });
+            }
+        }
+        
+        // ==========================================
+        // シアターモード
+        // ==========================================
+        class TheaterMode {
+            constructor(poemElement) {
+                this.poemElement = poemElement;
+                this.enabled = false;
+                this.currentPoemIndex = 0;
+                this.interval = null;
+            }
+            
+            toggle() {
+                this.enabled = !this.enabled;
+                if (this.enabled) {
+                    this.start();
+                } else {
+                    this.stop();
+                }
+                return this.enabled;
+            }
+            
+            start() {
+                this.showPoem();
+                this.interval = setInterval(() => {
+                    this.showPoem();
+                }, 12000); // 12秒ごとに新しい詩
+            }
+            
+            stop() {
+                if (this.interval) {
+                    clearInterval(this.interval);
+                }
+                this.poemElement.classList.remove('visible');
+            }
+            
+            showPoem() {
+                const poem = poemFragments[this.currentPoemIndex];
+                this.currentPoemIndex = (this.currentPoemIndex + 1) % poemFragments.length;
+                
+                // 一文字ずつアニメーション
+                const textElement = this.poemElement.querySelector('.poem-text');
+                textElement.innerHTML = '';
+                
+                this.poemElement.classList.remove('visible');
+                
+                setTimeout(() => {
+                    let delay = 0;
+                    poem.split('').forEach((char, i) => {
+                        const span = document.createElement('span');
+                        span.className = 'char';
+                        span.textContent = char;
+                        span.style.animationDelay = delay + 'ms';
+                        textElement.appendChild(span);
+                        delay += 80;
+                    });
+                    
+                    this.poemElement.classList.add('visible');
+                    
+                    // フェードアウト
+                    setTimeout(() => {
+                        if (this.enabled) {
+                            this.poemElement.classList.remove('visible');
+                        }
+                    }, 9000);
+                }, 500);
+            }
+        }
+        
+        // ==========================================
+        // アンビエントサウンド
+        // ==========================================
+        class AmbientSound {
+            constructor() {
+                this.audioContext = null;
+                this.enabled = false;
+                this.nodes = {};
+            }
+            
+            init() {
+                if (this.audioContext) return;
+                
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // マスターボリューム（先に作成）
+                this.masterGain = this.audioContext.createGain();
+                this.masterGain.gain.value = 0.12;
+                this.masterGain.connect(this.audioContext.destination);
+                
+                // リバーブ（残響）ノードを作成
+                this.createReverbNode();
+                
+                // 雨音風のノイズ
+                this.createRainNoise();
+                
+                // 低周波のドローン（お輪/シンギングボウル風の深い倍音）
+                this.createDrone();
+                
+                // 風のノイズ
+                this.createWindNoise();
+                
+                // 各種環境音
+                this.createWaterDrops();
+                this.createBirdChirps();
+                this.createBells();
+                this.createWoodCreaks();
+                this.createGrassRustle();
+            }
+            
+            createReverbNode() {
+                // シンプルなリバーブ（ConvolverNode用のインパルス応答を生成）
+                const sampleRate = this.audioContext.sampleRate;
+                const length = sampleRate * 2.5; // 2.5秒のリバーブ
+                const impulse = this.audioContext.createBuffer(2, length, sampleRate);
+                const impulseL = impulse.getChannelData(0);
+                const impulseR = impulse.getChannelData(1);
+                
+                // 有機的な減衰を持つインパルス応答を生成
+                for (let i = 0; i < length; i++) {
+                    const decay = Math.exp(-i / (sampleRate * 0.8)); // 減衰率
+                    impulseL[i] = (Math.random() * 2 - 1) * decay;
+                    impulseR[i] = (Math.random() * 2 - 1) * decay;
+                }
+                
+                this.reverbNode = this.audioContext.createConvolver();
+                this.reverbNode.buffer = impulse;
+                
+                // リバーブの音量調整
+                this.reverbGain = this.audioContext.createGain();
+                this.reverbGain.gain.value = 0.3; // リバーブのミックス量
+                
+                this.reverbNode.connect(this.reverbGain);
+                this.reverbGain.connect(this.masterGain);
+            }
+            
+            createRainNoise() {
+                const bufferSize = 2 * this.audioContext.sampleRate;
+                const noiseBuffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                
+                // ピンクノイズ生成（より自然な音）
+                let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const white = Math.random() * 2 - 1;
+                    b0 = 0.99886 * b0 + white * 0.0555179;
+                    b1 = 0.99332 * b1 + white * 0.0750759;
+                    b2 = 0.96900 * b2 + white * 0.1538520;
+                    b3 = 0.86650 * b3 + white * 0.3104856;
+                    b4 = 0.55000 * b4 + white * 0.5329522;
+                    b5 = -0.7616 * b5 - white * 0.0168980;
+                    output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.05;
+                    b6 = white * 0.115926;
+                }
+                
+                const noise = this.audioContext.createBufferSource();
+                noise.buffer = noiseBuffer;
+                noise.loop = true;
+                
+                // フィルター（高周波をカット）
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 400;
+                
+                const noiseGain = this.audioContext.createGain();
+                noiseGain.gain.value = 0.4;
+                
+                noise.connect(filter);
+                filter.connect(noiseGain);
+                noiseGain.connect(this.masterGain);
+                noiseGain.connect(this.reverbNode); // リバーブにも送る
+                
+                this.nodes.rain = { source: noise, gain: noiseGain };
+            }
+            
+            createDrone() {
+                // 低周波の深いドローン（お輪/シンギングボウル風の深い倍音）
+                const droneGain = this.audioContext.createGain();
+                droneGain.gain.value = 0.025; // 音量をより控えめに
+                
+                const frequencies = [55, 110, 165, 220, 330]; // 基本周波数とその倍音
+                const oscillators = frequencies.map((freq, i) => {
+                    const osc = this.audioContext.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq + (Math.random() - 0.5) * 0.5; // 微弱なデチューン
+                    
+                    const g = this.audioContext.createGain();
+                    g.gain.value = 1 / (i + 1); // 倍音ほど小さく
+                    
+                    // 個別にLFOをかけて複雑な鳴りに
+                    const lfo = this.audioContext.createOscillator();
+                    lfo.frequency.value = 0.05 + Math.random() * 0.1;
+                    const lg = this.audioContext.createGain();
+                    lg.gain.value = 0.2 + Math.random() * 0.3;
+                    lfo.connect(lg);
+                    lg.connect(g.gain);
+                    lfo.start();
+                    
+                    osc.connect(g);
+                    g.connect(droneGain);
+                    return osc;
+                });
+                
+                droneGain.connect(this.masterGain);
+                droneGain.connect(this.reverbNode);
+                
+                this.nodes.drone = { oscillators, gain: droneGain };
+            }
+            
+            createWindNoise() {
+                // 風の音（より高周波のノイズ、低音を抑制）
+                const bufferSize = 2 * this.audioContext.sampleRate;
+                const noiseBuffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = (Math.random() * 2 - 1) * 0.02; // 振幅を少し下げる
+                }
+                
+                const wind = this.audioContext.createBufferSource();
+                wind.buffer = noiseBuffer;
+                wind.loop = true;
+                
+                // 低音カットフィルター（highpass）
+                const windHPFilter = this.audioContext.createBiquadFilter();
+                windHPFilter.type = 'highpass';
+                windHPFilter.frequency.value = 300; // 300Hz以下をカット
+                windHPFilter.Q.value = 0.7;
+                
+                // バンドパスフィルター（中高域を強調）
+                const windFilter = this.audioContext.createBiquadFilter();
+                windFilter.type = 'bandpass';
+                windFilter.frequency.value = 1200; // 周波数を上げて低音を避ける
+                windFilter.Q.value = 0.4; // Q値を下げて広い帯域に
+                
+                const windGain = this.audioContext.createGain();
+                windGain.gain.value = 0;
+                
+                // LFOで風の強弱
+                const windLFO = this.audioContext.createOscillator();
+                windLFO.type = 'sine';
+                windLFO.frequency.value = 0.08;
+                
+                const windLFOGain = this.audioContext.createGain();
+                windLFOGain.gain.value = 0.15;
+                
+                windLFO.connect(windLFOGain);
+                windLFOGain.connect(windGain.gain);
+                
+                wind.connect(windHPFilter); // まず低音カット
+                windHPFilter.connect(windFilter); // 次にバンドパス
+                windFilter.connect(windGain);
+                windGain.connect(this.masterGain);
+                windGain.connect(this.reverbNode); // リバーブにも送る
+                
+                this.nodes.wind = { source: wind, gain: windGain, lfo: windLFO };
+            }
+            
+            createWaterDrops() {
+                // 水滴音のシミュレーション（ランダムなピッチのトーン）
+                this.nodes.drops = { timers: [] };
+            }
+            
+            createBirdChirps() {
+                // 鳥のさえずり（ランダムな高周波トーン）
+                this.nodes.birds = { timers: [] };
+            }
+            
+            createBells() {
+                // ベル（風鈴）の音
+                this.nodes.bells = { timers: [] };
+            }
+            
+            createWoodCreaks() {
+                // 木のきしみ音
+                this.nodes.creaks = { timers: [] };
+            }
+            
+            playBirdChirp() {
+                if (!this.audioContext || !this.enabled) return;
+                
+                // ランダムな鳥の鳴き声（短いFM合成）
+                const carrier = this.audioContext.createOscillator();
+                const modulator = this.audioContext.createOscillator();
+                const modGain = this.audioContext.createGain();
+                const birdGain = this.audioContext.createGain();
+                
+                const baseFreq = 2000 + Math.random() * 1500;
+                carrier.type = 'sine';
+                carrier.frequency.value = baseFreq;
+                
+                modulator.type = 'sine';
+                modulator.frequency.value = 10 + Math.random() * 20;
+                modGain.gain.value = 100 + Math.random() * 200;
+                
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+                
+                birdGain.gain.value = 0.008;
+                carrier.connect(birdGain);
+                birdGain.connect(this.masterGain);
+                
+                const now = this.audioContext.currentTime;
+                carrier.start(now);
+                modulator.start(now);
+                
+                // 短いチャープ
+                birdGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                carrier.stop(now + 0.15);
+                modulator.stop(now + 0.15);
+                
+                // 次の鳥（ランダムな間隔）
+                if (this.enabled) {
+                    const nextChirp = setTimeout(() => {
+                        this.playBirdChirp();
+                    }, 15000 + Math.random() * 25000);
+                    this.nodes.birds.timers.push(nextChirp);
+                }
+            }
+            
+            playBell() {
+                if (!this.audioContext || !this.enabled) return;
+                
+                // 風鈴のような音（減衰するサイン波）
+                const frequencies = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                const freq = frequencies[Math.floor(Math.random() * frequencies.length)];
+                
+                const osc = this.audioContext.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                
+                // フィルターでベルっぽい音に
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 400;
+                
+                const bellGain = this.audioContext.createGain();
+                bellGain.gain.value = 0.015;
+                
+                osc.connect(filter);
+                filter.connect(bellGain);
+                bellGain.connect(this.masterGain);
+                
+                const now = this.audioContext.currentTime;
+                osc.start(now);
+                bellGain.gain.exponentialRampToValueAtTime(0.001, now + 2);
+                osc.stop(now + 2);
+                
+                // 次のベル（ランダムな間隔）
+                if (this.enabled) {
+                    const nextBell = setTimeout(() => {
+                        this.playBell();
+                    }, 20000 + Math.random() * 30000);
+                    this.nodes.bells.timers.push(nextBell);
+                }
+            }
+            
+            playWaterDrop() {
+                if (!this.audioContext || !this.enabled) return;
+                
+                const osc = this.audioContext.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.value = 800 + Math.random() * 400;
+                
+                const dropGain = this.audioContext.createGain();
+                dropGain.gain.value = 0.02;
+                
+                osc.connect(dropGain);
+                dropGain.connect(this.masterGain);
+                
+                const now = this.audioContext.currentTime;
+                osc.start(now);
+                dropGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.stop(now + 0.3);
+                
+                // 次の水滴（ランダムな間隔）
+                if (this.enabled) {
+                    const nextDrop = setTimeout(() => {
+                        this.playWaterDrop();
+                    }, 5000 + Math.random() * 10000);
+                    this.nodes.drops.timers.push(nextDrop);
+                }
+            }
+
+            playWoodCreak() {
+                if (!this.audioContext || !this.enabled) return;
+                
+                const now = this.audioContext.currentTime;
+                // 木のきしみ（より深みのある複数レイヤー）
+                const count = 2 + Math.floor(Math.random() * 2);
+                
+                for (let i = 0; i < count; i++) {
+                    const osc = this.audioContext.createOscillator();
+                    const gain = this.audioContext.createGain();
+                    const filter = this.audioContext.createBiquadFilter();
+                    
+                    osc.type = 'sine';
+                    const baseFreq = 50 + Math.random() * 50;
+                    osc.frequency.setValueAtTime(baseFreq, now + i * 0.15);
+                    osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.7, now + 2);
+                    
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 250;
+                    
+                    gain.gain.setValueAtTime(0, now + i * 0.15);
+                    gain.gain.linearRampToValueAtTime(0.02, now + i * 0.15 + 0.3);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+                    
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.masterGain);
+                    gain.connect(this.reverbNode);
+                    
+                    osc.start(now + i * 0.15);
+                    osc.stop(now + 3);
+                }
+                
+                if (this.enabled) {
+                    const nextCreak = setTimeout(() => {
+                        this.playWoodCreak();
+                    }, 12000 + Math.random() * 15000);
+                    this.nodes.creaks.timers.push(nextCreak);
+                }
+            }
+
+            createGrassRustle() {
+                // 草のたなびき（ノイズをフィルタリングして再現）
+                this.nodes.grass = { timers: [] };
+            }
+
+            playGrassRustle() {
+                if (!this.audioContext || !this.enabled) return;
+                
+                const now = this.audioContext.currentTime;
+                const bufferSize = this.audioContext.sampleRate * 5;
+                const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                // 柔らかいノイズ
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * 0.5;
+                }
+                
+                const source = this.audioContext.createBufferSource();
+                source.buffer = buffer;
+                
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(600, now);
+                filter.Q.value = 0.4;
+                
+                // 風による周波数のたなびき
+                filter.frequency.exponentialRampToValueAtTime(1000, now + 2);
+                filter.frequency.exponentialRampToValueAtTime(500, now + 5);
+                
+                const gain = this.audioContext.createGain();
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.015, now + 2);
+                gain.gain.linearRampToValueAtTime(0, now + 5);
+                
+                source.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                
+                source.start(now);
+                source.stop(now + 5);
+                
+                if (this.enabled) {
+                    const nextRustle = setTimeout(() => {
+                        this.playGrassRustle();
+                    }, 15000 + Math.random() * 20000);
+                    this.nodes.grass.timers.push(nextRustle);
+                }
+            }
+            
+            toggle() {
+                if (!this.audioContext) {
+                    this.init();
+                }
+                
+                this.enabled = !this.enabled;
+                
+                if (this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+                
+                if (this.enabled) {
+                    this.nodes.rain.source.start();
+                    // 全てのドローン発振器を開始
+                    this.nodes.drone.oscillators.forEach(osc => osc.start());
+                    this.nodes.wind.source.start();
+                    this.nodes.wind.lfo.start();
+                    
+                    // フェードイン
+                    this.masterGain.gain.linearRampToValueAtTime(0.12, this.audioContext.currentTime + 2);
+                    
+                    // 不規則な環境音の開始（侘寂の美学に基づき、間隔を空ける）
+                    setTimeout(() => this.playWaterDrop(), 3000);
+                    setTimeout(() => this.playBirdChirp(), 8000);
+                    setTimeout(() => this.playBell(), 15000);
+                    setTimeout(() => this.playWoodCreak(), 5000);
+                    setTimeout(() => this.playGrassRustle(), 12000);
+                } else {
+                    // フェードアウト
+                    this.masterGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 1.5);
+                    
+                    // 全てのタイマーをクリア
+                    const timerNodes = ['drops', 'birds', 'bells', 'creaks', 'grass'];
+                    timerNodes.forEach(nodeName => {
+                        if (this.nodes[nodeName] && this.nodes[nodeName].timers) {
+                            this.nodes[nodeName].timers.forEach(timer => clearTimeout(timer));
+                            this.nodes[nodeName].timers = [];
+                        }
+                    });
+                    
+                    setTimeout(() => {
+                        try {
+                            if (this.nodes.rain && this.nodes.rain.source) this.nodes.rain.source.stop();
+                            if (this.nodes.drone && this.nodes.drone.oscillators) {
+                                this.nodes.drone.oscillators.forEach(osc => {
+                                    try { osc.stop(); } catch(e) {}
+                                });
+                            }
+                            if (this.nodes.wind) {
+                                if (this.nodes.wind.source) this.nodes.wind.source.stop();
+                                if (this.nodes.wind.lfo) this.nodes.wind.lfo.stop();
+                            }
+                        } catch (e) {}
+                        
+                        // 再作成のため初期化
+                        this.audioContext = null;
+                        this.nodes = {};
+                    }, 1600);
+                }
+                
+                return this.enabled;
+            }
+        }
+
+        // ==========================================
+        // メイン初期化
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const card = document.querySelector('.card');
+            const scanningGuide = document.getElementById('scanning-guide-container');
+            const customLoading = document.getElementById('custom-loading');
+            const uiTitle = document.querySelector('#ui-title');
+            const uiImage = document.querySelector('#ui-image');
+            const uiDesc = document.querySelector('#ui-desc');
+            const closeBtn = document.querySelector('.close-btn');
+            const imageLoading = document.getElementById('image-loading');
+            const scene = document.querySelector('a-scene');
+            const introOverlay = document.getElementById('intro-overlay');
+            const introStartBtn = document.getElementById('intro-start-btn');
+            const completionOverlay = document.getElementById('completion-overlay');
+            const completionRestartBtn = document.getElementById('completion-restart-btn');
+            const completionProfileBtn = document.getElementById('completion-profile-btn');
+            const profileOverlay = document.getElementById('profile-overlay');
+            const profileCloseBtn = document.getElementById('profile-close-btn');
+
+            let currentTargetIndex = -1;
+            let sceneLoaded = false;
+            let arReady = false;
+            let introShown = false;
+            let completionShown = false;
+            
+            // 閲覧履歴をlocalStorageから復元
+            const viewedEpisodes = new Set();
+            try {
+                const saved = localStorage.getItem('silence_ar_viewed_episodes');
+                if (saved) {
+                    JSON.parse(saved).forEach(idx => viewedEpisodes.add(idx));
+                }
+            } catch (e) {
+                console.warn('Failed to load viewed episodes:', e);
+            }
+            
+            const hasVisited = sessionStorage.getItem('silence_ar_visited') === 'true';
+            
+            // イントロ開始ボタン
+            if (introStartBtn) {
+                introStartBtn.addEventListener('click', () => {
+                    introOverlay.classList.remove('visible');
+                    introOverlay.classList.add('hidden');
+                    introShown = true;
+                    sessionStorage.setItem('silence_ar_visited', 'true');
+                    
+                    // イントロ終了後にガイドを表示
+                    scanningGuide.classList.add('visible');
+                });
+            }
+            
+            // 完了画面: リスタートボタン
+            if (completionRestartBtn) {
+                completionRestartBtn.addEventListener('click', () => {
+                    completionOverlay.classList.remove('visible');
+                    completionShown = true; /* 永続的に非表示化するためtrueを維持 */
+                    
+                    // スキャンガイドを再表示
+                    if (sceneLoaded) {
+                        scanningGuide.classList.remove('hidden');
+                        scanningGuide.classList.add('visible');
+                    }
+                    
+                    updateEpisodeIndicator(-1); 
+                    
+                    // シードのカレント表示のみリセット
+                    document.querySelectorAll('.episode-seed').forEach(seed => {
+                        seed.classList.remove('current');
+                    });
+
+                    // 完了演出後はボタンの配置は変更しない（既に正しい位置にある）
+                });
+            }
+
+            // 永続的なプロフィールボタン
+            const persistentProfileBtn = document.getElementById('persistent-profile-btn');
+            if (persistentProfileBtn) {
+                persistentProfileBtn.addEventListener('click', () => {
+                    if (profileOverlay) profileOverlay.classList.add('visible');
+                });
+            }
+            
+            // 完了画面: プロフィールボタン
+            if (completionProfileBtn) {
+                completionProfileBtn.addEventListener('click', () => {
+                    profileOverlay.classList.add('visible');
+                });
+            }
+            
+            // プロフィール: 閉じるボタン
+            if (profileCloseBtn) {
+                profileCloseBtn.addEventListener('click', () => {
+                    profileOverlay.classList.remove('visible');
+                });
+            }
+            
+            // プロフィール・オーバーレイクリックで閉じる（外側）
+            if (profileOverlay) {
+                profileOverlay.addEventListener('click', (e) => {
+                    if (e.target === profileOverlay) {
+                        profileOverlay.classList.remove('visible');
+                    }
+                });
+            }
+            
+            // 全エピソード閲覧時のエンディング表示
+            function showCompletion() {
+                if (completionShown) return;
+                completionShown = true;
+                
+                // テキストを順番にアニメーション
+                const lines = completionOverlay.querySelectorAll('.line');
+                lines.forEach((line, index) => {
+                    setTimeout(() => {
+                        line.style.opacity = '1';
+                        line.style.transform = 'translateY(0)';
+                        line.style.transition = 'all 1s ease';
+                    }, 500 + index * 800);
+                });
+                
+                completionOverlay.classList.add('visible');
+            }
+            
+            // ローディングマネージャー初期化
+            loadingManager = new LoadingManager();
+            loadingManager.setStageActive('library');
+            
+            // ライブラリ読み込み完了をチェック
+            if (window.AFRAME && window.MINDAR) {
+                loadingManager.setStageComplete('library');
+                loadingManager.setStageActive('targets');
+            } else {
+                // 少し待ってから再チェック
+                setTimeout(() => {
+                    loadingManager.setStageComplete('library');
+                    loadingManager.setStageActive('targets');
+                }, 500);
+            }
+            
+            // インスタレーション機能の初期化
+            const particleCanvas = document.getElementById('particle-canvas');
+            const particleSystem = new ParticleSystem(particleCanvas);
+            particleSystem.animate();
+            
+            const rippleContainer = document.getElementById('ripple-container');
+            const rippleEffect = new RippleEffect(rippleContainer);
+            
+            const theaterPoem = document.getElementById('theater-poem');
+            const theaterMode = new TheaterMode(theaterPoem);
+            
+            const ambientSound = new AmbientSound();
+            
+            // ジャイロスコープ
+            const mistLayer = document.querySelector('.mist-layer');
+            window.gyroData = { gamma: 0, beta: 0 }; // グローバルジャイロデータ
+            window.arTargetActive = false; // ターゲット認識状態
+            
+            const gyroParallax = new GyroParallax((x, y) => {
+                window.gyroData.gamma = x;
+                window.gyroData.beta = y;
+                if (mistLayer) mistLayer.style.transform = `translate(${x * 20}px, ${y * 10}px)`;
+                particleSystem.updateGyro(x, y);
+            });
+            
+            document.addEventListener('touchstart', (e) => {
+                gyroParallax.requestPermission();
+                if (!theaterMode.enabled || card.classList.contains('visible')) return;
+                const touch = e.touches[0];
+                rippleEffect.create(touch.clientX, touch.clientY);
+            });
+            
+            // iPad（デスクトップモード時のSafari）などタップがclickとして判定される環境向け
+            document.addEventListener('click', (e) => {
+                gyroParallax.requestPermission();
+                if (!theaterMode.enabled || card.classList.contains('visible')) return;
+                // clickイベントの場合はclientX/Yを直接使用
+                rippleEffect.create(e.clientX, e.clientY);
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (!theaterMode.enabled || card.classList.contains('visible')) return;
+                rippleEffect.create(e.clientX, e.clientY);
+            });
+            
+            // 没入モードボタン（統合）
+            const theaterBtn = document.getElementById('theater-mode-btn');
+            if (theaterBtn) {
+                theaterBtn.addEventListener('click', () => {
+                    const theaterEnabled = theaterMode.toggle();
+                    ambientSound.toggle();
+                    theaterBtn.classList.toggle('active', theaterEnabled);
+                });
+            }
+            
+            // エピソードインジケーター更新
+            function updateEpisodeIndicator(index, justViewed = false) {
+                const seeds = document.querySelectorAll('.episode-seed');
+                seeds.forEach((seed, i) => {
+                    seed.classList.remove('current');
+                    if (viewedEpisodes.has(i)) {
+                        seed.classList.add('viewed');
+                    }
+                });
+                
+                if (index >= 0 && index < seeds.length) {
+                    seeds[index].classList.add('current');
+                    if (justViewed) {
+                        viewedEpisodes.add(index);
+                        seeds[index].classList.add('viewed');
+                        
+                        // localStorageに保存
+                        try {
+                            localStorage.setItem('silence_ar_viewed_episodes', 
+                                JSON.stringify([...viewedEpisodes]));
+                        } catch (e) {
+                            console.warn('Failed to save viewed episodes:', e);
+                        }
+                    }
+                }
+            }
+            
+            // エピソードシードクリックイベント
+            document.querySelectorAll('.episode-seed').forEach((seed, index) => {
+                seed.addEventListener('click', () => {
+                    if (!viewedEpisodes.has(index)) return;
+                    const data = episodes[index];
+                    if (!data) return;
+                    
+                    const wasViewed = viewedEpisodes.has(index);
+                    const cardWasVisible = card.classList.contains('visible');
+                    
+                    window.arTargetActive = false;
+                    currentTargetIndex = index;
+                    
+                    const previewPrompt = document.getElementById('ar-preview-prompt');
+                    if (previewPrompt) previewPrompt.classList.remove('visible');
+                    
+                    scanningGuide.classList.remove('visible');
+                    scanningGuide.classList.add('hidden');
+                    
+                    const cardContent = document.querySelector('.card-content');
+                    if (cardContent) cardContent.scrollTop = 0;
+                    
+                    setEpisodeText(uiTitle, uiDesc, data);
+
+                    const isPreloaded = preloadedImageCache[index];
+                    if (!isPreloaded) imageLoading.classList.remove('hidden');
+                    uiImage.classList.remove('loaded');
+                    
+                    uiImage.onload = () => {
+                        imageLoading.classList.add('hidden');
+                        setTimeout(() => {
+                            uiImage.classList.add('loaded');
+                        }, isPreloaded ? 50 : 150);
+                    };
+                    
+                    uiImage.src = data.image;
+                    
+                    if (!cardWasVisible) {
+                        card.classList.remove('pulse-effect');
+                        setTimeout(() => {
+                            card.classList.add('visible');
+                            card.classList.add('pulse-effect');
+                        }, 80);
+                    } else {
+                        card.classList.add('visible');
+                    }
+                    
+                    if (!wasViewed) {
+                        viewedEpisodes.add(index);
+                        updateEpisodeIndicator(index, true);
+                        if (viewedEpisodes.size === 10 && !completionShown) {
+                            setTimeout(() => showCompletion(), 6000);
+                        }
+                    } else {
+                        updateEpisodeIndicator(index, false);
+                    }
+                    
+                    if (theaterBtn) theaterBtn.style.display = 'none';
+                    if (persistentProfileBtn) persistentProfileBtn.classList.add('hidden-manual');
+                });
+            });
+
+            // 画像プリロード完了チェック
+            function checkImagesLoaded() {
+                const loaded = Object.keys(preloadedImageCache).length;
+                loadingManager.updateImageProgress(loaded);
+                
+                if (loaded >= 10) {
+                    loadingManager.setStageComplete('images');
+                    return true;
+                }
+                return false;
+            }
+
+            // ロード完了判定（画像とカメラ両方準備OKか）
+            function checkAndFinishLoading() {
+                const imagesDone = loadingManager.stages.images.complete;
+                const cameraDone = loadingManager.stages.camera.complete;
+                
+                console.log(`Check finish: Images=${imagesDone}, Camera=${cameraDone}`);
+
+                if (imagesDone && cameraDone) {
+                    onAllReady();
+                }
+            }
+            
+            // 全ての準備完了時の処理
+            function onAllReady() {
+                if (arReady) return;
+                arReady = true;
+                
+                // 閲覧履歴を初期表示に反映
+                updateEpisodeIndicator(-1);
+                
+                // 少し待ってからフェードアウト
+                setTimeout(() => {
+                    customLoading.classList.add('fade-out');
+                    
+                    setTimeout(() => {
+                        // 初回かつ未訪問ならイントロを表示、そうでなければ即ガイド
+                        if (!hasVisited && !introShown) {
+                            introOverlay.classList.remove('hidden');
+                            introOverlay.classList.add('visible');
+                        } else {
+                            scanningGuide.classList.remove('hidden');
+                            scanningGuide.classList.add('visible');
+                        }
+                    }, 800);
+                }, 500);
+            }
+
+            // A-Frameシーンのロード完了を検知
+            const onSceneLoaded = () => {
+                if (sceneLoaded) return;
+                sceneLoaded = true;
+                
+                loadingManager.setStageComplete('targets');
+                loadingManager.setStageActive('images');
+                
+                // シーンロード後に段階的プリロード開始（帯域を圧迫しない）
+                startStaggeredPreload();
+                
+                // 画像プリロード状況を定期的にチェック
+                const imageCheckInterval = setInterval(() => {
+                    if (checkImagesLoaded()) {
+                        clearInterval(imageCheckInterval);
+                        loadingManager.setStageActive('camera');
+                        checkAndFinishLoading();
+                    }
+                }, 200);
+                
+                // タイムアウト（5秒）で画像ロードを強制完了
+                setTimeout(() => {
+                    clearInterval(imageCheckInterval);
+                    loadingManager.setStageComplete('images');
+                    loadingManager.setStageActive('camera');
+                    checkAndFinishLoading();
+                }, 5000);
+            };
+            
+            // AR準備完了（カメラ起動後）
+            const onArReady = () => {
+                console.log('AR is ready');
+                loadingManager.setStageComplete('camera');
+                checkAndFinishLoading();
+            };
+
+            if (scene.hasLoaded) {
+                onSceneLoaded();
+            } else {
+                scene.addEventListener('loaded', onSceneLoaded);
+                scene.addEventListener('renderstart', onSceneLoaded);
+            }
+            
+            // MindAR の arReady イベントを監視
+            scene.addEventListener('arReady', onArReady);
+            
+            // フォールバック：一定時間後に強制的に準備完了
+            setTimeout(() => {
+                if (!arReady) {
+                    console.log('Forcing AR ready state');
+                    onAllReady();
+                }
+            }, 8000);
+
+            // 閉じるボタン
+            closeBtn.addEventListener('click', () => {
+                card.classList.remove('visible');
+                card.classList.remove('pulse-effect');
+                
+                // ターゲット認識状態をリセット
+                window.arTargetActive = false;
+                currentTargetIndex = -1;
+                
+                // プレビュープロンプトも非表示
+                const previewPrompt = document.getElementById('ar-preview-prompt');
+                if (previewPrompt) {
+                    previewPrompt.classList.remove('visible');
+                }
+                
+                if (sceneLoaded) {
+                    scanningGuide.classList.remove('hidden');
+                    scanningGuide.classList.add('visible');
+                }
+                updateEpisodeIndicator(-1);
+                
+                // ボタンを再表示
+                if (theaterBtn) theaterBtn.style.display = '';
+                if (persistentProfileBtn) persistentProfileBtn.classList.remove('hidden-manual');
+            });
+
+            const onTargetFound = (index) => {
+                if (window.arTargetActive && currentTargetIndex === index) return;
+                if (card.classList.contains('visible') ||
+                    completionOverlay.classList.contains('visible') || 
+                    profileOverlay.classList.contains('visible')) return;
+
+                console.log('Target Found:', index);
+                currentTargetIndex = index;
+                window.arTargetActive = true;
+                
+                const targetEntity = document.querySelector(`#target-${index}`);
+                if (targetEntity) {
+                    const child = targetEntity.querySelector('[anatomical-reveal]');
+                    if (child?.components['anatomical-reveal']?.loadTextures) {
+                        child.components['anatomical-reveal'].loadTextures();
+                    }
+                }
+                
+                scanningGuide.classList.remove('visible');
+                scanningGuide.classList.add('hidden');
+
+                const data = episodes[index];
+                if (!data) return;
+                
+                const cardContent = document.querySelector('.card-content');
+                if (cardContent) cardContent.scrollTop = 0;
+                
+                setEpisodeText(uiTitle, uiDesc, data);
+
+                const isPreloaded = preloadedImageCache[index];
+                if (!isPreloaded) imageLoading.classList.remove('hidden');
+                uiImage.classList.remove('loaded');
+                
+                uiImage.onload = () => {
+                    imageLoading.classList.add('hidden');
+                    setTimeout(() => {
+                        uiImage.classList.add('loaded');
+                    }, isPreloaded ? 50 : 150);
+                };
+                
+                uiImage.onerror = () => {
+                    imageLoading.classList.add('hidden');
+                    console.error('Failed to load image:', data.image);
+                };
+                
+                uiImage.src = data.image;
+                
+                const previewPrompt = document.getElementById('ar-preview-prompt');
+                if (previewPrompt) {
+                    previewPrompt.querySelector('.preview-title').textContent = data.title;
+                    previewPrompt.classList.add('visible');
+                }
+                
+                updateEpisodeIndicator(index, false);
+                if (theaterBtn) theaterBtn.style.display = 'none';
+                if (persistentProfileBtn) persistentProfileBtn.classList.add('hidden-manual');
+            };
+            
+            // プレビュープロンプトをタップでカードUI表示
+            const showCardUI = () => {
+                if (currentTargetIndex < 0) return;
+                
+                const previewPrompt = document.getElementById('ar-preview-prompt');
+                if (previewPrompt) previewPrompt.classList.remove('visible');
+                
+                card.classList.remove('visible');
+                card.classList.remove('pulse-effect');
+                
+                setTimeout(() => {
+                    card.classList.add('visible');
+                    card.classList.add('pulse-effect');
+                    updateEpisodeIndicator(currentTargetIndex, true);
+                    if (viewedEpisodes.size === 10 && !completionShown) {
+                        setTimeout(() => showCompletion(), 6000);
+                    }
+                }, 80);
+            };
+            
+            // プレビュープロンプトのクリックイベント
+            const previewPrompt = document.getElementById('ar-preview-prompt');
+            if (previewPrompt) previewPrompt.addEventListener('click', showCardUI);
+            
+            // a-scene全体のタップでもカードUI表示（プレビュー状態の時のみ）
+            scene.addEventListener('click', () => {
+                const promptVisible = previewPrompt && previewPrompt.classList.contains('visible');
+                if (promptVisible && !card.classList.contains('visible')) {
+                    showCardUI();
+                }
+            });
+
+            const onTargetLost = (index) => {
+                console.log('Target Lost:', index);
+                // ターゲットが見えなくなったら認識状態をリセット
+                if (currentTargetIndex === index) {
+                    window.arTargetActive = false;
+                    
+                    // プレビュープロンプトを非表示
+                    const previewPrompt = document.getElementById('ar-preview-prompt');
+                    if (previewPrompt) {
+                        previewPrompt.classList.remove('visible');
+                    }
+                    
+                    // スキャンガイドを再表示（カードが表示されていない場合のみ）
+                    const card = document.querySelector('.card');
+                    if (card && !card.classList.contains('visible')) {
+                        scanningGuide.classList.remove('hidden');
+                        scanningGuide.classList.add('visible');
+                        
+                        // 「没入」「製作者」ボタンも再表示
+                        if (theaterBtn) theaterBtn.style.display = '';
+                        if (persistentProfileBtn) persistentProfileBtn.classList.remove('hidden-manual');
+                    }
+                }
+            };
+
+            for (let i = 0; i < 10; i++) {
+                const entity = document.querySelector(`#target-${i}`);
+                if (entity) {
+                    entity.addEventListener('targetFound', () => onTargetFound(i));
+                    entity.addEventListener('targetLost', () => onTargetLost(i));
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+        <!-- 初回訪問時イントロ -->
+        <div id="intro-overlay" class="intro-overlay">
+            <div class="intro-title">沈黙の解剖図譜</div>
+            <div class="intro-subtitle">不可視の愛に関する空間的考察</div>
+            <div class="intro-poem">
+                空気に溶けきれなかった感情。<br>
+                行き場を失った本音、喉の奥に沈んだ声<br>
+                それらは、消えたのではない。<br>
+                <br>
+                この庭の土の深いところで、<br>
+                静かに、でも確かに、層を重ねている。
+            </div>
+            <button class="intro-start" id="intro-start-btn">標本室の扉を開く</button>
+        </div>
+    
+        <!-- 完了エンディング -->
+        <div id="completion-overlay" class="completion-overlay">
+            <div class="completion-text">
+                <div class="line">私たちが選んだ沈黙は、</div>
+                <div class="line">拒絶の壁ではなかった。</div>
+                <div class="line">壊れやすいものを守るための、</div>
+                <div class="line">もっとも静かな抱擁だった。</div>
+                <div class="line"><br></div>
+                <div class="line">名前をつければ割れてしまうものを、</div>
+                <div class="line">暗がりの中で両手で包むように、</div>
+                <div class="line">私たちは口を閉ざした。</div>
+                <div class="line"><br></div>
+                <div class="line">語られなかった愛は、</div>
+                <div class="line">今もこの庭で、静かに息をしている。</div>
+            </div>
+            
+            <div class="completion-actions">
+                <button class="completion-btn restart-btn" id="completion-restart-btn">もう一度、庭を歩く</button>
+                <button class="completion-btn profile-btn" id="completion-profile-btn">制作者を見る</button>
+            </div>
+        </div>
+    
+    <!-- プロフィールオーバーレイ -->
+    <div id="profile-overlay">
+        <div class="profile-card">
+            <div class="profile-content">
+                <div class="grid-bg"></div>
+                <div class="profile-corner pc-tl"></div>
+                <div class="profile-corner pc-tr"></div>
+                <div class="profile-corner pc-bl"></div>
+                <div class="profile-corner pc-br"></div>
+                
+                <div class="profile-close" id="profile-close-btn"></div>
+                
+                <div class="profile-image-box">
+                    <div class="profile-orbit orbit-1"></div>
+                    <div class="profile-orbit orbit-2"></div>
+                    <img src="../images/profile_kikuchi.jpg" alt="Mitsutaka Kikuchi" class="profile-img">
+                </div>
+                
+                <div class="profile-role">Profile</div>
+                <div class="profile-name">菊池 光峰</div>
+                <div class="profile-name-en">Mitsutaka Kikuchi</div>
+                
+                <div class="profile-desc">
+                    東京藝術大学音楽学部<br>
+                    邦楽科 長唄三味線専攻<br>
+                </div>
+                
+                <a href="https://www.instagram.com/_mitsu_yoshi_taka?igsh=ejAwZTZ5djNmcHl5&utm_source=qr" target="_blank" class="profile-link">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    <span>Connect on Instagram</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 環境エフェクト -->
+    <div id="environment-effects">
+        <div class="mist-layer"></div>
+        <div class="light-rays"></div>
+    </div>
+    
+    <!-- ヴィネットオーバーレイ -->
+    <div id="vignette-overlay"></div>
+    
+    <!-- パーティクルキャンバス -->
+    <canvas id="particle-canvas"></canvas>
+    
+    <!-- タッチリップルコンテナ -->
+    <div id="ripple-container"></div>
+    
+    <!-- シアターモード詩テキスト -->
+    <div id="theater-poem">
+        <div class="poem-text"></div>
+    </div>
+    
+    <!-- エピソード進行インジケーター -->
+    <div id="episode-indicator">
+        <div class="episode-seed">
+            <span class="episode-seed-label">01 支柱</span>
+        </div>
+        <div class="episode-seed">
+            <span class="episode-seed-label">02 蔦</span>
+        </div>
+        <div class="episode-seed">
+            <span class="episode-seed-label">03 雨</span>
+        </div>
+        <div class="episode-seed">
+            <span class="episode-seed-label">04 化石</span>
+        </div>
+        <div class="episode-seed">
+            <span class="episode-seed-label">05 檻</span>
+        </div>
+        <div class="episode-seed">
+            <span class="episode-seed-label">06 接ぎ木</span>
+        </div>
+        <div class="episode-seed">
+            <span class="episode-seed-label">07 要塞</span>
+        </div>
+        <div class="episode-seed">
+            <span class="episode-seed-label">08 剪定</span>
+        </div>
+        <div class="episode-seed">
+            <span class="episode-seed-label">09 迷路</span>
+        </div>
+        <div class="episode-seed">
+            <span class="episode-seed-label">10 種</span>
+        </div>
+    </div>
+    
+    <!-- シアターモードボタン -->
+    <div id="theater-mode-btn">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+        </svg>
+        <span>没入</span>
+    </div>
+
+    <!-- 永続的なプロフィールボタン（完了後に出現） -->
+    <div id="persistent-profile-btn">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+        </svg>
+        <span>制作者</span>
+    </div>
+
+    
+    <!-- カスタムローディング画面（進捗表示付き） -->
+    <div id='custom-loading'>
+        <div class='loading-garden'>
+            <div class='circle'></div>
+            <div class='circle'></div>
+            <div class='circle'></div>
+            <div class='circle'></div>
+            <div class='circle'></div>
+        </div>
+
+        <div class='loading-text' id='loading-main-text'>記憶の庭へ、降りていきます...</div>
+        
+        <!-- 進捗バー -->
+        <div class='loading-progress-container'>
+            <div class='loading-progress-bar'>
+                <div class='loading-progress-fill' id='loading-progress-fill'></div>
+            </div>
+            <div class='loading-progress-text' id='loading-progress-text'>0%</div>
+        </div>
+        
+        <!-- 段階表示 -->
+        <div class='loading-stages'>
+            <div class='loading-stage' id='stage-library'>場の準備</div>
+            <div class='loading-stage' id='stage-targets'>記憶の照合</div>
+            <div class='loading-stage' id='stage-images'>断片の採集</div>
+            <div class='loading-stage' id='stage-camera'>視界を開く</div>
+        </div>
+    </div>
+    
+    <!-- UIオーバーレイ -->
+    <div id='ui-overlay'>
+        <!-- スキャンガイドコンテナ -->
+        <div id='scanning-guide-container'>
+            <!-- ガイド本体 -->
+            <div id='scanning-guide'>
+                <!-- 蔦アニメーション（スキャン待機中） -->
+                <div class='scan-loading-garden'>
+                    <div class='circle'></div>
+                    <div class='circle'></div>
+                    <div class='circle'></div>
+                    <div class='circle'></div>
+                    <div class='circle'></div>
+                </div>
+                <div class='scan-mist'></div>
+                <div class='corner corner-tl'></div>
+                <div class='corner corner-tr'></div>
+                <div class='corner corner-bl'></div>
+                <div class='corner corner-br'></div>
+            </div>
+
+            <!-- ガイドテキスト -->
+            <div class='scanning-guide-text'>語られなかった言葉の奥に、焦点を合わせて…</div>
+
+            <!-- 枠外に散らばる象徴的な光 -->
+            <div class="symbol-particle p1"></div>
+            <div class="symbol-particle p2"></div>
+            <div class="symbol-particle p3"></div>
+            <div class="symbol-particle p4"></div>
+            <div class="symbol-particle p5"></div>
+            <div class="symbol-particle p6"></div>
+        </div>
+        
+        <!-- ARプレビュープロンプト（タップで詳細表示） -->
+        <div id="ar-preview-prompt">
+            <div class="preview-content">
+                <div class="preview-title">Episode.01
+矯正する支柱</div>
+                <div class="preview-hint">タップして、深層をひらく</div>
+                <div class="preview-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- カードUI -->
+        <div class='card'>
+            <div class='card-image-container'>
+                <!-- 画像ローディング表示（呼吸する円） -->
+                <div class='image-loading' id='image-loading'>
+                    <div class='card-loading-garden'>
+                        <div class='circle'></div>
+                        <div class='circle'></div>
+                        <div class='circle'></div>
+                        <div class='circle'></div>
+                        <div class='circle'></div>
+                    </div>
+                    <div class='card-loading-text'>沈黙を、解剖しています…</div>
+                </div>
+                <img id='ui-image' src='' alt='Episode Image'>
+                <div class='close-btn'>×</div>
+            </div>
+            
+            <div class='card-content'>
+                <h2 id='ui-title'>No.xx Title</h2>
+                <div class='description-box' id='ui-desc'>
+                    Text description...
+                </div>
+                <div class='footer-note'>沈黙の解剖図譜</div>
+            </div>
+        </div>
+    </div>
+
+    <a-scene mindar-image="imageTargetSrc: ../targets.mind; autoStart: true; uiLoading: no; uiError: yes; uiScanning: no;" 
+             color-space="sRGB" 
+             renderer="colorManagement: true, physicallyCorrectLights" 
+             vr-mode-ui="enabled: false" 
+             device-orientation-permission-ui="enabled: false">
+        
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <!-- 10枚のターゲットエンティティ（解剖学的露見シェーダー適用） -->
+        <a-entity mindar-image-target="targetIndex: 0" id="target-0">
+            <a-entity 
+                geometry="primitive: plane; width: 1; height: 1" 
+                position="0 0 0" 
+                rotation="0 0 0" 
+                anatomical-reveal="
+                    layerA: ../images/layerA_0.jpg; 
+                    layerB: ../images/layerB_0.jpg; 
+                    depthMap: ../images/layerB_0_depth.png; 
+                    strength: 0.6;
+                    edgeColor: #00ffaa
+                ">
+            </a-entity>
+        </a-entity>
+        
+        <a-entity mindar-image-target="targetIndex: 1" id="target-1">
+            <a-entity 
+                geometry="primitive: plane; width: 1; height: 1" 
+                position="0 0 0" 
+                rotation="0 0 0" 
+                anatomical-reveal="
+                    layerA: ../images/layerA_1.jpg; 
+                    layerB: ../images/layerB_1.jpg; 
+                    depthMap: ../images/layerB_1_depth.png; 
+                    strength: 0.6;
+                    edgeColor: #00ffaa
+                ">
+            </a-entity>
+        </a-entity>
+        
+        <a-entity mindar-image-target="targetIndex: 2" id="target-2">
+            <a-entity 
+                geometry="primitive: plane; width: 1; height: 1" 
+                position="0 0 0" 
+                rotation="0 0 0" 
+                anatomical-reveal="
+                    layerA: ../images/layerA_2.jpg; 
+                    layerB: ../images/layerB_2.jpg; 
+                    depthMap: ../images/layerB_2_depth.png; 
+                    strength: 0.6;
+                    edgeColor: #00ffaa
+                ">
+            </a-entity>
+        </a-entity>
+        
+        <a-entity mindar-image-target="targetIndex: 3" id="target-3">
+            <a-entity 
+                geometry="primitive: plane; width: 1; height: 1" 
+                position="0 0 0" 
+                rotation="0 0 0" 
+                anatomical-reveal="
+                    layerA: ../images/layerA_3.jpg; 
+                    layerB: ../images/layerB_3.jpg; 
+                    depthMap: ../images/layerB_3_depth.png; 
+                    strength: 0.6;
+                    edgeColor: #00ffaa
+                ">
+            </a-entity>
+        </a-entity>
+        
+        <a-entity mindar-image-target="targetIndex: 4" id="target-4">
+            <a-entity 
+                geometry="primitive: plane; width: 1; height: 1" 
+                position="0 0 0" 
+                rotation="0 0 0" 
+                anatomical-reveal="
+                    layerA: ../images/layerA_4.jpg; 
+                    layerB: ../images/layerB_4.jpg; 
+                    depthMap: ../images/layerB_4_depth.png; 
+                    strength: 0.6;
+                    edgeColor: #00ffaa
+                ">
+            </a-entity>
+        </a-entity>
+        
+        <a-entity mindar-image-target="targetIndex: 5" id="target-5">
+            <a-entity 
+                geometry="primitive: plane; width: 1; height: 1" 
+                position="0 0 0" 
+                rotation="0 0 0" 
+                anatomical-reveal="
+                    layerA: ../images/layerA_5.jpg; 
+                    layerB: ../images/layerB_5.jpg; 
+                    depthMap: ../images/layerB_5_depth.png; 
+                    strength: 0.6;
+                    edgeColor: #00ffaa
+                ">
+            </a-entity>
+        </a-entity>
+        
+        <a-entity mindar-image-target="targetIndex: 6" id="target-6">
+            <a-entity 
+                geometry="primitive: plane; width: 1; height: 1" 
+                position="0 0 0" 
+                rotation="0 0 0" 
+                anatomical-reveal="
+                    layerA: ../images/layerA_6.jpg; 
+                    layerB: ../images/layerB_6.jpg; 
+                    depthMap: ../images/layerB_6_depth.png; 
+                    strength: 0.6;
+                    edgeColor: #00ffaa
+                ">
+            </a-entity>
+        </a-entity>
+        
+        <a-entity mindar-image-target="targetIndex: 7" id="target-7">
+            <a-entity 
+                geometry="primitive: plane; width: 1; height: 1" 
+                position="0 0 0" 
+                rotation="0 0 0" 
+                anatomical-reveal="
+                    layerA: ../images/layerA_7.jpg; 
+                    layerB: ../images/layerB_7.jpg; 
+                    depthMap: ../images/layerB_7_depth.png; 
+                    strength: 0.6;
+                    edgeColor: #00ffaa
+                ">
+            </a-entity>
+        </a-entity>
+        
+        <a-entity mindar-image-target="targetIndex: 8" id="target-8">
+            <a-entity 
+                geometry="primitive: plane; width: 1; height: 1" 
+                position="0 0 0" 
+                rotation="0 0 0" 
+                anatomical-reveal="
+                    layerA: ../images/layerA_8.jpg; 
+                    layerB: ../images/layerB_8.jpg; 
+                    depthMap: ../images/layerB_8_depth.png; 
+                    strength: 0.6;
+                    edgeColor: #00ffaa
+                ">
+            </a-entity>
+        </a-entity>
+        
+        <a-entity mindar-image-target="targetIndex: 9" id="target-9">
+            <a-entity 
+                geometry="primitive: plane; width: 1; height: 1" 
+                position="0 0 0" 
+                rotation="0 0 0" 
+                anatomical-reveal="
+                    layerA: ../images/layerA_9.jpg; 
+                    layerB: ../images/layerB_9.jpg; 
+                    depthMap: ../images/layerB_9_depth.png; 
+                    strength: 0.6;
+                    edgeColor: #00ffaa
+                ">
+            </a-entity>
+        </a-entity>
+        
+    </a-scene>
+</body>
+</html>
