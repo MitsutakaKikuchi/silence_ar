@@ -70,7 +70,7 @@
     color: rgba(255, 255, 255, 0.7);
     font-size: 0.92rem;
     letter-spacing: 0.35em;
-    font-family: 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+    font-family: 'Shippori Mincho B1', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
     animation: textBreath 3s ease-in-out infinite;
     text-shadow: 0 0 15px rgba(0, 255, 170, 0.2);
 }

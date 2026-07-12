@@ -4,6 +4,7 @@
 // ==========================================
 
 // スタイル（関心別に分割）
+import './styles/fonts.css';
 import './styles/base.css';
 import './styles/fx.css';
 import './styles/indicator.css';
@@ -29,6 +30,8 @@ import { TimeBasedEnvironment } from './fx/timeEnvironment.js';
 import { ParticleSystem } from './fx/petals.js';
 import { RippleEffect } from './ui/ripple.js';
 import { TheaterMode } from './ui/theaterMode.js';
+import { openCard, closeCard, pingSeed } from './ui/cardMotion.js';
+import { swapOverlay } from './ui/transitions.js';
 import { AmbientSound } from './audio/ambientSound.js';
 
 // ARシーン（カメラ起動はユーザージェスチャーまで遅延）
@@ -122,32 +125,33 @@ function mainInit() {
     }
     
     // 永続的なプロフィールボタン
+    // （表示切替は View Transitions 対応環境ではページ全体のクロスフェードになる）
     const persistentProfileBtn = document.getElementById('persistent-profile-btn');
     if (persistentProfileBtn) {
         persistentProfileBtn.addEventListener('click', () => {
-            if (profileOverlay) profileOverlay.classList.add('visible');
+            if (profileOverlay) swapOverlay(() => profileOverlay.classList.add('visible'));
         });
     }
-    
+
     // 完了画面: プロフィールボタン
     if (completionProfileBtn) {
         completionProfileBtn.addEventListener('click', () => {
-            profileOverlay.classList.add('visible');
+            swapOverlay(() => profileOverlay.classList.add('visible'));
         });
     }
-    
+
     // プロフィール: 閉じるボタン
     if (profileCloseBtn) {
         profileCloseBtn.addEventListener('click', () => {
-            profileOverlay.classList.remove('visible');
+            swapOverlay(() => profileOverlay.classList.remove('visible'));
         });
     }
-    
+
     // プロフィール・オーバーレイクリックで閉じる（外側）
     if (profileOverlay) {
         profileOverlay.addEventListener('click', (e) => {
             if (e.target === profileOverlay) {
-                profileOverlay.classList.remove('visible');
+                swapOverlay(() => profileOverlay.classList.remove('visible'));
             }
         });
     }
@@ -248,10 +252,11 @@ function mainInit() {
             if (justViewed) {
                 viewedEpisodes.add(index);
                 seeds[index].classList.add('viewed');
-                
+                pingSeed(seeds[index]); // 発芽ポップ
+
                 // localStorageに保存
                 try {
-                    localStorage.setItem('silence_ar_viewed_episodes', 
+                    localStorage.setItem('silence_ar_viewed_episodes',
                         JSON.stringify([...viewedEpisodes]));
                 } catch (e) {
                     console.warn('Failed to save viewed episodes:', e);
@@ -298,15 +303,11 @@ function mainInit() {
             uiImage.src = data.image;
             
             if (!cardWasVisible) {
-                card.classList.remove('pulse-effect');
-                setTimeout(() => {
-                    card.classList.add('visible');
-                    card.classList.add('pulse-effect');
-                }, 80);
+                setTimeout(() => openCard(card), 80);
             } else {
-                card.classList.add('visible');
+                openCard(card);
             }
-            
+
             if (!wasViewed) {
                 viewedEpisodes.add(index);
                 updateEpisodeIndicator(index, true);
@@ -438,9 +439,8 @@ function mainInit() {
     
     // 閉じるボタン
     closeBtn.addEventListener('click', () => {
-        card.classList.remove('visible');
-        card.classList.remove('pulse-effect');
-        
+        closeCard(card);
+
         // ターゲット認識状態をリセット
         state.arTargetActive = false;
         currentTargetIndex = -1;
@@ -521,13 +521,9 @@ function mainInit() {
         
         const previewPrompt = document.getElementById('ar-preview-prompt');
         if (previewPrompt) previewPrompt.classList.remove('visible');
-        
-        card.classList.remove('visible');
-        card.classList.remove('pulse-effect');
-        
+
         setTimeout(() => {
-            card.classList.add('visible');
-            card.classList.add('pulse-effect');
+            openCard(card);
             updateEpisodeIndicator(currentTargetIndex, true);
             if (viewedEpisodes.size === 10 && !completionShown) {
                 setTimeout(() => showCompletion(), 6000);

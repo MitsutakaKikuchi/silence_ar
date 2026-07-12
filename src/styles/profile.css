@@ -102,7 +102,7 @@
 .profile-name {
     font-size: 1.4rem; color: #fff;
     text-align: center; margin-bottom: 8px;
-    font-family: 'Yu Mincho', serif;
+    font-family: 'Shippori Mincho B1', 'Yu Mincho', serif;
     letter-spacing: 0.2em;
 }
 
@@ -116,7 +116,7 @@
 .profile-desc {
     font-size: 0.8rem; color: rgba(220, 220, 220, 0.8);
     line-height: 2; text-align: center; margin-bottom: 40px;
-    font-family: 'Yu Mincho', serif;
+    font-family: 'Shippori Mincho B1', 'Yu Mincho', serif;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding: 20px 0;

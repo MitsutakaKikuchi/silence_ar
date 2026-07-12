@@ -41,3 +41,4 @@ node_modules/
 *.backup
 node_modules/
 dist/
+_dev_tools/fonts/

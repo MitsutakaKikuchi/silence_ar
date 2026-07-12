@@ -9,7 +9,7 @@
 body {
     margin: 0;
     overflow: hidden;
-    font-family: 'Yu Mincho', 'Hiragino Mincho ProN', 'serif';
+    font-family: 'Shippori Mincho B1', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
     touch-action: none; /* タッチの干渉を防ぐ */
     /* わびさび: 和紙のようなテクスチャを全体に追加 */
     background-image: var(--paper-texture);

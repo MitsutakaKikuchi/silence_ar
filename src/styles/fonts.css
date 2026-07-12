@@ -1,0 +1,20 @@
+/* ========================================
+   しっぽり明朝 B1（使用グリフのみのサブセット・セルフホスト）
+   文言を編集したら `npm run subset` を再実行すること。
+   未サブセット文字はシステム明朝でフォールバック表示される。
+   ======================================== */
+@font-face {
+    font-family: 'Shippori Mincho B1';
+    src: url('../assets/fonts/ShipporiMinchoB1-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Shippori Mincho B1';
+    src: url('../assets/fonts/ShipporiMinchoB1-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
