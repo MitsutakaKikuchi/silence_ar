@@ -210,7 +210,10 @@ function mainInit() {
         document.fonts.load('500 1em "Shippori Mincho B1"')
     ]).catch(() => {}).finally(() => {
         loadingManager.setStageComplete('fonts');
-        loadingManager.setStageActive('targets');
+        // 図譜の取得が先に終わっていた場合はステージ表示を巻き戻さない
+        if (!loadingManager.stages.targets.complete) {
+            loadingManager.setStageActive('targets');
+        }
     });
     
     // インスタレーション機能の初期化
