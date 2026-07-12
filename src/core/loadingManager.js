@@ -12,6 +12,7 @@ export class LoadingManager {
         this.imageProgress = 0;
         this.totalImages = 10;
         this.loadedImages = 0;
+        this.partials = {}; // ステージ途中経過 (0.0〜1.0)
         
         this.progressFill = document.getElementById('loading-progress-fill');
         this.progressText = document.getElementById('loading-progress-text');
@@ -43,6 +44,12 @@ export class LoadingManager {
         this.updateProgress();
     }
     
+    // ステージの途中経過を反映（targets.mind のストリーム取得などで使用）
+    setStagePartial(stageName, ratio) {
+        this.partials[stageName] = Math.max(0, Math.min(ratio, 1));
+        this.updateProgress();
+    }
+
     updateProgress() {
         let total = 0;
         for (const [key, stage] of Object.entries(this.stages)) {
@@ -50,6 +57,8 @@ export class LoadingManager {
                 total += stage.weight;
             } else if (key === 'images') {
                 total += this.imageProgress;
+            } else if (this.partials[key]) {
+                total += this.partials[key] * stage.weight;
             }
         }
         

@@ -15,12 +15,12 @@ import './styles/profile.css';
 import './styles/intro.css';
 import './styles/card.css';
 
-// AR（anatomical-reveal の登録は import の副作用で行われる）
-import './ar/anatomicalReveal.js';
-import { injectARScene } from './ar/arScene.js';
+// AR（MindAR Three.js版）
+import { ARScene, fetchTargets } from './ar/arScene.js';
 
 // コア・UI・演出
 import { state } from './core/state.js';
+import { events } from './core/events.js';
 import { LoadingManager } from './core/loadingManager.js';
 import { GyroParallax } from './core/gyro.js';
 import { preloadedImageCache, startStaggeredPreload } from './core/preload.js';
@@ -31,8 +31,8 @@ import { RippleEffect } from './ui/ripple.js';
 import { TheaterMode } from './ui/theaterMode.js';
 import { AmbientSound } from './audio/ambientSound.js';
 
-// コンポーネント登録済みのこの時点で a-scene を DOM へ追加する
-injectARScene();
+// ARシーン（カメラ起動はユーザージェスチャーまで遅延）
+const arScene = new ARScene(document.querySelector('#ar-container'));
 
 // 時間帯による環境変化
 let timeEnvironment = null;
@@ -54,7 +54,7 @@ function mainInit() {
     const uiDesc = document.querySelector('#ui-desc');
     const closeBtn = document.querySelector('.close-btn');
     const imageLoading = document.getElementById('image-loading');
-    const scene = document.querySelector('a-scene');
+    const arContainer = document.querySelector('#ar-container');
     const introOverlay = document.getElementById('intro-overlay');
     const introStartBtn = document.getElementById('intro-start-btn');
     const completionOverlay = document.getElementById('completion-overlay');
@@ -89,7 +89,10 @@ function mainInit() {
             introOverlay.classList.add('hidden');
             introShown = true;
             sessionStorage.setItem('silence_ar_visited', 'true');
-            
+
+            // ユーザージェスチャー起点でカメラを起動（iOSの権限連鎖）
+            startARSafely();
+
             // イントロ終了後にガイドを表示
             scanningGuide.classList.add('visible');
         });
@@ -171,17 +174,9 @@ function mainInit() {
     loadingManager = new LoadingManager();
     loadingManager.setStageActive('library');
     
-    // ライブラリ読み込み完了をチェック
-    if (window.AFRAME && window.MINDAR) {
-        loadingManager.setStageComplete('library');
-        loadingManager.setStageActive('targets');
-    } else {
-        // 少し待ってから再チェック
-        setTimeout(() => {
-            loadingManager.setStageComplete('library');
-            loadingManager.setStageActive('targets');
-        }, 500);
-    }
+    // ライブラリはバンドル済み（このコードが動いている時点で読み込み完了）
+    loadingManager.setStageComplete('library');
+    loadingManager.setStageActive('targets');
     
     // インスタレーション機能の初期化
     const particleCanvas = document.getElementById('particle-canvas');
@@ -364,11 +359,13 @@ function mainInit() {
             customLoading.classList.add('fade-out');
             
             setTimeout(() => {
-                // 初回かつ未訪問ならイントロを表示、そうでなければ即ガイド
+                // 初回かつ未訪問ならイントロを表示（カメラはタップ時に起動）、
+                // 再訪時は即カメラ起動してガイドへ
                 if (!hasVisited && !introShown) {
                     introOverlay.classList.remove('hidden');
                     introOverlay.classList.add('visible');
                 } else {
+                    startARSafely();
                     scanningGuide.classList.remove('hidden');
                     scanningGuide.classList.add('visible');
                 }
@@ -376,59 +373,68 @@ function mainInit() {
         }, 500);
     }
     
-    // A-Frameシーンのロード完了を検知
-    const onSceneLoaded = () => {
-        if (sceneLoaded) return;
-        sceneLoaded = true;
-        
-        loadingManager.setStageComplete('targets');
-        loadingManager.setStageActive('images');
-        
-        // シーンロード後に段階的プリロード開始（帯域を圧迫しない）
-        startStaggeredPreload(loadingManager);
-        
-        // 画像プリロード状況を定期的にチェック
-        const imageCheckInterval = setInterval(() => {
-            if (checkImagesLoaded()) {
-                clearInterval(imageCheckInterval);
-                loadingManager.setStageActive('camera');
-                checkAndFinishLoading();
+    // カメラ起動 + 描画ループ開始。
+    // 初回訪問はイントロのタップから、再訪時は onAllReady から呼ばれる。
+    async function startARSafely() {
+        try {
+            await arScene.start();
+        } catch (err) {
+            console.error('カメラ起動に失敗:', err);
+            const guideText = document.querySelector('.scanning-guide-text');
+            if (guideText) {
+                guideText.textContent = 'カメラを利用できません。ブラウザの設定でカメラを許可し、再読み込みしてください。';
             }
-        }, 200);
-        
-        // タイムアウト（5秒）で画像ロードを強制完了
-        setTimeout(() => {
-            clearInterval(imageCheckInterval);
-            loadingManager.setStageComplete('images');
-            loadingManager.setStageActive('camera');
-            checkAndFinishLoading();
-        }, 5000);
-    };
-    
-    // AR準備完了（カメラ起動後）
-    const onArReady = () => {
-        console.log('AR is ready');
-        loadingManager.setStageComplete('camera');
-        checkAndFinishLoading();
-    };
-    
-    if (scene.hasLoaded) {
-        onSceneLoaded();
-    } else {
-        scene.addEventListener('loaded', onSceneLoaded);
-        scene.addEventListener('renderstart', onSceneLoaded);
+        }
     }
-    
-    // MindAR の arReady イベントを監視
-    scene.addEventListener('arReady', onArReady);
-    
+
+    // targets.mind をストリーム取得 → MindARThree 構築 → 画像プリロード
+    async function initAR() {
+        try {
+            const targetsUrl = await fetchTargets('./targets.mind', (ratio) => {
+                loadingManager.setStagePartial('targets', ratio);
+            });
+            arScene.init(targetsUrl);
+            sceneLoaded = true;
+
+            loadingManager.setStageComplete('targets');
+            loadingManager.setStageActive('images');
+
+            // 段階的プリロード開始（帯域を圧迫しない）
+            startStaggeredPreload(loadingManager);
+
+            // 画像プリロード状況を定期的にチェック
+            const imageCheckInterval = setInterval(() => {
+                if (checkImagesLoaded()) {
+                    clearInterval(imageCheckInterval);
+                    loadingManager.setStageComplete('camera');
+                    checkAndFinishLoading();
+                }
+            }, 200);
+
+            // タイムアウト（5秒）で画像ロードを強制完了
+            setTimeout(() => {
+                clearInterval(imageCheckInterval);
+                loadingManager.setStageComplete('images');
+                loadingManager.setStageComplete('camera');
+                checkAndFinishLoading();
+            }, 5000);
+        } catch (err) {
+            console.error('AR初期化に失敗:', err);
+            const mainText = document.getElementById('loading-main-text');
+            if (mainText) {
+                mainText.textContent = '読み込みに失敗しました。通信環境を確認し、再読み込みしてください。';
+            }
+        }
+    }
+    initAR();
+
     // フォールバック：一定時間後に強制的に準備完了
     setTimeout(() => {
         if (!arReady) {
             console.log('Forcing AR ready state');
             onAllReady();
         }
-    }, 8000);
+    }, 12000);
     
     // 閉じるボタン
     closeBtn.addEventListener('click', () => {
@@ -466,13 +472,8 @@ function mainInit() {
         currentTargetIndex = index;
         state.arTargetActive = true;
         
-        const targetEntity = document.querySelector(`#target-${index}`);
-        if (targetEntity) {
-            const child = targetEntity.querySelector('[anatomical-reveal]');
-            if (child?.components['anatomical-reveal']?.loadTextures) {
-                child.components['anatomical-reveal'].loadTextures();
-            }
-        }
+        // テクスチャの遅延ロード（初回検出時のみ実行される）
+        arScene.loadTextures(index);
         
         scanningGuide.classList.remove('visible');
         scanningGuide.classList.add('hidden');
@@ -538,8 +539,8 @@ function mainInit() {
     const previewPrompt = document.getElementById('ar-preview-prompt');
     if (previewPrompt) previewPrompt.addEventListener('click', showCardUI);
     
-    // a-scene全体のタップでもカードUI表示（プレビュー状態の時のみ）
-    scene.addEventListener('click', () => {
+    // カメラビュー全体のタップでもカードUI表示（プレビュー状態の時のみ）
+    arContainer.addEventListener('click', () => {
         const promptVisible = previewPrompt && previewPrompt.classList.contains('visible');
         if (promptVisible && !card.classList.contains('visible')) {
             showCardUI();
@@ -571,13 +572,8 @@ function mainInit() {
         }
     };
     
-    for (let i = 0; i < 10; i++) {
-        const entity = document.querySelector(`#target-${i}`);
-        if (entity) {
-            entity.addEventListener('targetFound', () => onTargetFound(i));
-            entity.addEventListener('targetLost', () => onTargetLost(i));
-        }
-    }
+    events.on('targetFound', onTargetFound);
+    events.on('targetLost', onTargetLost);
 }
 
 if (document.readyState === 'loading') {

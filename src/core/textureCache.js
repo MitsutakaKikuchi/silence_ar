@@ -1,6 +1,8 @@
 // ==========================================
 // グローバルテクスチャキャッシュ（読み込み最適化）
 // ==========================================
+import * as THREE from 'three';
+
 const textureCache = {};
 const textureLoadPromises = {};
 
