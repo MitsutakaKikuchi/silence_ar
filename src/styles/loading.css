@@ -165,3 +165,31 @@
     50% { transform: scale(1.3); }
 }
 
+
+/* ========================================
+   種子の線画（実ロード進捗で一筆描き）
+   --load-progress (0〜1) は LoadingManager が更新する。
+   前半70%で種と茎、後半30%で葉が展く。
+   ======================================== */
+#loading-seed {
+    position: absolute;
+    width: 96px;
+    height: 134px;
+    overflow: visible;
+}
+#loading-seed path {
+    fill: none;
+    stroke: rgba(0, 255, 170, 0.7);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    filter: drop-shadow(0 0 4px rgba(0, 255, 170, 0.35));
+    transition: stroke-dashoffset 0.4s ease-out;
+}
+#loading-seed .seed-stem {
+    stroke-dashoffset: clamp(0, calc(1 - var(--load-progress, 0) / 0.7), 1);
+}
+#loading-seed .seed-leaves {
+    stroke: rgba(150, 200, 150, 0.8);
+    stroke-dashoffset: clamp(0, calc(1 - (var(--load-progress, 0) - 0.7) / 0.3), 1);
+}

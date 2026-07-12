@@ -34,6 +34,9 @@
             </div>
             <button class="intro-start" id="intro-start-btn">標本室の扉を開く</button>
         </div>
+
+        <!-- 切開ワイプ: イントロから世界へ入る最初の一刀 -->
+        <div id="incision-line" aria-hidden="true"></div>
     
         <!-- 完了エンディング -->
         <div id="completion-overlay" class="completion-overlay">
@@ -174,6 +177,11 @@
             <div class='circle'></div>
             <div class='circle'></div>
             <div class='circle'></div>
+            <!-- 種子の線画: 実ロード進捗(--load-progress)に応じて一筆で描かれる -->
+            <svg id='loading-seed' viewBox='0 0 100 140' aria-hidden='true'>
+                <path class='seed-stem' pathLength='1' d='M50 124 a7 7 0 1 1 0.2 -0.2 M50 110 C51 96 43 88 47 70 C50 55 55 50 52 32' />
+                <path class='seed-leaves' pathLength='1' d='M52 46 C45 41 39 43 32 35 M53 58 C59 51 67 53 72 44' />
+            </svg>
         </div>
 
         <div class='loading-text' id='loading-main-text'>記憶の庭へ、降りていきます...</div>
@@ -189,9 +197,9 @@
         <!-- 段階表示 -->
         <div class='loading-stages'>
             <div class='loading-stage' id='stage-library'>場の準備</div>
+            <div class='loading-stage' id='stage-fonts'>言葉の支度</div>
             <div class='loading-stage' id='stage-targets'>記憶の照合</div>
             <div class='loading-stage' id='stage-images'>断片の採集</div>
-            <div class='loading-stage' id='stage-camera'>視界を開く</div>
         </div>
     </div>
     

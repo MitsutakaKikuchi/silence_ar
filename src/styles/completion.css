@@ -71,8 +71,12 @@
     gap: 16px;
     align-items: center;
     opacity: 0;
-    animation: completionBtnFadeIn 1s ease forwards 3.5s;
     flex-shrink: 0; /* 縮小しない */
+}
+
+/* ボタンは星座演出(約4.5s)と本文の立ち上がりを待ってから現れる */
+.completion-overlay.visible .completion-actions {
+    animation: completionBtnFadeIn 1s ease forwards 8s;
 }
 
 .completion-btn {

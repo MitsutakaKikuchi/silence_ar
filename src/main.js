@@ -32,6 +32,8 @@ import { RippleEffect } from './ui/ripple.js';
 import { TheaterMode } from './ui/theaterMode.js';
 import { openCard, closeCard, pingSeed } from './ui/cardMotion.js';
 import { swapOverlay } from './ui/transitions.js';
+import { revealIntroTitle, playIncision } from './ui/introFx.js';
+import { playConstellation } from './ui/completionFx.js';
 import { AmbientSound } from './audio/ambientSound.js';
 
 // ARシーン（カメラ起動はユーザージェスチャーまで遅延）
@@ -88,16 +90,19 @@ function mainInit() {
     // イントロ開始ボタン
     if (introStartBtn) {
         introStartBtn.addEventListener('click', () => {
-            introOverlay.classList.remove('visible');
-            introOverlay.classList.add('hidden');
+            if (introShown) return;
             introShown = true;
             sessionStorage.setItem('silence_ar_visited', 'true');
 
             // ユーザージェスチャー起点でカメラを起動（iOSの権限連鎖）
             startARSafely();
 
-            // イントロ終了後にガイドを表示
-            scanningGuide.classList.add('visible');
+            // 切開ワイプ（最初の一刀）でカメラビューへ入り、ガイドを表示
+            playIncision(introOverlay, () => {
+                introOverlay.classList.remove('visible');
+                introOverlay.classList.add('hidden');
+                scanningGuide.classList.add('visible');
+            });
         });
     }
     
@@ -157,21 +162,23 @@ function mainInit() {
     }
     
     // 全エピソード閲覧時のエンディング表示
+    // ①シードの星座演出 → ②エピローグの詩が一行ずつ立ち上がる
     function showCompletion() {
         if (completionShown) return;
         completionShown = true;
-        
-        // テキストを順番にアニメーション
-        const lines = completionOverlay.querySelectorAll('.line');
-        lines.forEach((line, index) => {
-            setTimeout(() => {
-                line.style.opacity = '1';
-                line.style.transform = 'translateY(0)';
-                line.style.transition = 'all 1s ease';
-            }, 500 + index * 800);
-        });
-        
+
         completionOverlay.classList.add('visible');
+
+        playConstellation(particleSystem, () => {
+            const lines = completionOverlay.querySelectorAll('.line');
+            lines.forEach((line, index) => {
+                setTimeout(() => {
+                    line.style.opacity = '1';
+                    line.style.transform = 'translateY(0)';
+                    line.style.transition = 'all 1s ease';
+                }, 300 + index * 800);
+            });
+        });
     }
     
     // ローディングマネージャー初期化
@@ -180,7 +187,16 @@ function mainInit() {
     
     // ライブラリはバンドル済み（このコードが動いている時点で読み込み完了）
     loadingManager.setStageComplete('library');
-    loadingManager.setStageActive('targets');
+
+    // Webフォント（しっぽり明朝）の先読みもローディングの儀式に組み込む
+    loadingManager.setStageActive('fonts');
+    Promise.all([
+        document.fonts.load('400 1em "Shippori Mincho B1"'),
+        document.fonts.load('500 1em "Shippori Mincho B1"')
+    ]).catch(() => {}).finally(() => {
+        loadingManager.setStageComplete('fonts');
+        loadingManager.setStageActive('targets');
+    });
     
     // インスタレーション機能の初期化
     const particleCanvas = document.getElementById('particle-canvas');
@@ -335,14 +351,14 @@ function mainInit() {
         return false;
     }
     
-    // ロード完了判定（画像とカメラ両方準備OKか）
+    // ロード完了判定（図譜と画像の両方が揃ったか。カメラはイントロのタップで起動する）
     function checkAndFinishLoading() {
         const imagesDone = loadingManager.stages.images.complete;
-        const cameraDone = loadingManager.stages.camera.complete;
-        
-        console.log(`Check finish: Images=${imagesDone}, Camera=${cameraDone}`);
-    
-        if (imagesDone && cameraDone) {
+        const targetsDone = loadingManager.stages.targets.complete;
+
+        console.log(`Check finish: Images=${imagesDone}, Targets=${targetsDone}`);
+
+        if (imagesDone && targetsDone) {
             onAllReady();
         }
     }
@@ -365,6 +381,7 @@ function mainInit() {
                 if (!hasVisited && !introShown) {
                     introOverlay.classList.remove('hidden');
                     introOverlay.classList.add('visible');
+                    revealIntroTitle(introOverlay);
                 } else {
                     startARSafely();
                     scanningGuide.classList.remove('hidden');
@@ -407,7 +424,6 @@ function mainInit() {
             const imageCheckInterval = setInterval(() => {
                 if (checkImagesLoaded()) {
                     clearInterval(imageCheckInterval);
-                    loadingManager.setStageComplete('camera');
                     checkAndFinishLoading();
                 }
             }, 200);
@@ -416,7 +432,6 @@ function mainInit() {
             setTimeout(() => {
                 clearInterval(imageCheckInterval);
                 loadingManager.setStageComplete('images');
-                loadingManager.setStageComplete('camera');
                 checkAndFinishLoading();
             }, 5000);
         } catch (err) {

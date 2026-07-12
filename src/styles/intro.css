@@ -79,3 +79,47 @@
     transform: scale(0.98);
 }
 
+
+/* ========================================
+   切開ワイプ
+   イントロのタップで、縦のティール・ヘアラインが走り、
+   幕がマスクで左右へ開いてカメラビューが現れる。
+   マスク帯域 --cut は GSAP (main.js) が動かす。
+   ======================================== */
+.intro-overlay {
+    --cut: 0%;
+    -webkit-mask-image: linear-gradient(90deg,
+        #000 0%,
+        #000 calc(50% - var(--cut)),
+        transparent calc(50% - var(--cut)),
+        transparent calc(50% + var(--cut)),
+        #000 calc(50% + var(--cut)),
+        #000 100%);
+    mask-image: linear-gradient(90deg,
+        #000 0%,
+        #000 calc(50% - var(--cut)),
+        transparent calc(50% - var(--cut)),
+        transparent calc(50% + var(--cut)),
+        #000 calc(50% + var(--cut)),
+        #000 100%);
+}
+
+#incision-line {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    width: 1.5px;
+    height: 100%;
+    margin-left: -0.75px;
+    background: linear-gradient(to bottom,
+        transparent,
+        rgba(0, 255, 170, 0.9) 20%,
+        rgba(0, 255, 170, 0.9) 80%,
+        transparent);
+    box-shadow: 0 0 12px rgba(0, 255, 170, 0.6), 0 0 40px rgba(0, 255, 170, 0.25);
+    transform: scaleY(0);
+    transform-origin: center;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 999999; /* イントロオーバーレイ(999998)より上 */
+}

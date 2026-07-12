@@ -51,6 +51,27 @@ export class ParticleSystem {
         this.gyroOffset.x = x * 15;
         this.gyroOffset.y = y * 15;
     }
+
+    // 指定座標から花弁・光の粒を放つ（コンプリーション星座の解散などに使用）
+    burst(x, y, count = 20) {
+        for (let i = 0; i < count; i++) {
+            const p = this.createParticle();
+            p.x = x;
+            p.y = y;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 0.6 + Math.random() * 1.6;
+            p.speedX = Math.cos(angle) * speed;
+            p.speedY = Math.sin(angle) * speed - 0.5; // やや上向きに
+            p.opacity = 0.3 + Math.random() * 0.4;
+            this.particles.push(p);
+        }
+        // しばらく漂ったあと定常数へ戻す
+        setTimeout(() => {
+            if (this.particles.length > this.maxParticles) {
+                this.particles.length = this.maxParticles;
+            }
+        }, 9000);
+    }
     
     update() {
         this.particles.forEach((p, index) => {

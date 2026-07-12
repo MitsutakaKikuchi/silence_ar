@@ -3,11 +3,13 @@
 // ==========================================
 export class LoadingManager {
     constructor() {
+        // targets.mind (約7MB) が支配的なので、その実バイト進捗に最大の重みを割く。
+        // カメラはローディング中ではなくイントロのタップで起動するため、ステージから外した。
         this.stages = {
-            library: { weight: 20, complete: false },
-            targets: { weight: 30, complete: false },
-            images: { weight: 40, complete: false },
-            camera: { weight: 10, complete: false }
+            library: { weight: 5, complete: false },
+            fonts: { weight: 10, complete: false },
+            targets: { weight: 65, complete: false },
+            images: { weight: 20, complete: false }
         };
         this.imageProgress = 0;
         this.totalImages = 10;
@@ -69,6 +71,9 @@ export class LoadingManager {
         if (this.progressText) {
             this.progressText.textContent = percent + '%';
         }
+        // 種子の線画SVG（stroke-dashoffset）を実進捗で描き進める
+        const loading = document.getElementById('custom-loading');
+        if (loading) loading.style.setProperty('--load-progress', String(percent / 100));
     }
     
     updateMainText(stage) {
@@ -78,17 +83,17 @@ export class LoadingManager {
             // 世界観への入り口。「奥へ」「深層へ」という潜るイメージ。
             library: '沈黙の深層へ潜行しています…',
 
-            // targets: ターゲット認識/顔認識など
+            // fonts: 書体の読み込み
+            // 語られなかった言葉に、かたち（活字）を与える準備。
+            fonts: '言葉のかたちを整えています…',
+
+            // targets: 図譜(targets.mind)の読み込み
             // 何を探しているのか。「痕跡」をより具体的に「宛先のない言葉」の捜索へ。
             targets: '行き場のない言葉を探測しています…',
 
-            // images: 画像生成/ロード
+            // images: 画像プリロード
             // 見えないものを可視化するプロセス。「現像」という言葉が持つ、徐々に像を結ぶニュアンス。
-            images: '不可視の輪郭を現像しています…',
-
-            // camera: カメラ起動
-            // 単なる準備ではなく、ユーザー自身の目（カメラ）が、この世界の「目撃者」になる瞬間。
-            camera: '観察者の「眼」を接続しています…'
+            images: '不可視の輪郭を現像しています…'
         };
         this.mainText.textContent = texts[stage] || '静寂を調整しています...';
     }
