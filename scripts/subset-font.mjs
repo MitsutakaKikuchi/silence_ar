@@ -65,31 +65,34 @@ async function ensureSourceFont(relPath) {
 }
 
 async function collectText() {
-    const chars = new Set();
+    const used = new Set();
     for (const rel of TEXT_SOURCES) {
         let content = await readFile(path.join(root, rel), 'utf8');
         if (rel.endsWith('.js')) content = stripJsComments(content);
-        for (const ch of content) chars.add(ch);
+        for (const ch of content) used.add(ch);
     }
+    const all = new Set(used);
     for (const [from, to] of SAFETY_RANGES) {
-        for (let cp = from; cp <= to; cp++) chars.add(String.fromCodePoint(cp));
+        for (let cp = from; cp <= to; cp++) all.add(String.fromCodePoint(cp));
     }
     // 制御文字を除去
-    return [...chars].filter((c) => c.codePointAt(0) >= 0x20).join('');
+    const clean = (set) => [...set].filter((c) => c.codePointAt(0) >= 0x20).join('');
+    return { used: clean(used), all: clean(all) };
 }
 
 async function main() {
     const verifyOnly = process.argv.includes('--verify');
-    const text = await collectText();
-    console.log(`収集した文字数: ${[...new Set(text)].length}`);
+    const { used, all } = await collectText();
+    console.log(`収集した文字数: 使用 ${[...new Set(used)].length} / 安全マージン込み ${[...new Set(all)].length}`);
 
     if (verifyOnly) {
-        // 既存のサブセットに欠落がないか検査
+        // 既存のサブセットに、実際に使用されている文字の欠落がないか検査
+        // （安全マージンの文字は元フォントに存在しない場合があるため対象外）
         const { create } = await import('fontkit');
         let failed = false;
         for (const { out } of FONTS) {
             const font = create(await readFile(path.join(root, out)));
-            const missing = [...new Set(text)].filter(
+            const missing = [...new Set(used)].filter(
                 (ch) => !font.hasGlyphForCodePoint(ch.codePointAt(0)) && ch.codePointAt(0) > 0x7f
             );
             if (missing.length) {
@@ -106,7 +109,7 @@ async function main() {
     for (const { src, out } of FONTS) {
         const srcPath = await ensureSourceFont(src);
         const buffer = await readFile(srcPath);
-        const subset = await subsetFont(buffer, text, { targetFormat: 'woff2' });
+        const subset = await subsetFont(buffer, all, { targetFormat: 'woff2' });
         await writeFile(path.join(root, out), subset);
         console.log(`✓ ${out} (${(subset.length / 1024).toFixed(1)} KB)`);
     }
