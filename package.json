@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "fontkit": "^2.0.4",
+    "stats.js": "^0.17.0",
     "subset-font": "^2.3.0",
     "vite": "^6.3.5",
     "vite-plugin-mkcert": "^1.17.6"

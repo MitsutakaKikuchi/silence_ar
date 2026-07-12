@@ -7,6 +7,15 @@ export default defineConfig({
     base: './',
     plugins: [mkcert()],
     build: {
-        target: 'safari15'
+        target: 'safari15',
+        chunkSizeWarningLimit: 1600,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    // 変更頻度の低いライブラリを分離し、アプリ更新時のキャッシュ効率を上げる
+                    vendor: ['three', 'gsap', 'mind-ar/dist/mindar-image-three.prod.js']
+                }
+            }
+        }
     }
 });

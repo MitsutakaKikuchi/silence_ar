@@ -39,6 +39,21 @@ import { AmbientSound } from './audio/ambientSound.js';
 // ARシーン（カメラ起動はユーザージェスチャーまで遅延）
 const arScene = new ARScene(document.querySelector('#ar-container'));
 
+// ?debug でFPSメーターを表示（実機での性能確認用）
+if (new URLSearchParams(window.location.search).has('debug')) {
+    import('stats.js').then(({ default: Stats }) => {
+        const stats = new Stats();
+        stats.showPanel(0);
+        stats.dom.style.zIndex = '9999999';
+        document.body.appendChild(stats.dom);
+        const loop = () => {
+            stats.update();
+            requestAnimationFrame(loop);
+        };
+        requestAnimationFrame(loop);
+    });
+}
+
 // 時間帯による環境変化
 let timeEnvironment = null;
 
