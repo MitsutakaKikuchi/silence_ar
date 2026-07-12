@@ -20,7 +20,10 @@ export function createRevealMaterial({ strength = 0.6, edgeColor = '#00ffaa' } =
             uViewVec: { value: new THREE.Vector3(0, 0, 1) }, // 視線ベクトル
             uReveal: { value: 0.0 },     // 露見度 (0.0=日常, 1.0=本音)
             uEdgeColor: { value: new THREE.Color(edgeColor) },
-            uHasDepth: { value: 0.0 }    // Depth Mapが利用可能か
+            uHasDepth: { value: 0.0 },   // Depth Mapが利用可能か
+            uCrack: { value: 0.0 },      // 亀裂ステージ（開裂に先立つ光の走り）
+            uEdgeBoost: { value: 1.0 },  // エッジ発光の一時ブースト
+            uTouch: { value: new THREE.Vector4(0, 0, 0, 0) } // タッチリップル
         },
         vertexShader,
         fragmentShader,

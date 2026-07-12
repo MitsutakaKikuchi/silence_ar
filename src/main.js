@@ -539,10 +539,14 @@ function mainInit() {
     const previewPrompt = document.getElementById('ar-preview-prompt');
     if (previewPrompt) previewPrompt.addEventListener('click', showCardUI);
     
-    // カメラビュー全体のタップでもカードUI表示（プレビュー状態の時のみ）
-    arContainer.addEventListener('click', () => {
+    // カメラビュー全体のタップでもカードUI表示（プレビュー状態の時のみ）。
+    // 同じタップが「傷に触れる」動作にもなる（シェーダーのタッチリップル）。
+    arContainer.addEventListener('click', (e) => {
         const promptVisible = previewPrompt && previewPrompt.classList.contains('visible');
         if (promptVisible && !card.classList.contains('visible')) {
+            if (currentTargetIndex >= 0) {
+                arScene.touchAt(e.clientX, e.clientY, currentTargetIndex);
+            }
             showCardUI();
         }
     });

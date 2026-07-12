@@ -152,3 +152,33 @@
     z-index: 390;
     background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
 }
+
+/* ========================================
+   フィルムグレイン（DOMオーバーレイ）
+   カメラ映像とWebGLキャンバスの双方に一様な質感を与える。
+   transformベースのアニメーションでGPU合成に載せる。
+   ======================================== */
+#grain-overlay {
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    pointer-events: none;
+    z-index: 380;
+    background-image: var(--grain-texture);
+    opacity: 0.055;
+    mix-blend-mode: overlay;
+    animation: grainShift 0.9s steps(3) infinite;
+}
+
+@keyframes grainShift {
+    0% { transform: translate(0, 0); }
+    33% { transform: translate(-2.5%, 1.5%); }
+    66% { transform: translate(1.5%, -2%); }
+    100% { transform: translate(0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #grain-overlay { animation: none; }
+}

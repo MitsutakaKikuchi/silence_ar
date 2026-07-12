@@ -7,6 +7,9 @@ uniform float uReveal; // 0.0 ~ 1.0
 uniform vec3 uEdgeColor;
 uniform float uHasDepth;
 uniform vec3 uViewVec; // ジャイロベースの視線方向
+uniform float uCrack;     // 亀裂ステージ (0=なし, 1=最大) 開裂に先立つ光の走り
+uniform float uEdgeBoost; // エッジ発光の一時ブースト (定常=1.0)
+uniform vec4 uTouch;      // タッチリップル: xy=uv, z=開始時刻(秒), w=強さ
 
 varying vec2 vUv;
 varying vec3 vViewPosition;
@@ -68,11 +71,21 @@ void main() {
     // 2. 有機的トランジション (Organic Noise Reveal)
     // ノイズの速度とスケールを調整して滑らかに
     float noiseVal = snoise(vUv * 2.5 + vec2(0.0, uTime * 0.05));
-    float mask = uReveal + (noiseVal * 0.1);
 
     // 深度マップ自体もマスクの一部に使う（深いところから裂ける演出）
     float depthFactor = 1.0 - depthVal;  // 黒（奥）が1.0
-    mask = smoothstep(0.4, 0.6, mask * 1.2 - depthFactor * 0.2 * uHasDepth);
+    float field = (uReveal + noiseVal * 0.1) * 1.2 - depthFactor * 0.2 * uHasDepth;
+
+    // タッチリップル: 触れた場所から減衰するリングが走り、マスクを僅かに押し開く
+    float ripple = 0.0;
+    if (uTouch.w > 0.0) {
+        float tAge = max(uTime - uTouch.z, 0.0);
+        float ring = 1.0 - smoothstep(0.0, 0.08, abs(distance(vUv, uTouch.xy) - tAge * 0.45));
+        ripple = ring * max(0.0, 1.0 - tAge * 1.2) * uTouch.w;
+        field += ripple * 0.18;
+    }
+
+    float mask = smoothstep(0.4, 0.6, field);
 
     // 3. テクスチャ取得 & 色収差 (Chromatic Aberration)
     vec4 colorA = texture2D(uTexA, uvA);
@@ -85,12 +98,24 @@ void main() {
     vec4 colorB = vec4(r, g, b, 1.0);
 
     // 4. 合成とエッジ発光
+    // フェイクブルーム: 鋭い芯(従来) + 広く裾を引くグロー項。
+    // ポストプロセス無しで知覚的なブルームを得る（透過キャンバスのα問題を回避）
     float edge = smoothstep(0.0, 0.1, mask) * (1.0 - smoothstep(0.9, 1.0, mask));
-    vec3 edgeEmission = uEdgeColor * edge * 2.0;
+    float edgeWide = smoothstep(0.0, 0.35, mask) * (1.0 - smoothstep(0.65, 1.0, mask));
+    float breath = 0.9 + 0.1 * sin(uTime * 1.2); // 定常状態でエッジが静かに呼吸する
+    vec3 edgeEmission = uEdgeColor * (edge * 2.0 + pow(edgeWide, 2.0) * 0.9 * breath) * uEdgeBoost;
+
+    // 亀裂ステージ: 開裂に先立ち、深部（黒）の等高線に沿って細い光の亀裂が走る
+    float crackIso = abs(noiseVal - 0.15);
+    float crackLine = (1.0 - smoothstep(0.015, 0.09, crackIso))
+                    * smoothstep(0.25, 0.75, depthFactor + 0.25)
+                    * (0.7 + 0.3 * sin(uTime * 3.0 + depthVal * 12.0));
+    vec3 crackEmission = uEdgeColor * crackLine * uCrack * (1.0 - mask) * 1.6;
 
     // AとBを混ぜる
     vec4 finalColor = mix(colorA, colorB, mask);
-    finalColor.rgb += edgeEmission;
+    finalColor.rgb += edgeEmission + crackEmission;
+    finalColor.rgb += uEdgeColor * ripple * 0.5;
 
     // 5. 角丸マスクとフェード境界を適用
     float borderGlow = (1.0 - roundMask) * smoothstep(0.0, 0.05, roundMask) * 0.5;
