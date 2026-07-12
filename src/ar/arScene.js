@@ -67,8 +67,16 @@ export class ARScene {
             imageTargetSrc,
             uiLoading: 'no',
             uiScanning: 'no',
-            uiError: 'no'
-            // 旧A-Frame版と同じトラッキング挙動を保つため filter 系は既定値のまま
+            uiError: 'no',
+            // 姿勢推定の小刻みな震え(ジッター)を抑える OneEuroFilter 調整。
+            // filterMinCF: 静止時のカットオフ。既定 0.001 より小さくすると
+            //   静止時のブレが減る代わりに追従がわずかに遅れる。
+            // filterBeta: 動作時の追従性。既定 1000 より小さくすると
+            //   ゆっくり動かしたときの震えが減る代わりに遅延が増える。
+            // 静止時の震えは主に filterMinCF で決まるためこれを1桁下げ、
+            //   beta は追従性を残すため中間値に。落ち着いた鑑賞向けの平滑化寄り設定。
+            filterMinCF: 0.0001,
+            filterBeta: 300
         });
 
         const { renderer } = this.mindar;
@@ -77,7 +85,9 @@ export class ARScene {
         for (let i = 0; i < TARGET_COUNT; i++) {
             const anchor = this.mindar.addAnchor(i);
 
-            const material = createRevealMaterial({ strength: 0.6, edgeColor: '#00ffaa' });
+            // strength は視差(奥行き)の強さ。姿勢ジッターを視差が増幅するため、
+            // 震え軽減のため 0.6 → 0.5 に微調整（奥行き感はほぼ維持）。
+            const material = createRevealMaterial({ strength: 0.5, edgeColor: '#00ffaa' });
             const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
             anchor.group.add(mesh);
             this.meshes.push(mesh);
@@ -101,7 +111,10 @@ export class ARScene {
             anchor.onTargetLost = () => events.emit('targetLost', i);
         }
 
-        if (this.lowQuality) this.controller.crackEnabled = false;
+        if (this.lowQuality) {
+            this.controller.crackEnabled = false;
+            document.documentElement.classList.add('perf-lite');
+        }
 
         // iOSで画面回転後にvideoがミススケールする対策
         window.addEventListener('orientationchange', () => {
@@ -162,6 +175,7 @@ export class ARScene {
                 this.controller.crackEnabled = false;
                 this.particles.forEach((p) => { p.visible = false; });
                 this.mindar?.renderer?.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+                document.documentElement.classList.add('perf-lite');
             }
         };
         requestAnimationFrame(tick);

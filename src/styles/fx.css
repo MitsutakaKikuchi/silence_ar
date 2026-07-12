@@ -160,25 +160,29 @@
    ======================================== */
 #grain-overlay {
     position: fixed;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
+    top: -25%;
+    left: -25%;
+    width: 150%;
+    height: 150%;
     pointer-events: none;
     z-index: 380;
     background-image: var(--grain-texture);
-    opacity: 0.055;
+    opacity: 0.05;
     mix-blend-mode: overlay;
-    animation: grainShift 0.9s steps(3) infinite;
+    will-change: transform;
+    animation: grainShift 1.4s steps(2) infinite;
 }
 
 @keyframes grainShift {
-    0% { transform: translate(0, 0); }
-    33% { transform: translate(-2.5%, 1.5%); }
-    66% { transform: translate(1.5%, -2%); }
-    100% { transform: translate(0, 0); }
+    0% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(-2%, 1.5%, 0); }
+    100% { transform: translate3d(0, 0, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
     #grain-overlay { animation: none; }
 }
+
+/* 低速端末（quality tier が low に落ちた場合）ではグレインの
+   全画面ブレンド合成を止めて負荷を下げる。 */
+.perf-lite #grain-overlay { display: none; }

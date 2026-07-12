@@ -123,15 +123,26 @@
 }
 
 /* インスタグラムリンク（糸のようなデザイン） */
+/* リンク群（ポートフォリオ / Instagram を横並び） */
+.profile-links {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
 .profile-link {
     display: flex; align-items: center; justify-content: center;
-    gap: 10px;
+    gap: 8px;
     color: #fff; text-decoration: none;
-    font-size: 0.8rem; letter-spacing: 0.15em;
+    font-size: 0.8rem; letter-spacing: 0.12em;
     transition: all 0.3s ease;
     position: relative;
-    padding: 10px;
+    padding: 10px 6px;
+    opacity: 0.85;
 }
+
+.profile-link:hover { opacity: 1; }
 
 .profile-link::before {
     content: '';
