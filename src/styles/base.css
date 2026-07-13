@@ -1,5 +1,7 @@
 :root {
     --accent-moss: rgba(120, 140, 100, 0.85);
+    /* 呼吸の同期: 待機中の明滅すべてが共有する周期（core/breath.js と一致させること） */
+    --breath-period: 4.8s;
     /* わびさび: テクスチャノイズ用 */
     --paper-texture: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" /></filter><rect width="200" height="200" filter="url(%23noise)" opacity="0.05"/></svg>');
     /* フィルムグレイン用（paper-textureより粒が細かく濃い） */

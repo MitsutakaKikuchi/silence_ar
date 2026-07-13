@@ -200,23 +200,23 @@
     background: radial-gradient(circle, transparent 55%, rgba(255, 255, 255, 0.03) 100%);
     border-radius: 50%;
     box-shadow: 0 0 30px rgba(255, 255, 255, 0.08);
-    animation: breatheSoft 5s infinite ease-in-out;
+    animation: breatheSoft var(--breath-period) infinite ease-in-out;
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* 四隅の装飾（より有機的に脈動） */
+/* 四隅の装飾（呼吸の同期: 時間差をやめ、枠全体がひとつの呼吸で脈動する） */
 #scanning-guide .corner {
     position: absolute;
     width: 45px; height: 45px;
     border-color: #00ffaa; /* 明るいアクアグリーンで視認性向上 */
     border-style: solid;
     transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    animation: cornerPulse 3s infinite ease-in-out;
+    animation: cornerPulse var(--breath-period) infinite ease-in-out;
 }
-#scanning-guide .corner-tl { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 12px 0 0 0; animation-delay: 0s; }
-#scanning-guide .corner-tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 12px 0 0; animation-delay: 0.75s; }
-#scanning-guide .corner-bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0 0 0 12px; animation-delay: 1.5s; }
-#scanning-guide .corner-br { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 12px 0; animation-delay: 2.25s; }
+#scanning-guide .corner-tl { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 12px 0 0 0; }
+#scanning-guide .corner-tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 12px 0 0; }
+#scanning-guide .corner-bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0 0 0 12px; }
+#scanning-guide .corner-br { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 12px 0; }
 
 @keyframes cornerPulse {
     0%, 100% { 
@@ -257,7 +257,9 @@
             font-family: 'Shippori Mincho B1', 'Yu Mincho', serif;
             white-space: nowrap;
             opacity: 0;
-            animation: fadeInText 1.2s ease-out 0.3s forwards, textPulse 3s infinite ease-in-out 1.5s;
+            /* 呼吸の同期: フェードイン完了(1.5s)後、半周期(2.4s)から明滅を始めると
+               「明→暗」の継ぎ目が滑らかになり、かつ他要素と同位相で息づく */
+            animation: fadeInText 1.2s ease-out 0.3s forwards, textPulse var(--breath-period) infinite ease-in-out 2.4s;
             width: max-content;
             margin: 0;
         }
@@ -269,9 +271,35 @@
     100% { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+/* 0%を明側にする（フェードイン直後の opacity:1 から途切れなく息づき始める） */
 @keyframes textPulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1.0; }
+    0%, 100% { opacity: 1.0; }
+    50% { opacity: 0.4; }
+}
+
+/* ========================================
+   佇む者への一行
+   開いた庭を静止して見つめ続けた鑑賞者にだけ浮かぶ隠しテキスト。
+   文字ごとの出現・沈殿は ui/hiddenLine.js (GSAP) が振り付ける。
+   ======================================== */
+#hidden-line {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 28%;
+    text-align: center;
+    font-family: 'Shippori Mincho B1', 'Yu Mincho', serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.14em;
+    color: rgba(235, 255, 246, 0.92);
+    text-shadow: 0 0 14px rgba(0, 0, 0, 0.9), 0 0 24px rgba(0, 255, 170, 0.18);
+    pointer-events: none;
+    padding: 0 24px;
+    display: none;
+}
+#hidden-line.visible { display: block; }
+#hidden-line .hl-char {
+    display: inline-block;
+    will-change: transform, opacity, filter;
 }
 
 /* ミストエフェクト（より詩的に） */
@@ -279,7 +307,7 @@
     width: 100%; height: 100%;
     background: radial-gradient(circle, rgba(0,255,170,0.08) 0%, transparent 65%);
     opacity: 0.4;
-    animation: mistBreath 4.5s infinite ease-in-out;
+    animation: mistBreath var(--breath-period) infinite ease-in-out;
 }
 @keyframes mistBreath {
     0%, 100% { 

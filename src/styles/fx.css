@@ -99,10 +99,11 @@
     height: 200%;
     top: -50%;
     left: -50%;
-    background: 
-        radial-gradient(ellipse 80% 50% at 20% 80%, rgba(0, 255, 170, 0.04) 0%, transparent 50%),
+    /* 時間帯連動: 霧の色味は訪問時刻に沈む（timeEnvironment.js が :root に設定） */
+    background:
+        radial-gradient(ellipse 80% 50% at 20% 80%, var(--mist-tint-a, rgba(0, 255, 170, 0.04)) 0%, transparent 50%),
         radial-gradient(ellipse 60% 40% at 80% 30%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
-        radial-gradient(ellipse 100% 60% at 50% 100%, rgba(0, 200, 150, 0.05) 0%, transparent 40%);
+        radial-gradient(ellipse 100% 60% at 50% 100%, var(--mist-tint-b, rgba(0, 200, 150, 0.05)) 0%, transparent 40%);
     animation: mistDrift 20s ease-in-out infinite;
     will-change: transform;
 }
@@ -132,13 +133,16 @@
     background: 
         linear-gradient(175deg, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
         linear-gradient(165deg, rgba(0, 255, 170, 0.015) 0%, transparent 50%);
-    opacity: 0.6;
-    animation: raysPulse 8s ease-in-out infinite;
+    /* 時間帯連動: 差し込む光の強さは時刻で変わる（昼>朝>夕>夜） */
+    opacity: var(--rays-opacity, 0.6);
+    /* 呼吸の同期: 光線は呼吸2周期分（倍音関係）でゆっくり満ち引きする */
+    animation: raysPulse calc(var(--breath-period) * 2) ease-in-out infinite;
 }
 
+/* 満ち引きの振幅も --rays-opacity を基準にする（時間帯で全体が沈む） */
 @keyframes raysPulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 0.7; }
+    0%, 100% { opacity: calc(var(--rays-opacity, 0.6) * 0.6); }
+    50% { opacity: var(--rays-opacity, 0.6); }
 }
 
 /* ヴィネット強化 */

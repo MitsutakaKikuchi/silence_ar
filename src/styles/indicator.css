@@ -58,7 +58,8 @@
     background: radial-gradient(circle, var(--accent-moss) 0%, rgba(120, 140, 100, 0.6) 100%);
     border-color: rgba(120, 140, 100, 0.9);
     box-shadow: 0 0 20px rgba(120, 140, 100, 0.7);
-    animation: seedPulse 2s infinite ease-in-out;
+    /* 呼吸の同期: 位相は付与時に syncBreath() が負のディレイで合わせる */
+    animation: seedPulse var(--breath-period) infinite ease-in-out;
 }
 
 @keyframes seedPulse {

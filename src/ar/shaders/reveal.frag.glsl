@@ -10,6 +10,7 @@ uniform vec3 uViewVec; // ジャイロベースの視線方向
 uniform float uCrack;     // 亀裂ステージ (0=なし, 1=最大) 開裂に先立つ光の走り
 uniform float uEdgeBoost; // エッジ発光の一時ブースト (定常=1.0)
 uniform vec4 uTouch;      // タッチリップル: xy=uv, z=開始時刻(秒), w=強さ
+uniform float uAppear;    // 顕現度 (0=不可視, 1=結像) 霧が凝結して像を結ぶ
 
 varying vec2 vUv;
 varying vec3 vViewPosition;
@@ -102,7 +103,11 @@ void main() {
     // ポストプロセス無しで知覚的なブルームを得る（透過キャンバスのα問題を回避）
     float edge = smoothstep(0.0, 0.1, mask) * (1.0 - smoothstep(0.9, 1.0, mask));
     float edgeWide = smoothstep(0.0, 0.35, mask) * (1.0 - smoothstep(0.65, 1.0, mask));
-    float breath = 0.9 + 0.1 * sin(uTime * 1.2); // 定常状態でエッジが静かに呼吸する
+    // 定常状態でエッジが静かに呼吸する。
+    // 呼吸の同期: 周期4.8s（base.css --breath-period / core/breath.js と一致）。
+    // uTime はページロード起点(performance.now)なので、-cos で t=0 に息を
+    // 吐き切る形にすると、ロードと同時に始まるCSS明滅群と位相まで揃う。
+    float breath = 0.9 - 0.1 * cos(uTime * 6.28318 / 4.8);
     vec3 edgeEmission = uEdgeColor * (edge * 2.0 + pow(edgeWide, 2.0) * 0.9 * breath) * uEdgeBoost;
 
     // 亀裂ステージ: 開裂に先立ち、深部（黒）の等高線に沿って細い光の亀裂が走る
@@ -117,10 +122,18 @@ void main() {
     finalColor.rgb += edgeEmission + crackEmission;
     finalColor.rgb += uEdgeColor * ripple * 0.5;
 
-    // 5. 角丸マスクとフェード境界を適用
+    // 5. 顕現マスク: ターゲット認識直後、ノイズの粗から像が凝結する
+    //    （計算済みの noiseVal を再利用。追加のテクスチャフェッチなし）
+    float appearField = uAppear * 1.3 + noiseVal * 0.15 - 0.15;
+    float appearMask = smoothstep(0.35, 0.65, appearField);
+    // 凝結の輪郭がティールに一瞬灯り、結像が定着すると消える
+    float appearEdge = smoothstep(0.0, 0.15, appearMask) * (1.0 - smoothstep(0.55, 1.0, appearMask));
+    finalColor.rgb += uEdgeColor * appearEdge * (1.0 - uAppear) * 0.6;
+
+    // 6. 角丸マスクとフェード境界を適用
     float borderGlow = (1.0 - roundMask) * smoothstep(0.0, 0.05, roundMask) * 0.5;
     finalColor.rgb += uEdgeColor * borderGlow;
-    finalColor.a = roundMask;
+    finalColor.a = roundMask * appearMask;
 
     gl_FragColor = finalColor;
 }

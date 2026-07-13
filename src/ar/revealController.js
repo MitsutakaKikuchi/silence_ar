@@ -1,8 +1,9 @@
 // ==========================================
 // リビール振付（GSAPタイムライン）
-// 旧実装の固定lerp(0.02/frame)を、3段階の振付に置き換える:
-//   ① 0-0.5s   uCrack  — 深部から細い光の亀裂が走る
-//   ② 0.4-2.8s uReveal — 有機的に開裂 (power2.inOut)
+// 旧実装の固定lerp(0.02/frame)を、4段階の振付に置き換える:
+//   ⓪ 0-1.1s   uAppear — 霧が凝結し、記憶（Layer A）が像を結ぶ
+//   ① 0.9s~    uCrack  — 深部から細い光の亀裂が走る
+//   ② 1.4s~    uReveal — 有機的に開裂 (power2.inOut)
 //   ③ 中間点    uEdgeBoost — エッジ発光がパルスして定常へ沈む
 // targetLost 時は約1.6倍速で逆再生する。
 // ジャイロ平滑(uViewVec)は旧 tick() の忠実移植。
@@ -10,11 +11,17 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { state } from '../core/state.js';
+import { hapticPulse, HAPTIC_CRACK } from '../core/haptics.js';
 
 const REDUCED_MOTION =
     typeof window !== 'undefined' &&
     window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// 顕現ステージの振付定数
+const APPEAR_DURATION = 1.1; // 結像にかける時間（秒）
+const APPEAR_LEAD = 0.9;     // 顕現がほぼ結像してから亀裂が走るまでのリード（秒）
+const APPEAR_CLOSE = 0.8;    // targetLost 時に像が霧へ還る時間（秒）
 
 export class RevealController {
     constructor() {
@@ -37,30 +44,45 @@ export class RevealController {
     // （可視なのは認識中のアンカーのみなので描画コストは1枚分）。
     transitionTo(active) {
         const speed = REDUCED_MOTION ? 100 : 1; // モーション低減時はほぼ即時遷移
+
+        // 亀裂が走る瞬間の微振動（全マテリアル共通なので一度だけ予約する）
+        if (this.hapticCall) {
+            this.hapticCall.kill();
+            this.hapticCall = null;
+        }
+        if (active && !REDUCED_MOTION) {
+            this.hapticCall = gsap.delayedCall(APPEAR_LEAD, () => hapticPulse(HAPTIC_CRACK));
+        }
+
         for (const entry of this.entries) {
             const u = entry.material.uniforms;
-            gsap.killTweensOf([u.uReveal, u.uCrack, u.uEdgeBoost]);
+            gsap.killTweensOf([u.uReveal, u.uCrack, u.uEdgeBoost, u.uAppear]);
 
             if (active) {
                 const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
+                // ⓪ 霧の凝結 — まず記憶（Layer A）が像を結ぶ
+                tl.to(u.uAppear, { value: 1, duration: APPEAR_DURATION / speed, ease: 'sine.out' }, 0);
+                // 顕現がほぼ結像してから、以降の解剖振付が始まる
+                const lead = APPEAR_LEAD / speed;
                 if (this.crackEnabled) {
-                    tl.to(u.uCrack, { value: 1, duration: 0.7 / speed, ease: 'power1.out' }, 0);
+                    tl.to(u.uCrack, { value: 1, duration: 0.7 / speed, ease: 'power1.out' }, lead);
                 }
-                const revealStart = this.crackEnabled ? 0.5 / speed : 0;
+                const revealStart = lead + (this.crackEnabled ? 0.5 / speed : 0);
                 // 被膜がゆっくり剥がれるよう開裂を減速（uReveal: 3.0s）
                 tl.to(u.uReveal, { value: 1, duration: 3.0 / speed, ease: 'power2.inOut' }, revealStart);
                 // 開裂の中間点で発光がひときわ強まり、ゆっくり定常へ沈む
-                tl.to(u.uEdgeBoost, { value: 1.9, duration: 1.0 / speed, ease: 'power1.in' }, 1.0 / speed)
-                  .to(u.uEdgeBoost, { value: 1.0, duration: 1.4 / speed, ease: 'sine.out' }, 2.0 / speed);
+                tl.to(u.uEdgeBoost, { value: 1.9, duration: 1.0 / speed, ease: 'power1.in' }, lead + 1.0 / speed)
+                  .to(u.uEdgeBoost, { value: 1.0, duration: 1.4 / speed, ease: 'sine.out' }, lead + 2.0 / speed);
                 // 亀裂は開裂の進行とともに癒える
                 if (this.crackEnabled) {
-                    tl.to(u.uCrack, { value: 0, duration: 1.2 / speed, ease: 'sine.out' }, 1.4 / speed);
+                    tl.to(u.uCrack, { value: 0, duration: 1.2 / speed, ease: 'sine.out' }, lead + 1.4 / speed);
                 }
             } else {
-                // 逆再生（約1.6倍速）: 傷が静かに閉じる
+                // 逆再生（約1.6倍速）: 傷が静かに閉じ、像は霧へ還る
                 gsap.to(u.uReveal, { value: 0, duration: 1.5 / speed, ease: 'power2.in' });
                 gsap.to(u.uCrack, { value: 0, duration: 0.4 / speed, ease: 'sine.out' });
                 gsap.to(u.uEdgeBoost, { value: 1.0, duration: 0.6 / speed, ease: 'sine.out' });
+                gsap.to(u.uAppear, { value: 0, duration: APPEAR_CLOSE / speed, ease: 'sine.in' });
             }
         }
     }

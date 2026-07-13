@@ -22,6 +22,9 @@ import { ARScene, fetchTargets } from './ar/arScene.js';
 // コア・UI・演出
 import { state } from './core/state.js';
 import { events } from './core/events.js';
+import { syncBreath } from './core/breath.js';
+import { StillnessWatcher } from './core/stillness.js';
+import { showHiddenLine, hideHiddenLine } from './ui/hiddenLine.js';
 import { LoadingManager } from './core/loadingManager.js';
 import { GyroParallax } from './core/gyro.js';
 import { preloadedImageCache, startStaggeredPreload } from './core/preload.js';
@@ -246,9 +249,9 @@ function mainInit() {
         }
     });
     
-    // インスタレーション機能の初期化
+    // インスタレーション機能の初期化（粒子は訪問時刻のパレットで彩る）
     const particleCanvas = document.getElementById('particle-canvas');
-    const particleSystem = new ParticleSystem(particleCanvas);
+    const particleSystem = new ParticleSystem(particleCanvas, timeEnvironment.particlePalette);
     particleSystem.animate();
     
     const rippleContainer = document.getElementById('ripple-container');
@@ -257,7 +260,40 @@ function mainInit() {
     const theaterPoem = document.getElementById('theater-poem');
     const theaterMode = new TheaterMode(theaterPoem);
     
-    const ambientSound = new AmbientSound();
+    // 環境音は訪問時刻の「間合い」で鳴る（夜は間が深く、夕は風が強い）
+    const ambientSound = new AmbientSound(timeEnvironment.soundProfile);
+
+    // ==========================================
+    // 佇む者への一行
+    // 露見が定常に落ち着いてから静止監視を始め、動かさず見つめ続けた
+    // 鑑賞者にだけ隠れた一行を浮かべる。各話につきセッション中一度だけ
+    // （localStorage には保存しない——再訪時にまた見つけられる方がよい）。
+    // ==========================================
+    const REVEAL_SETTLE_MS = 4500; // 顕現(0.9s)+開裂(3.0s)が定常へ沈むまでの目安
+    const hiddenLineShown = new Set();
+    let stillnessArmTimer = null;
+
+    const stillnessWatcher = new StillnessWatcher(
+        () => (state.gyroData ? { x: state.gyroData.gamma, y: state.gyroData.beta } : null),
+        () => {
+            if (!state.arTargetActive || currentTargetIndex < 0) return;
+            if (card.classList.contains('visible')) return;
+            if (hiddenLineShown.has(currentTargetIndex)) return;
+            const line = episodes[currentTargetIndex]?.hiddenLine;
+            if (!line) return;
+            hiddenLineShown.add(currentTargetIndex);
+            showHiddenLine(line);
+        }
+    );
+
+    // 静止監視の予約と本体をまとめて止める
+    function disarmStillness() {
+        if (stillnessArmTimer) {
+            clearTimeout(stillnessArmTimer);
+            stillnessArmTimer = null;
+        }
+        stillnessWatcher.stop();
+    }
     
     // ジャイロスコープ
     const mistLayer = document.querySelector('.mist-layer');
@@ -313,6 +349,7 @@ function mainInit() {
         
         if (index >= 0 && index < seeds.length) {
             seeds[index].classList.add('current');
+            syncBreath(seeds[index]); // 明滅を全体の呼吸位相に合流させる
             if (justViewed) {
                 viewedEpisodes.add(index);
                 seeds[index].classList.add('viewed');
@@ -338,9 +375,13 @@ function mainInit() {
             
             const wasViewed = viewedEpisodes.has(index);
             const cardWasVisible = card.classList.contains('visible');
-            
+
             state.arTargetActive = false;
             currentTargetIndex = index;
+
+            // シードからの再閲覧ではAR上の静止監視を畳む
+            disarmStillness();
+            hideHiddenLine();
             
             const previewPrompt = document.getElementById('ar-preview-prompt');
             if (previewPrompt) previewPrompt.classList.remove('visible');
@@ -508,6 +549,7 @@ function mainInit() {
         // ターゲット認識状態をリセット
         state.arTargetActive = false;
         currentTargetIndex = -1;
+        disarmStillness();
         
         // プレビュープロンプトも非表示
         const previewPrompt = document.getElementById('ar-preview-prompt');
@@ -535,7 +577,17 @@ function mainInit() {
         console.log('Target Found:', index);
         currentTargetIndex = index;
         state.arTargetActive = true;
-        
+
+        // 露見の瞬間、環境音が静かに引く（世界が息を止める。音OFF時は内部でno-op）
+        ambientSound.duckForReveal();
+
+        // 佇む者への一行: 露見が定常に落ち着いてから静止監視を始める
+        disarmStillness();
+        hideHiddenLine();
+        if (!hiddenLineShown.has(index)) {
+            stillnessArmTimer = setTimeout(() => stillnessWatcher.start(), REVEAL_SETTLE_MS);
+        }
+
         // テクスチャの遅延ロード（初回検出時のみ実行される）
         arScene.loadTextures(index);
         
@@ -582,7 +634,11 @@ function mainInit() {
     // プレビュープロンプトをタップでカードUI表示
     const showCardUI = () => {
         if (currentTargetIndex < 0) return;
-        
+
+        // カードが前面に出るので静止監視と隠れた一行は畳む
+        disarmStillness();
+        hideHiddenLine();
+
         const previewPrompt = document.getElementById('ar-preview-prompt');
         if (previewPrompt) previewPrompt.classList.remove('visible');
 
@@ -616,6 +672,10 @@ function mainInit() {
         // ターゲットが見えなくなったら認識状態をリセット
         if (currentTargetIndex === index) {
             state.arTargetActive = false;
+
+            // 静止監視と隠れた一行を片付ける
+            disarmStillness();
+            hideHiddenLine();
             
             // プレビュープロンプトを非表示
             const previewPrompt = document.getElementById('ar-preview-prompt');

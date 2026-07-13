@@ -5,6 +5,7 @@
 // 花弁に解けて消える。そのあとエピローグの詩が立ち上がる。
 // ==========================================
 import { gsap } from 'gsap';
+import { hapticPulse, HAPTIC_CONSTELLATION } from '../core/haptics.js';
 
 const REDUCED_MOTION =
     window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -91,6 +92,8 @@ export function playConstellation(particleSystem, onDone) {
         ease: 'sine.inOut',
         stagger: 0.06
     }, '>-0.3');
+    // 星座が結ばれきった瞬間、二拍の微振動（対応端末のみ）
+    tl.call(() => hapticPulse(HAPTIC_CONSTELLATION));
     // ③ 余韻
     tl.to({}, { duration: 0.8 });
     // ④ 花弁に解けて消える

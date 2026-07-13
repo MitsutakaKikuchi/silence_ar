@@ -1,11 +1,29 @@
 // ==========================================
 // アンビエントサウンド
 // ==========================================
+
+// マスター音量とダッキング（露見時に世界が息を止める）の定数
+const MASTER_VOLUME = 0.12;      // 定常のマスターゲイン
+const DUCK_LEVEL = 0.018;        // 息を呑んだ瞬間の残響レベル（定常の約15%）
+const DUCK_ATTACK_SEC = 0.6;     // 音が引くまでの時間
+const DUCK_HOLD_SEC = 2.5;       // 静寂の保持（uReveal 3.0s の開裂に同期）
+const DUCK_RELEASE_SEC = 2.5;    // 深く戻ってくるまでの時間
+
+// 時間帯プロファイルの既定値（timeEnvironment.js の soundProfile が上書きする）
+const DEFAULT_SOUND_PROFILE = {
+    birds: true,                  // 鳥のさえずりの有無（夕・夜は鳥が帰る）
+    dropDelayMs: [5000, 10000],   // 水滴の間合い [基本, ランダム幅]
+    bellDelayMs: [20000, 30000],  // 風鈴の間合い [基本, ランダム幅]
+    windLfoGain: 0.15             // 風の強弱の振幅
+};
+
 export class AmbientSound {
-    constructor() {
+    constructor(soundProfile = null) {
         this.audioContext = null;
         this.enabled = false;
         this.nodes = {};
+        // 時間帯連動: 訪問時刻で環境音の「間」が変わる（夜は間が深くなる）
+        this.profile = { ...DEFAULT_SOUND_PROFILE, ...soundProfile };
     }
     
     init() {
@@ -15,7 +33,7 @@ export class AmbientSound {
         
         // マスターボリューム（先に作成）
         this.masterGain = this.audioContext.createGain();
-        this.masterGain.gain.value = 0.12;
+        this.masterGain.gain.value = MASTER_VOLUME;
         this.masterGain.connect(this.audioContext.destination);
         
         // リバーブ（残響）ノードを作成
@@ -172,7 +190,7 @@ export class AmbientSound {
         windLFO.frequency.value = 0.08;
         
         const windLFOGain = this.audioContext.createGain();
-        windLFOGain.gain.value = 0.15;
+        windLFOGain.gain.value = this.profile.windLfoGain; // 時間帯で風の強弱が変わる
         
         windLFO.connect(windLFOGain);
         windLFOGain.connect(windGain.gain);
@@ -208,6 +226,7 @@ export class AmbientSound {
     
     playBirdChirp() {
         if (!this.audioContext || !this.enabled) return;
+        if (!this.profile.birds) return; // 夕・夜は鳥が帰っている
         
         // ランダムな鳥の鳴き声（短いFM合成）
         const carrier = this.audioContext.createOscillator();
@@ -276,11 +295,11 @@ export class AmbientSound {
         bellGain.gain.exponentialRampToValueAtTime(0.001, now + 2);
         osc.stop(now + 2);
         
-        // 次のベル（ランダムな間隔）
+        // 次のベル（時間帯の間合いでランダムに）
         if (this.enabled) {
             const nextBell = setTimeout(() => {
                 this.playBell();
-            }, 20000 + Math.random() * 30000);
+            }, this.profile.bellDelayMs[0] + Math.random() * this.profile.bellDelayMs[1]);
             this.nodes.bells.timers.push(nextBell);
         }
     }
@@ -303,11 +322,11 @@ export class AmbientSound {
         dropGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
         osc.stop(now + 0.3);
         
-        // 次の水滴（ランダムな間隔）
+        // 次の水滴（時間帯の間合いでランダムに）
         if (this.enabled) {
             const nextDrop = setTimeout(() => {
                 this.playWaterDrop();
-            }, 5000 + Math.random() * 10000);
+            }, this.profile.dropDelayMs[0] + Math.random() * this.profile.dropDelayMs[1]);
             this.nodes.drops.timers.push(nextDrop);
         }
     }
@@ -402,6 +421,23 @@ export class AmbientSound {
         }
     }
     
+    // 露見の瞬間、世界が息を止める。
+    // 環境音を静かに絞り、開裂が定常へ沈むのに合わせて深く戻す。
+    // targetLost 時も何もしなくてよい（このエンベロープが自然に復帰する）。
+    duckForReveal() {
+        if (!this.enabled || !this.audioContext || !this.masterGain) return;
+
+        const gain = this.masterGain.gain;
+        const now = this.audioContext.currentTime;
+        const duckEnd = now + DUCK_ATTACK_SEC + DUCK_HOLD_SEC;
+
+        gain.cancelScheduledValues(now);
+        gain.setValueAtTime(gain.value, now);
+        gain.linearRampToValueAtTime(DUCK_LEVEL, now + DUCK_ATTACK_SEC);
+        gain.setValueAtTime(DUCK_LEVEL, duckEnd);
+        gain.linearRampToValueAtTime(MASTER_VOLUME, duckEnd + DUCK_RELEASE_SEC);
+    }
+
     toggle() {
         if (!this.audioContext) {
             this.init();
@@ -420,8 +456,9 @@ export class AmbientSound {
             this.nodes.wind.source.start();
             this.nodes.wind.lfo.start();
             
-            // フェードイン
-            this.masterGain.gain.linearRampToValueAtTime(0.12, this.audioContext.currentTime + 2);
+            // フェードイン（ダッキング等の予約を破棄してから）
+            this.masterGain.gain.cancelScheduledValues(this.audioContext.currentTime);
+            this.masterGain.gain.linearRampToValueAtTime(MASTER_VOLUME, this.audioContext.currentTime + 2);
             
             // 不規則な環境音の開始（侘寂の美学に基づき、間隔を空ける）
             setTimeout(() => this.playWaterDrop(), 3000);
@@ -430,7 +467,8 @@ export class AmbientSound {
             setTimeout(() => this.playWoodCreak(), 5000);
             setTimeout(() => this.playGrassRustle(), 12000);
         } else {
-            // フェードアウト
+            // フェードアウト（ダッキング等の予約を破棄してから）
+            this.masterGain.gain.cancelScheduledValues(this.audioContext.currentTime);
             this.masterGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 1.5);
             
             // 全てのタイマーをクリア

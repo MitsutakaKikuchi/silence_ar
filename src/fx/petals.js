@@ -1,13 +1,22 @@
 // ==========================================
 // パーティクルシステム（花びら・光の粒子）
 // ==========================================
+
+// 既定のわびさびパレット（時間帯テーマ未指定時のフォールバック）
+const DEFAULT_PALETTE = {
+    petalBase: [120, 140, 100], // 苔色
+    lightBase: [140, 115, 95]   // 銅色
+};
+
 export class ParticleSystem {
-    constructor(canvas) {
+    constructor(canvas, palette = DEFAULT_PALETTE) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.particles = [];
         this.maxParticles = 35;
         this.gyroOffset = { x: 0, y: 0 };
+        // 時間帯連動: 訪問時刻のパレットで粒子を彩る（timeEnvironment.js 参照）
+        this.palette = { ...DEFAULT_PALETTE, ...palette };
         this.resize();
         this.init();
         window.addEventListener('resize', () => this.resize());
@@ -39,10 +48,10 @@ export class ParticleSystem {
             rotation: Math.random() * Math.PI * 2,
             rotationSpeed: (Math.random() - 0.5) * 0.02,
             pulse: Math.random() * Math.PI * 2,
-            color: type === 'petal' 
-                ? `rgba(${120 + Math.random() * 20}, ${140 + Math.random() * 15}, ${100 + Math.random() * 20}, ` // わびさび: 苔色
+            color: type === 'petal'
+                ? `rgba(${this.palette.petalBase[0] + Math.random() * 20}, ${this.palette.petalBase[1] + Math.random() * 15}, ${this.palette.petalBase[2] + Math.random() * 20}, ` // 苔色（時間帯で沈む）
                 : type === 'light'
-                ? `rgba(${140 + Math.random() * 20}, ${115 + Math.random() * 15}, ${95 + Math.random() * 20}, ` // わびさび: 銅色
+                ? `rgba(${this.palette.lightBase[0] + Math.random() * 20}, ${this.palette.lightBase[1] + Math.random() * 15}, ${this.palette.lightBase[2] + Math.random() * 20}, ` // 銅色（時間帯で沈む）
                 : `rgba(255, 255, 255, `
         };
     }

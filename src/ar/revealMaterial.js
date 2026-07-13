@@ -23,7 +23,8 @@ export function createRevealMaterial({ strength = 0.6, edgeColor = '#00ffaa' } =
             uHasDepth: { value: 0.0 },   // Depth Mapが利用可能か
             uCrack: { value: 0.0 },      // 亀裂ステージ（開裂に先立つ光の走り）
             uEdgeBoost: { value: 1.0 },  // エッジ発光の一時ブースト
-            uTouch: { value: new THREE.Vector4(0, 0, 0, 0) } // タッチリップル
+            uTouch: { value: new THREE.Vector4(0, 0, 0, 0) }, // タッチリップル
+            uAppear: { value: 0.0 }      // 顕現度（霧が凝結して像を結ぶ）
         },
         vertexShader,
         fragmentShader,
