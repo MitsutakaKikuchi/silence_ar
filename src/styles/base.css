@@ -18,13 +18,14 @@ body {
 }
 
 /* ARカメラビュー（MindARThree が video / canvas をこの中に生成する） */
+/* inset:0 を使用（height:100dvh を使わない）。
+   body の touch-action:none によりスクロールが起きないiOS Safariでは、
+   アドレスバーが後から自動的に引っ込んでも dvh の再計算が追従せず、
+   古い（小さい）高さのまま固定されて中身が上に取り残されて見える不具合があった。
+   inset:0 は明示的な高さの値を持たず常に実ビューポートへ追従するため、これを回避する。 */
 #ar-container {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    height: 100dvh;
+    inset: 0;
     overflow: hidden;
     z-index: 1;
 }
