@@ -102,17 +102,33 @@ function mainInit() {
     
     const hasVisited = sessionStorage.getItem('silence_ar_visited') === 'true';
     
-    // イントロ開始ボタン
+    // イントロ開始ボタン（2ビート構成）
+    // 1タップ目: このジェスチャーを起点にカメラ承認を「詩を見せる前」に済ませる。
+    // 2タップ目: 承認完了後に立ち上がった詩を読んでから、世界（AR）へ入る。
     if (introStartBtn) {
-        introStartBtn.addEventListener('click', () => {
+        let introArmed = false; // 1タップ目（カメラ承認）が完了したか
+        introStartBtn.addEventListener('click', async () => {
+            // --- 1タップ目: カメラ承認を先行させ、完了後に詩をひらく ---
+            if (!introArmed) {
+                introArmed = true;
+                introStartBtn.disabled = true;
+                introStartBtn.textContent = 'カメラを準備しています…';
+
+                // ユーザージェスチャー内でカメラ承認を要求し、解決を待つ（iOS制約）
+                await startARSafely();
+
+                // 承認が済んでから詩を立ち上げ、ボタンを入室用に切り替える
+                introOverlay.classList.add('armed');
+                introStartBtn.disabled = false;
+                introStartBtn.textContent = '庭へ降りる';
+                return;
+            }
+
+            // --- 2タップ目: 切開ワイプで世界へ入り、ガイドを表示 ---
             if (introShown) return;
             introShown = true;
             sessionStorage.setItem('silence_ar_visited', 'true');
 
-            // ユーザージェスチャー起点でカメラを起動（iOSの権限連鎖）
-            startARSafely();
-
-            // 切開ワイプ（最初の一刀）でカメラビューへ入り、ガイドを表示
             playIncision(introOverlay, () => {
                 introOverlay.classList.remove('visible');
                 introOverlay.classList.add('hidden');
@@ -186,13 +202,23 @@ function mainInit() {
 
         playConstellation(particleSystem, () => {
             const lines = completionOverlay.querySelectorAll('.line');
+            const LINE_STEP = 800;      // 行の立ち上がり間隔
+            const LINE_BASE = 300;      // 最初の行までの待ち
+            const LINE_REVEAL = 1000;   // 1行のフェード所要（transition）
             lines.forEach((line, index) => {
                 setTimeout(() => {
                     line.style.opacity = '1';
                     line.style.transform = 'translateY(0)';
                     line.style.transition = 'all 1s ease';
-                }, 300 + index * 800);
+                }, LINE_BASE + index * LINE_STEP);
             });
+
+            // ボタンは全行が出揃ってから現れる（固定8s遅延をやめ本文完了に同期）
+            const actions = completionOverlay.querySelector('.completion-actions');
+            if (actions) {
+                const lastLineAt = LINE_BASE + Math.max(lines.length - 1, 0) * LINE_STEP;
+                setTimeout(() => actions.classList.add('visible'), lastLineAt + LINE_REVEAL + 400);
+            }
         });
     }
     
@@ -392,16 +418,17 @@ function mainInit() {
         // 少し待ってからフェードアウト
         setTimeout(() => {
             customLoading.classList.add('fade-out');
-            
-            setTimeout(() => {
+
+            setTimeout(async () => {
                 // 初回かつ未訪問ならイントロを表示（カメラはタップ時に起動）、
-                // 再訪時は即カメラ起動してガイドへ
+                // 再訪時はカメラ承認の完了を待ってからガイドへ
                 if (!hasVisited && !introShown) {
                     introOverlay.classList.remove('hidden');
                     introOverlay.classList.add('visible');
                     revealIntroTitle(introOverlay);
                 } else {
-                    startARSafely();
+                    // 承認ダイアログが案内文に被らないよう、完了を待ってから表示
+                    await startARSafely();
                     scanningGuide.classList.remove('hidden');
                     scanningGuide.classList.add('visible');
                 }

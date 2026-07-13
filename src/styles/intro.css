@@ -54,6 +54,17 @@
     max-width: 320px;
     margin-bottom: 60px;
     font-feature-settings: "palt";
+    /* 2ビート構成: カメラ承認（1タップ目）が済むまで詩は伏せておく。
+       承認後に .armed が付与され、静かに立ち上がる。 */
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 1.4s ease, transform 1.4s ease;
+    pointer-events: none;
+}
+
+.intro-overlay.armed .intro-poem {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .intro-start {

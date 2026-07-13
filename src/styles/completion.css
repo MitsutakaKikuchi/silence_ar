@@ -6,16 +6,11 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.9);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
     z-index: 2000;
     opacity: 0;
     pointer-events: none;
     transition: opacity 1.5s ease;
     background-image: var(--paper-texture);
-    padding: 60px 20px 20px 20px;
     box-sizing: border-box;
     overflow-y: auto;
     touch-action: pan-y; /* bodyのtouch-action: noneを上書き */
@@ -25,6 +20,20 @@
 .completion-overlay.visible {
     opacity: 1;
     pointer-events: auto;
+}
+
+/* スクロール安全な上下中央寄せ:
+   内容が収まるときは中央、あふれる場合は上から自然にスクロールできる。
+   （iPhoneで上寄りに見える問題への対処。パディングはこちらへ移動） */
+.completion-inner {
+    min-height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: max(60px, env(safe-area-inset-top)) 20px
+             max(20px, env(safe-area-inset-bottom)) 20px;
 }
 
 .completion-text {
@@ -74,9 +83,10 @@
     flex-shrink: 0; /* 縮小しない */
 }
 
-/* ボタンは星座演出(約4.5s)と本文の立ち上がりを待ってから現れる */
-.completion-overlay.visible .completion-actions {
-    animation: completionBtnFadeIn 1s ease forwards 8s;
+/* ボタンは本文の全行が出揃ってから現れる。
+   タイミングは固定遅延ではなく JS(main.js showCompletion) が .visible 付与で制御する。 */
+.completion-actions.visible {
+    animation: completionBtnFadeIn 1s ease forwards;
 }
 
 .completion-btn {

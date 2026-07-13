@@ -13,9 +13,8 @@
     padding: 0;
     margin-bottom: 0;
     /* 背景は92%不透明なので blur は薄くても見た目はほぼ同じ。
-       スライド中に大面積のガウスぼかしを毎フレーム再計算する負荷を軽減するため 25→12px。 */
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+       backdrop-filter はスライド中に毎フレーム再計算されカクつきの主因になるため、
+       着地後(.settled)にのみ有効化する（下部 .card.settled を参照）。 */
     box-shadow:
         0 -10px 50px rgba(0,0,0,0.7),
         0 -2px 20px rgba(0, 255, 170, 0.08),
@@ -50,9 +49,15 @@
 .card.visible {
     display: flex; /* visible時にflexに戻す */
     opacity: 1;
-    box-shadow: 
+    box-shadow:
         0 -15px 60px rgba(0,0,0,0.8),
         0 -5px 30px rgba(0, 255, 170, 0.12);
+}
+
+/* スライド着地後にのみ すりガラス を適用（入場中の毎フレーム再計算を回避） */
+.card.settled {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 /* カードオープン時のパルスエフェクト */
@@ -245,6 +250,12 @@ h2::after {
     opacity: 1;
     transform: translateY(15px);
     transition: transform 0.6s ease 0.2s;
+    /* 和文の禁則・折り返し品質を上げる（句読点や約物の詰め＋強い禁則規則）。
+       文字単位spanのため WORD JOINER で禁則位置を補強している（ui/cardMotion.js）。 */
+    line-break: strict;
+    word-break: normal;
+    overflow-wrap: normal;
+    font-feature-settings: "palt";
 }
 
 .card.visible .description-box {
