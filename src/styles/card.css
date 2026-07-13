@@ -12,9 +12,9 @@
     border-radius: 30px 30px 0 0; /* 上部のみ丸く、下部は直角に */
     padding: 0;
     margin-bottom: 0;
-    /* 背景は92%不透明なので blur は薄くても見た目はほぼ同じ。
-       backdrop-filter はスライド中に毎フレーム再計算されカクつきの主因になるため、
-       着地後(.settled)にのみ有効化する（下部 .card.settled を参照）。 */
+    /* backdrop-filter は使わない。背景は92%不透明で見た目差はほぼ無い一方、
+       カード表示中は背後でカメラ映像+WebGLが描画され続けるため、
+       そのすりガラス化は毎フレームの高負荷（カクつき源）になる。 */
     box-shadow:
         0 -10px 50px rgba(0,0,0,0.7),
         0 -2px 20px rgba(0, 255, 170, 0.08),
@@ -52,12 +52,6 @@
     box-shadow:
         0 -15px 60px rgba(0,0,0,0.8),
         0 -5px 30px rgba(0, 255, 170, 0.12);
-}
-
-/* スライド着地後にのみ すりガラス を適用（入場中の毎フレーム再計算を回避） */
-.card.settled {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
 }
 
 /* カードオープン時のパルスエフェクト */
@@ -169,13 +163,13 @@
     mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
     opacity: 0;
-    transform: scale(1.04);
-    transition: opacity 0.9s ease, transform 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+    /* 以前は scale のケンバーンズを併用していたが、filter+mask 付き画像の
+       transform アニメはカード入場と同時に走ると重い。フェードのみに簡素化。 */
+    transition: opacity 0.9s ease;
     filter: saturate(0.7) sepia(0.15) contrast(0.95);
 }
 #ui-image.loaded {
     opacity: 1;
-    transform: scale(1);
 }
 
 /* テキストエリア */
@@ -330,13 +324,13 @@ h2::after {
     background: rgba(0,0,0,0.6);
     border-radius: 50%;
     display: flex; justify-content: center; align-items: center;
-    color: rgba(255,255,255,0.9); 
-    font-size: 1.4rem; 
+    color: rgba(255,255,255,0.9);
+    font-size: 1.4rem;
     cursor: pointer;
     z-index: 10;
     border: 1px solid rgba(255,255,255,0.12);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    /* backdrop-filter は外す: スライド中にカメラ映像を毎フレームぼかす負荷源。
+       背景 rgba(0,0,0,0.6) で視認性は十分。 */
     transition: all 0.3s ease;
     box-shadow: 0 2px 15px rgba(0,0,0,0.4);
 }

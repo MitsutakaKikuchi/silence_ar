@@ -60,9 +60,8 @@ export function openCard(card) {
     const desc = card.querySelector('#ui-desc');
 
     card.classList.add('visible');
-    // pulse(box-shadowアニメ)とbackdrop-filterはスライド完了後に付与する。
-    // スライド中に毎フレーム再描画/再合成させないためのカクつき対策。
-    card.classList.remove('pulse-effect', 'settled');
+    // パルスは着地後に付与（スライド中に box-shadow を毎フレーム再描画させない）
+    card.classList.remove('pulse-effect');
 
     const chars = desc ? splitChars(desc) : [];
 
@@ -72,30 +71,29 @@ export function openCard(card) {
     if (REDUCED_MOTION) {
         gsap.set(card, { y: '0%' });
         if (chars.length) gsap.set(chars, { opacity: 1, y: 0 });
-        card.classList.add('pulse-effect', 'settled');
+        card.classList.add('pulse-effect');
         return;
     }
 
     gsap.set(card, { willChange: 'transform' });
 
     const tl = gsap.timeline();
-    // 入場: 上に僅かに行き過ぎてから沈む（呼吸のような着地）
+    // ① スライド単独: 文字リビールや画像演出と競合させず、まず滑らかに着地させる
     tl.fromTo(
         card,
         { y: '100%' },
         {
             y: '0%',
-            duration: 0.95,
+            duration: 0.9,
             ease: 'back.out(1.1)',
             onComplete: () => {
-                // 着地してからパルス発火・すりガラス(backdrop-filter)を有効化
-                card.classList.add('pulse-effect', 'settled');
+                card.classList.add('pulse-effect');
                 gsap.set(card, { willChange: 'auto' });
             }
         },
         0
     );
-    // 詩は一文字ずつ、闇からゆっくり浮かび上がる（blurは負荷が高いので使わない）
+    // ② 着地後に本文を一字ずつ立ち上げる（スライド完了に続けて開始）
     if (chars.length) {
         tl.fromTo(
             chars,
@@ -103,17 +101,17 @@ export function openCard(card) {
             {
                 opacity: 1,
                 y: 0,
-                duration: 0.55,
+                duration: 0.5,
                 ease: 'power2.out',
-                stagger: 0.028
+                stagger: 0.022
             },
-            0.4
+            0.9
         );
     }
 }
 
 export function closeCard(card) {
-    card.classList.remove('visible', 'pulse-effect', 'settled');
+    card.classList.remove('visible', 'pulse-effect');
     gsap.killTweensOf(card);
     if (REDUCED_MOTION) {
         gsap.set(card, { y: '100%' });

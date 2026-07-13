@@ -1,16 +1,10 @@
 // ==========================================
-// View Transitions API ラッパー（プログレッシブ強化）
-// 対応環境(iOS 18+/Chrome)ではオーバーレイの切替が
-// ページ全体のクロスフェードとして滑らかに繋がる。
-// 非対応環境では既存のCSS transitionがそのまま働く。
+// オーバーレイ切替ヘルパー
+// 以前は View Transitions API でページ全体をクロスフェードしていたが、
+// ライブカメラ(video)/WebGL を含む全画面スナップショットの取得で映像が
+// フリーズ→ジャンプして見える不具合があったため使用を停止。
+// 各オーバーレイ自身の CSS transition（opacity 等）に委ねる。
 // ==========================================
-const REDUCED_MOTION =
-    window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 export function swapOverlay(mutate) {
-    if (document.startViewTransition && !REDUCED_MOTION) {
-        document.startViewTransition(mutate);
-    } else {
-        mutate();
-    }
+    mutate();
 }
