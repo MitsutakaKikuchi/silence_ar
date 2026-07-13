@@ -134,3 +134,94 @@
     pointer-events: none;
     z-index: 999999; /* イントロオーバーレイ(999998)より上 */
 }
+
+
+/* ========================================
+   扉の演出（観音開き）
+   イントロの詩を読んだあと「扉を開く」で、模様入りの両扉が
+   奥へ swing open し、庭（AR）が現れる。回転は GSAP (introFx.js) が動かす。
+   ======================================== */
+#door-scene {
+    position: fixed;
+    inset: 0;
+    z-index: 999999; /* イントロ内容(999998)を覆う */
+    perspective: 1600px;
+    perspective-origin: 50% 45%;
+    visibility: hidden;
+    pointer-events: none;
+}
+#door-scene.active {
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.door {
+    position: absolute;
+    top: 0;
+    width: 50.3%; /* 中央を僅かに重ね、閉じた状態の隙間を防ぐ */
+    height: 100%;
+    background-color: #070707;
+    background-image:
+        var(--paper-texture),
+        radial-gradient(130% 90% at 50% 42%, rgba(0, 255, 170, 0.05), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.35));
+    box-shadow: inset 0 0 130px rgba(0, 0, 0, 0.75);
+    will-change: transform;
+    backface-visibility: hidden;
+}
+
+/* 扉の紋様（種子・月）。左右で鏡像に配置し、両開きの対称を作る */
+.door::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 170"><g fill="none" stroke="rgba(0,255,170,0.22)" stroke-width="1.1"><circle cx="60" cy="118" r="10"/><path d="M60 108 C62 90 53 80 57 62 C60 49 66 44 62 26"/><path d="M61 58 C52 52 45 54 37 45"/><path d="M63 72 C71 64 80 66 87 56"/><circle cx="60" cy="118" r="27" stroke="rgba(0,255,170,0.12)"/><circle cx="60" cy="118" r="44" stroke="rgba(0,255,170,0.07)"/></g></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 44% auto;
+}
+
+/* 取っ手（内側の丸い環） */
+.door::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    border: 1.5px solid rgba(0, 255, 170, 0.5);
+    border-radius: 50%;
+    box-shadow: 0 0 12px rgba(0, 255, 170, 0.3), inset 0 0 8px rgba(0, 255, 170, 0.15);
+}
+
+.door-left {
+    left: 0;
+    transform-origin: left center;
+    border-right: 1px solid rgba(0, 255, 170, 0.15);
+}
+.door-left::after { right: 16px; }
+
+.door-right {
+    right: 0;
+    transform-origin: right center;
+    border-left: 1px solid rgba(0, 255, 170, 0.15);
+}
+.door-right::before { transform: scaleX(-1); }
+.door-right::after { left: 16px; }
+
+/* 中央の継ぎ目の光（開く直前に息づく） */
+.door-seam {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 100%;
+    margin-left: -1px;
+    background: linear-gradient(to bottom,
+        transparent,
+        rgba(0, 255, 170, 0.9) 15%,
+        rgba(0, 255, 170, 0.9) 85%,
+        transparent);
+    box-shadow: 0 0 16px rgba(0, 255, 170, 0.6), 0 0 48px rgba(0, 255, 170, 0.25);
+    transform-origin: center;
+}

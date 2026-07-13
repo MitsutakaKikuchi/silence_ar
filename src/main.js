@@ -32,7 +32,7 @@ import { RippleEffect } from './ui/ripple.js';
 import { TheaterMode } from './ui/theaterMode.js';
 import { openCard, closeCard, pingSeed } from './ui/cardMotion.js';
 import { swapOverlay } from './ui/transitions.js';
-import { revealIntroTitle, playIncision } from './ui/introFx.js';
+import { revealIntroTitle, playDoors } from './ui/introFx.js';
 import { playConstellation } from './ui/completionFx.js';
 import { AmbientSound } from './audio/ambientSound.js';
 
@@ -120,18 +120,22 @@ function mainInit() {
                 // 承認が済んでから詩を立ち上げ、ボタンを入室用に切り替える
                 introOverlay.classList.add('armed');
                 introStartBtn.disabled = false;
-                introStartBtn.textContent = '庭へ降りる';
+                introStartBtn.textContent = '扉を開く';
                 return;
             }
 
-            // --- 2タップ目: 切開ワイプで世界へ入り、ガイドを表示 ---
+            // --- 2タップ目: 観音開きの扉で世界へ入り、ガイドを表示 ---
             if (introShown) return;
             introShown = true;
             sessionStorage.setItem('silence_ar_visited', 'true');
 
-            playIncision(introOverlay, () => {
-                introOverlay.classList.remove('visible');
-                introOverlay.classList.add('hidden');
+            // 扉で画面を覆ってからイントロ背景を隠す（開いた隙間からARが見える）
+            const doorScene = document.getElementById('door-scene');
+            if (doorScene) doorScene.classList.add('active');
+            introOverlay.classList.remove('visible');
+            introOverlay.classList.add('hidden');
+
+            playDoors(() => {
                 scanningGuide.classList.add('visible');
             });
         });

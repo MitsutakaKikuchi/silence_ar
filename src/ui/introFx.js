@@ -55,3 +55,43 @@ export function playIncision(overlay, onOpened) {
         .to(line, { opacity: 0, duration: 0.35, ease: 'sine.out' }, 0.85)
         .call(onOpened);
 }
+
+// 観音開きの扉演出。中央の継ぎ目が息づいてから、
+// 模様入りの両扉が奥へ swing open し、庭（AR）が現れる。
+// #door-scene は事前に .active で表示済みである前提。
+export function playDoors(onOpened) {
+    const scene = document.getElementById('door-scene');
+    const left = scene && scene.querySelector('.door-left');
+    const right = scene && scene.querySelector('.door-right');
+    const seam = scene && scene.querySelector('.door-seam');
+
+    const finish = () => {
+        if (scene) scene.classList.remove('active');
+        if (left && right) gsap.set([left, right], { clearProps: 'all' });
+        if (seam) gsap.set(seam, { clearProps: 'all' });
+        onOpened();
+    };
+
+    if (REDUCED_MOTION || !scene || !left || !right) {
+        finish();
+        return;
+    }
+
+    const tl = gsap.timeline({ onComplete: finish });
+
+    // 継ぎ目が息づく
+    if (seam) {
+        tl.fromTo(seam,
+            { opacity: 0, scaleY: 0.6 },
+            { opacity: 1, scaleY: 1, duration: 0.4, ease: 'power2.out' }, 0);
+    }
+    // 両扉が奥へ開く（観音開き）
+    tl.to(left, { rotateY: 108, duration: 1.25, ease: 'power3.inOut' }, 0.35)
+      .to(right, { rotateY: -108, duration: 1.25, ease: 'power3.inOut' }, 0.35);
+    // 継ぎ目の光は開き始めに解ける
+    if (seam) {
+        tl.to(seam, { opacity: 0, duration: 0.5, ease: 'sine.out' }, 0.5);
+    }
+    // 開ききる手前で扉を薄く消し、縁のちらつきを防ぐ
+    tl.to([left, right], { opacity: 0, duration: 0.45, ease: 'sine.in' }, '-=0.5');
+}
