@@ -47,14 +47,14 @@ export class RevealController {
                     tl.to(u.uCrack, { value: 1, duration: 0.7 / speed, ease: 'power1.out' }, 0);
                 }
                 const revealStart = this.crackEnabled ? 0.5 / speed : 0;
-                // 被膜がゆっくり剥がれるよう開裂を減速（2.4s → 4.0s）
-                tl.to(u.uReveal, { value: 1, duration: 4.0 / speed, ease: 'power2.inOut' }, revealStart);
+                // 被膜がゆっくり剥がれるよう開裂を減速（uReveal: 3.0s）
+                tl.to(u.uReveal, { value: 1, duration: 3.0 / speed, ease: 'power2.inOut' }, revealStart);
                 // 開裂の中間点で発光がひときわ強まり、ゆっくり定常へ沈む
-                tl.to(u.uEdgeBoost, { value: 1.9, duration: 1.2 / speed, ease: 'power1.in' }, 1.3 / speed)
-                  .to(u.uEdgeBoost, { value: 1.0, duration: 1.8 / speed, ease: 'sine.out' }, 2.7 / speed);
+                tl.to(u.uEdgeBoost, { value: 1.9, duration: 1.0 / speed, ease: 'power1.in' }, 1.0 / speed)
+                  .to(u.uEdgeBoost, { value: 1.0, duration: 1.4 / speed, ease: 'sine.out' }, 2.0 / speed);
                 // 亀裂は開裂の進行とともに癒える
                 if (this.crackEnabled) {
-                    tl.to(u.uCrack, { value: 0, duration: 1.4 / speed, ease: 'sine.out' }, 1.8 / speed);
+                    tl.to(u.uCrack, { value: 0, duration: 1.2 / speed, ease: 'sine.out' }, 1.4 / speed);
                 }
             } else {
                 // 逆再生（約1.6倍速）: 傷が静かに閉じる
