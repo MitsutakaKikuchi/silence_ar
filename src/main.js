@@ -91,6 +91,7 @@ function mainInit() {
     let arReady = false;
     let introShown = false;
     let completionShown = false;
+    let imageLoadingIndex = -1; // カード画像を読み込み中のエピソード（同一話の多重クリック抑止）
     
     // 閲覧履歴をlocalStorageから復元
     const viewedEpisodes = new Set();
@@ -140,6 +141,8 @@ function mainInit() {
 
             playDoors(() => {
                 scanningGuide.classList.add('visible');
+                // スキャン開始。空き時間に全テクスチャをGPUへ温めておく（認識時のカクつき防止）
+                arScene.preloadAllTextures();
             });
         });
     }
@@ -372,7 +375,11 @@ function mainInit() {
             if (!viewedEpisodes.has(index)) return;
             const data = episodes[index];
             if (!data) return;
-            
+
+            // 同じエピソードを読み込み中の再クリックは無視
+            // （再アニメーション・画像の再読込によるカクつきを防ぐ）
+            if (imageLoadingIndex === index) return;
+
             const wasViewed = viewedEpisodes.has(index);
             const cardWasVisible = card.classList.contains('visible');
 
@@ -397,16 +404,23 @@ function mainInit() {
             const isPreloaded = preloadedImageCache[index];
             if (!isPreloaded) imageLoading.classList.remove('hidden');
             uiImage.classList.remove('loaded');
-            
+
+            imageLoadingIndex = index;
             uiImage.onload = () => {
+                imageLoadingIndex = -1;
                 imageLoading.classList.add('hidden');
                 setTimeout(() => {
                     uiImage.classList.add('loaded');
                 }, isPreloaded ? 50 : 150);
             };
-            
+            uiImage.onerror = () => {
+                imageLoadingIndex = -1;
+                imageLoading.classList.add('hidden');
+                console.error('Failed to load image:', data.image);
+            };
+
             uiImage.src = data.image;
-            
+
             if (!cardWasVisible) {
                 setTimeout(() => openCard(card), 80);
             } else {
@@ -476,6 +490,8 @@ function mainInit() {
                     await startARSafely();
                     scanningGuide.classList.remove('hidden');
                     scanningGuide.classList.add('visible');
+                    // 再訪時もスキャン開始でテクスチャを温める（認識時のカクつき防止）
+                    arScene.preloadAllTextures();
                 }
             }, 800);
         }, 500);
@@ -605,19 +621,22 @@ function mainInit() {
         const isPreloaded = preloadedImageCache[index];
         if (!isPreloaded) imageLoading.classList.remove('hidden');
         uiImage.classList.remove('loaded');
-        
+
+        imageLoadingIndex = index;
         uiImage.onload = () => {
+            imageLoadingIndex = -1;
             imageLoading.classList.add('hidden');
             setTimeout(() => {
                 uiImage.classList.add('loaded');
             }, isPreloaded ? 50 : 150);
         };
-        
+
         uiImage.onerror = () => {
+            imageLoadingIndex = -1;
             imageLoading.classList.add('hidden');
             console.error('Failed to load image:', data.image);
         };
-        
+
         uiImage.src = data.image;
         
         const previewPrompt = document.getElementById('ar-preview-prompt');

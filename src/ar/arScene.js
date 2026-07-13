@@ -10,8 +10,14 @@ import { createSeamParticles } from './seamParticles.js';
 import { RevealController } from './revealController.js';
 import { loadTextureWithCache } from '../core/textureCache.js';
 import { events } from '../core/events.js';
+import { state } from '../core/state.js';
 
 const TARGET_COUNT = 10;
+
+// 全テクスチャ先読み（GPU事前アップロード）のスケジューリング定数
+const TEXTURE_PRELOAD_START_MS = 600;    // カメラ起動が落ち着くまでの初期待ち
+const TEXTURE_PRELOAD_STAGGER_MS = 300;  // 1話ぶんの温めごとの間隔
+const TEXTURE_PRELOAD_RETRY_MS = 500;    // 露見中は避け、後で再試行する間隔
 
 // targets.mind をストリーム取得し、バイト単位の進捗を通知する。
 // 取得結果は Blob URL として MindARThree に渡す。
@@ -58,6 +64,8 @@ export class ARScene {
         this.started = false;
         this.raycaster = new THREE.Raycaster();
         this.lowQuality = qualityOverride() === 'low';
+        this.renderer = null; // start() で MindAR のレンダラを保持（GPU事前アップロード用）
+        this.preloadStarted = false; // 全テクスチャ先読みは一度だけ走らせる
     }
 
     // MindARThree の構築とアンカー配線（カメラはまだ起動しない）
@@ -122,13 +130,15 @@ export class ARScene {
         });
     }
 
-    // テクスチャの遅延ロード（ターゲット検出時に呼び出し）
+    // テクスチャの遅延ロード（ターゲット検出時・先読み時に呼び出し）。
+    // renderer を渡すことで、デコード後すぐGPUへアップロードし、
+    // 初回描画時のカクつき（デコード+アップロードの同期処理）を解消する。
     loadTextures(index) {
         if (this.texturesLoaded.has(index)) return;
         this.texturesLoaded.add(index);
         const params = this.textureParams[index];
         const material = this.controller.entries[index]?.material;
-        if (material) loadRevealTextures(material, params);
+        if (material) loadRevealTextures(material, params, this.renderer);
 
         // パーティクル側にも同じ深度マップを共有（キャッシュ経由なので二重取得なし）
         const particleMaterial = this.controller.entries[index]?.particleMaterial;
@@ -137,9 +147,33 @@ export class ARScene {
                 .then((tex) => {
                     particleMaterial.uniforms.uDepth.value = tex;
                     particleMaterial.uniforms.uHasDepth.value = 1.0;
+                    this.renderer?.initTexture?.(tex);
                 })
                 .catch(() => {});
         }
+    }
+
+    // 全エピソードのテクスチャを段階的に先読みし、GPUへ事前アップロードしておく。
+    // スキャン開始後のアイドル時間に少しずつ温めることで、ターゲット認識時の
+    // デコード/アップロードが露見アニメと競合するカクつきを防ぐ。
+    // 全10話を巡ればいずれ全テクスチャがGPUに載るため、ピークVRAMは増えない（前倒し）。
+    // スキャン開始の合図で呼ぶ（複数箇所から呼ばれても一度だけ実行）。
+    preloadAllTextures() {
+        if (this.preloadStarted || !this.renderer) return;
+        this.preloadStarted = true;
+        let index = 0;
+        const step = () => {
+            if (index >= TARGET_COUNT) return;
+            // 露見の最中はアップロードを避け、アニメの滑らかさを優先する
+            if (state.arTargetActive === true) {
+                setTimeout(step, TEXTURE_PRELOAD_RETRY_MS);
+                return;
+            }
+            this.loadTextures(index);
+            index++;
+            setTimeout(step, TEXTURE_PRELOAD_STAGGER_MS);
+        };
+        setTimeout(step, TEXTURE_PRELOAD_START_MS);
     }
 
     // 画面座標→現在アンカーの平面uvへレイキャストし、タッチリップルを発火
@@ -187,6 +221,7 @@ export class ARScene {
         this.started = true;
         await this.mindar.start();
         const { renderer, scene, camera } = this.mindar;
+        this.renderer = renderer;
         renderer.setAnimationLoop((time) => {
             this.controller.update(time || performance.now());
             renderer.render(scene, camera);

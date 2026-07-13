@@ -33,14 +33,20 @@ export function createRevealMaterial({ strength = 0.6, edgeColor = '#00ffaa' } =
     });
 }
 
-// テクスチャの遅延ロード（ターゲット検出時に呼び出し）
-export function loadRevealTextures(material, { layerA, layerB, depthMap }) {
+// テクスチャの遅延ロード（ターゲット検出時・先読み時に呼び出し）。
+// renderer を渡すと、デコード完了後すぐにGPUへアップロード(initTexture)し、
+// 初回描画フレームでのアップロード同期処理によるカクつきを防ぐ。
+export function loadRevealTextures(material, { layerA, layerB, depthMap }, renderer = null) {
     const load = (url, uniform, isDepth) => {
         if (!url) return;
         loadTextureWithCache(url)
             .then((tex) => {
                 material.uniforms[uniform].value = tex;
                 if (isDepth) material.uniforms.uHasDepth.value = 1.0;
+                // GPUへ事前アップロードして初回描画時のカクつきを防ぐ
+                if (renderer && typeof renderer.initTexture === 'function') {
+                    renderer.initTexture(tex);
+                }
             })
             .catch((err) => {
                 console.log(`Texture load failed: ${url}`, err);
