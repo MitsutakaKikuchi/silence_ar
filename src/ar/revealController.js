@@ -1,9 +1,9 @@
 // ==========================================
 // リビール振付（GSAPタイムライン）
 // 旧実装の固定lerp(0.02/frame)を、4段階の振付に置き換える:
-//   ⓪ 0-1.1s   uAppear — 霧が凝結し、記憶（Layer A）が像を結ぶ
-//   ① 0.9s~    uCrack  — 深部から細い光の亀裂が走る
-//   ② 1.4s~    uReveal — 有機的に開裂 (power2.inOut)
+//   ⓪ 0-1.9s   uAppear — 霧が凝結し、記憶（Layer A）が像を結ぶ
+//   ① 1.5s~    uCrack  — 深部から細い光の亀裂が走る
+//   ② 2.0s~    uReveal — 有機的に開裂 (power2.inOut)
 //   ③ 中間点    uEdgeBoost — エッジ発光がパルスして定常へ沈む
 // targetLost 時は約1.6倍速で逆再生する。
 // ジャイロ平滑(uViewVec)は旧 tick() の忠実移植。
@@ -19,8 +19,10 @@ const REDUCED_MOTION =
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // 顕現ステージの振付定数
-const APPEAR_DURATION = 1.1; // 結像にかける時間（秒）
-const APPEAR_LEAD = 0.9;     // 顕現がほぼ結像してから亀裂が走るまでのリード（秒）
+// 浮かび上がりのフェードをより緩やかに感じさせるため、結像にかける時間を延長
+// （後続の亀裂リードも同じ比率で後ろへ送り、結像が十分進んでから始まるようにする）
+const APPEAR_DURATION = 1.9; // 結像にかける時間（秒）
+const APPEAR_LEAD = 1.5;     // 顕現がほぼ結像してから亀裂が走るまでのリード（秒）
 const APPEAR_CLOSE = 0.8;    // targetLost 時に像が霧へ還る時間（秒）
 
 export class RevealController {
