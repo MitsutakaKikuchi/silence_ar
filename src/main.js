@@ -116,7 +116,10 @@ function mainInit() {
             if (!introArmed) {
                 introArmed = true;
                 introStartBtn.disabled = true;
-                introStartBtn.textContent = 'カメラの使用を許可してください';
+                // 「カメラを許可してください」は他の状態より文字数が多く、
+                // 通常サイズだと狭い画面幅で折り返るため、この間だけ詰めて一行に収める。
+                introStartBtn.classList.add('compact');
+                introStartBtn.textContent = 'カメラを許可してください';
 
                 // ユーザージェスチャー内でカメラ承認を要求し、解決を待つ（iOS制約）
                 await startARSafely();
@@ -124,6 +127,7 @@ function mainInit() {
                 // 承認が済んでから詩を立ち上げ、ボタンを入室用に切り替える
                 introOverlay.classList.add('armed');
                 introStartBtn.disabled = false;
+                introStartBtn.classList.remove('compact');
                 introStartBtn.textContent = '扉を開く';
                 return;
             }

@@ -90,6 +90,16 @@
     transform: scale(0.98);
 }
 
+/* カメラ許可待ちの案内文（「カメラを許可してください」）は他の状態より長く、
+   通常のpadding/letter-spacingのままだと375px幅でも2行に折り返り、
+   末尾が孤立して見えてしまう。この状態だけ詰めて一行に収める。 */
+.intro-start.compact {
+    padding: 16px 24px;
+    font-size: 0.76rem;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+}
+
 
 /* ========================================
    切開ワイプ
