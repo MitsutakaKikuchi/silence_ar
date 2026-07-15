@@ -1,7 +1,7 @@
 // ==========================================
 // イントロ演出
 // - タイトルの文字単位リビール
-// - 「標本室の扉を開く」タップ後の切開ワイプ:
+// - 「はじめる」タップ後の切開ワイプ:
 //   縦のティール・ヘアラインが走り、幕がマスクで左右に開く。
 //   最初の解剖の一刀としてカメラビューへ入る。
 // ==========================================
@@ -64,11 +64,13 @@ export function playDoors(onOpened) {
     const left = scene && scene.querySelector('.door-left');
     const right = scene && scene.querySelector('.door-right');
     const seam = scene && scene.querySelector('.door-seam');
+    const light = scene && scene.querySelector('.door-light');
 
     const finish = () => {
         if (scene) scene.classList.remove('active');
         if (left && right) gsap.set([left, right], { clearProps: 'all' });
         if (seam) gsap.set(seam, { clearProps: 'all' });
+        if (light) gsap.set(light, { clearProps: 'all' });
         onOpened();
     };
 
@@ -79,19 +81,51 @@ export function playDoors(onOpened) {
 
     const tl = gsap.timeline({ onComplete: finish });
 
-    // 継ぎ目が息づく
+    // 1) 継ぎ目が息づいて立ち上がる
     if (seam) {
         tl.fromTo(seam,
             { opacity: 0, scaleY: 0.6 },
-            { opacity: 1, scaleY: 1, duration: 0.4, ease: 'power2.out' }, 0);
+            { opacity: 1, scaleY: 1, duration: 0.5, ease: 'power2.out' }, 0);
     }
-    // 両扉が奥へ開く（観音開き）
-    tl.to(left, { rotateY: 108, duration: 1.25, ease: 'power3.inOut' }, 0.35)
-      .to(right, { rotateY: -108, duration: 1.25, ease: 'power3.inOut' }, 0.35);
+
+    // 2) 開く前に“ため”（静止のひと呼吸）を置き、
+    //    掛金が外れるように両扉が微かに軋んで震える。
+    tl.to(left, {
+        keyframes: { rotateY: [0, -2, 1.4, -0.8, 0], easeEach: 'sine.inOut' },
+        duration: 0.36
+    }, 1.0)
+      .to(right, {
+        keyframes: { rotateY: [0, 2, -1.4, 0.8, 0], easeEach: 'sine.inOut' },
+        duration: 0.36
+    }, 1.0);
+    // 震えに合わせて継ぎ目が一瞬強く閃く
+    if (seam) {
+        tl.fromTo(seam,
+            { filter: 'brightness(1)' },
+            { filter: 'brightness(2.2)', duration: 0.18, yoyo: true, repeat: 1, ease: 'sine.inOut' }, 1.0);
+    }
+
+    // 3) 隙間から光が滲み出しはじめる
+    if (light) {
+        tl.fromTo(light,
+            { opacity: 0, scale: 0.6 },
+            { opacity: 0.85, scale: 1, duration: 1.0, ease: 'power2.out' }, 1.3);
+    }
+
+    // 4) “ため”のあと、両扉が奥へ開く（観音開き）
+    tl.to(left, { rotateY: 108, duration: 1.0, ease: 'power3.inOut' }, 1.45)
+      .to(right, { rotateY: -108, duration: 1.0, ease: 'power3.inOut' }, 1.45);
     // 継ぎ目の光は開き始めに解ける
     if (seam) {
-        tl.to(seam, { opacity: 0, duration: 0.5, ease: 'sine.out' }, 0.5);
+        tl.to(seam, { opacity: 0, duration: 0.5, ease: 'sine.out' }, 1.5);
     }
-    // 開ききる手前で扉を薄く消し、縁のちらつきを防ぐ
-    tl.to([left, right], { opacity: 0, duration: 0.45, ease: 'sine.in' }, '-=0.5');
+
+    // 5) 開ききる手前で扉を薄く消し、縁のちらつきを防ぐ
+    tl.to([left, right], { opacity: 0, duration: 0.4, ease: 'sine.in' }, 2.05);
+    // 6) 漏れた光は最後にやわらかく満ちて消える
+    if (light) {
+        tl.to(light, { opacity: 0, scale: 1.45, duration: 0.65, ease: 'sine.inOut' }, 2.15);
+    }
+    // 7) 光が満ちてから、暗転→AR への切り替わりに一拍の余韻を置く
+    tl.to({}, { duration: 0.3 });
 }

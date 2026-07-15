@@ -166,32 +166,25 @@
         radial-gradient(130% 90% at 50% 42%, rgba(0, 255, 170, 0.05), transparent 60%),
         linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.35));
     box-shadow: inset 0 0 130px rgba(0, 0, 0, 0.75);
+    overflow: hidden; /* 継ぎ目をまたぐ紋様の反対側半分を切り落とす */
     will-change: transform;
     backface-visibility: hidden;
 }
 
-/* 扉の紋様（種子・月）。左右で鏡像に配置し、両開きの対称を作る */
+/* 扉の紋様（蔦）。中央の根元から左右へ一対の蔦が這い上がり、小葉を広げる。
+   閉じた状態では継ぎ目で一株の蔦を成し、開くと根元から上へ二つに裂ける。
+   紋は x=60 で左右対称に描き、::before を継ぎ目に中心合わせして配置する。 */
 .door::before {
     content: '';
     position: absolute;
-    inset: 0;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 170"><g fill="none" stroke="rgba(0,255,170,0.22)" stroke-width="1.1"><circle cx="60" cy="118" r="10"/><path d="M60 108 C62 90 53 80 57 62 C60 49 66 44 62 26"/><path d="M61 58 C52 52 45 54 37 45"/><path d="M63 72 C71 64 80 66 87 56"/><circle cx="60" cy="118" r="27" stroke="rgba(0,255,170,0.12)"/><circle cx="60" cy="118" r="44" stroke="rgba(0,255,170,0.07)"/></g></svg>');
+    top: 0;
+    bottom: 0;
+    width: 200%; /* 継ぎ目に中心が来るよう倍幅で置き、外側の半分は overflow で隠す */
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 170"><g fill="none" stroke="rgba(0,255,170,0.2)" stroke-width="1.1" stroke-linecap="round"><path d="M60 160 C62 128 80 122 80 96 C80 74 66 64 82 44 C88 36 90 30 88 22"/><path d="M60 160 C58 128 40 122 40 96 C40 74 54 64 38 44 C32 36 30 30 32 22"/><path stroke="rgba(0,255,170,0.14)" d="M80 110 C90 106 96 110 102 102"/><path stroke="rgba(0,255,170,0.14)" d="M40 110 C30 106 24 110 18 102"/><path stroke="rgba(0,255,170,0.14)" d="M76 82 C86 80 92 84 97 77"/><path stroke="rgba(0,255,170,0.14)" d="M44 82 C34 80 28 84 23 77"/><path stroke="rgba(0,255,170,0.14)" d="M82 52 C89 49 93 52 98 46"/><path stroke="rgba(0,255,170,0.14)" d="M38 52 C31 49 27 52 22 46"/></g></svg>');
     background-repeat: no-repeat;
-    background-position: center;
-    background-size: 44% auto;
-}
-
-/* 取っ手（内側の丸い環） */
-.door::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    width: 16px;
-    height: 16px;
-    margin-top: -8px;
-    border: 1.5px solid rgba(0, 255, 170, 0.5);
-    border-radius: 50%;
-    box-shadow: 0 0 12px rgba(0, 255, 170, 0.3), inset 0 0 8px rgba(0, 255, 170, 0.15);
+    background-position: center 58%;
+    background-size: auto 66%;
+    pointer-events: none;
 }
 
 .door-left {
@@ -199,15 +192,14 @@
     transform-origin: left center;
     border-right: 1px solid rgba(0, 255, 170, 0.15);
 }
-.door-left::after { right: 16px; }
+.door-left::before { left: 0; }   /* 紋の中心＝右端（継ぎ目） */
 
 .door-right {
     right: 0;
     transform-origin: right center;
     border-left: 1px solid rgba(0, 255, 170, 0.15);
 }
-.door-right::before { transform: scaleX(-1); }
-.door-right::after { left: 16px; }
+.door-right::before { right: 0; }  /* 紋の中心＝左端（継ぎ目） */
 
 /* 中央の継ぎ目の光（開く直前に息づく） */
 .door-seam {
@@ -224,4 +216,23 @@
         transparent);
     box-shadow: 0 0 16px rgba(0, 255, 170, 0.6), 0 0 48px rgba(0, 255, 170, 0.25);
     transform-origin: center;
+}
+
+/* 扉の背後の光。閉じている間は両扉に隠れ、開く隙間から溢れ出す。
+   opacity / scale は GSAP (introFx.js) が動かす。 */
+.door-light {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 46%;
+    height: 84%;
+    transform: translate(-50%, -50%) scale(0.6);
+    background: radial-gradient(ellipse at center,
+        rgba(190, 255, 235, 0.7) 0%,
+        rgba(0, 255, 170, 0.38) 32%,
+        rgba(0, 255, 170, 0.1) 58%,
+        transparent 74%);
+    filter: blur(26px);
+    opacity: 0;
+    pointer-events: none;
 }

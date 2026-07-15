@@ -128,11 +128,7 @@ export class TimeBasedEnvironment {
             loadingBg.style.background = theme.gradient;
         }
 
-        // ローディングテキスト更新
-        const loadingText = document.getElementById('loading-main-text');
-        if (loadingText) {
-            loadingText.textContent = theme.welcomeText;
-        }
+        // ローディング画面は文字を出さない方針のため、welcomeText は表示しない。
 
         console.log(`Environment set to: ${this.currentPeriod}`);
     }

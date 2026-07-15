@@ -18,16 +18,16 @@ export class LoadingManager {
         
         this.progressFill = document.getElementById('loading-progress-fill');
         this.progressText = document.getElementById('loading-progress-text');
-        this.mainText = document.getElementById('loading-main-text');
     }
-    
+
     setStageActive(stageName) {
+        // ローディング画面は文字を出さない方針のため、テキストは更新しない。
+        // 段階表示の要素が存在すればハイライトだけ行う（現状は非表示）。
         const stageEl = document.getElementById(`stage-${stageName}`);
         if (stageEl) {
             stageEl.classList.remove('complete');
             stageEl.classList.add('active');
         }
-        this.updateMainText(stageName);
     }
     
     setStageComplete(stageName) {
@@ -74,27 +74,5 @@ export class LoadingManager {
         // 種子の線画SVG（stroke-dashoffset）を実進捗で描き進める
         const loading = document.getElementById('custom-loading');
         if (loading) loading.style.setProperty('--load-progress', String(percent / 100));
-    }
-    
-    updateMainText(stage) {
-        if (!this.mainText) return;
-        const texts = {
-            // library: ライブラリ読み込み
-            // 世界観への入り口。「奥へ」「深層へ」という潜るイメージ。
-            library: '沈黙の深層へ潜行しています…',
-
-            // fonts: 書体の読み込み
-            // 語られなかった言葉に、かたち（活字）を与える準備。
-            fonts: '言葉のかたちを整えています…',
-
-            // targets: 図譜(targets.mind)の読み込み
-            // 何を探しているのか。「痕跡」をより具体的に「宛先のない言葉」の捜索へ。
-            targets: '行き場のない言葉を探測しています…',
-
-            // images: 画像プリロード
-            // 見えないものを可視化するプロセス。「現像」という言葉が持つ、徐々に像を結ぶニュアンス。
-            images: '不可視の輪郭を現像しています…'
-        };
-        this.mainText.textContent = texts[stage] || '静寂を調整しています...';
     }
 }
