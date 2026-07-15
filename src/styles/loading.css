@@ -65,6 +65,25 @@
     }
 }
 
+/* 進捗バー（数値・パーセント表記なし。実ロード進捗のみを静かに示す） */
+.loading-progress-bar {
+    margin-top: 44px;
+    width: 160px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 1px;
+    overflow: hidden;
+    position: relative;
+}
+.loading-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, rgba(0, 255, 170, 0.35), rgba(0, 255, 170, 0.85));
+    border-radius: 1px;
+    transition: width 0.3s ease-out;
+    box-shadow: 0 0 10px rgba(0, 255, 170, 0.4);
+}
+
 /* ローディング画面は文字情報を出さず、アニメーションのみで進捗を伝える。
    このテキストはロード失敗時の告知だけに使い、通常時（空）は表示しない。 */
 .loading-text {

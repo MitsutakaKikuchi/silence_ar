@@ -17,7 +17,6 @@ export class LoadingManager {
         this.partials = {}; // ステージ途中経過 (0.0〜1.0)
         
         this.progressFill = document.getElementById('loading-progress-fill');
-        this.progressText = document.getElementById('loading-progress-text');
     }
 
     setStageActive(stageName) {
@@ -67,9 +66,6 @@ export class LoadingManager {
         const percent = Math.min(Math.round(total), 100);
         if (this.progressFill) {
             this.progressFill.style.width = percent + '%';
-        }
-        if (this.progressText) {
-            this.progressText.textContent = percent + '%';
         }
         // 種子の線画SVG（stroke-dashoffset）を実進捗で描き進める
         const loading = document.getElementById('custom-loading');

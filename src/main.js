@@ -116,7 +116,7 @@ function mainInit() {
             if (!introArmed) {
                 introArmed = true;
                 introStartBtn.disabled = true;
-                introStartBtn.textContent = 'カメラを準備しています…';
+                introStartBtn.textContent = 'カメラの使用を許可してください';
 
                 // ユーザージェスチャー内でカメラ承認を要求し、解決を待つ（iOS制約）
                 await startARSafely();
